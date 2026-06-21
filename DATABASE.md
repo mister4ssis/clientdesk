@@ -58,6 +58,21 @@ CREATE TABLE IF NOT EXISTS customers (
 
 `id` será UUID salvo como `TEXT`. Datas serão salvas em ISO 8601. `active` representa exclusão lógica e deve ser persistido como `0` ou `1`. CPF/CNPJ será salvo em `tax_id` somente com números.
 
+## Repository
+
+`CustomerRepository` fica em `src/main/modules/customers/customer.repository.ts` e recebe a conexão SQLite no construtor. Ele não abre novas conexões e usa prepared statements em todas as operações.
+
+Operações implementadas:
+
+- `create(input)`;
+- `findById(id)`;
+- `findByTaxId(taxId)`;
+- `list(filters)`;
+- `update(id, input)`;
+- `setActive(id, active, updatedAt)`.
+
+A listagem permite busca por `legal_name`, `trade_name`, `tax_id`, `email` e `phone`, com comparação case-insensitive nos campos textuais. O filtro `active` usa `0 | 1` no banco e `boolean` na aplicação. `limit` e `offset` são normalizados antes da consulta.
+
 ## Índices
 
 A migration cria índices para listagem e pesquisa:
@@ -105,7 +120,9 @@ A conexão é fechada no evento `before-quit`.
 
 ## Testes
 
-Os testes de banco ficam em `tests/main/database/database.test.ts`. Eles usam banco em memória ou diretório temporário e cobrem:
+Os testes de banco e domínio usam banco em memória ou diretório temporário.
+
+`tests/main/database/database.test.ts` cobre:
 
 - abertura e fechamento da conexão;
 - criação de `schema_migrations`;
@@ -115,3 +132,9 @@ Os testes de banco ficam em `tests/main/database/database.test.ts`. Eles usam ba
 - registro da migration executada;
 - não reexecução de migration aplicada;
 - rollback quando uma migration falha.
+
+`tests/main/customers/customer.repository.test.ts` cobre create, find, listagem, busca, filtros, update, ativação/inativação e paginação.
+
+`tests/main/customers/customer.service.test.ts` cobre validação, UUID, datas, duplicidade de CPF/CNPJ, busca por ID, atualização, ativação/inativação e erros de domínio.
+
+`tests/shared/customers/customer.schemas.test.ts` cobre validações e normalizações Zod.

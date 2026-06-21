@@ -1,8 +1,8 @@
-export type CustomerPersonType = 'FISICA' | 'JURIDICA';
+export type PersonType = 'FISICA' | 'JURIDICA';
 
 export interface Customer {
   id: string;
-  personType: CustomerPersonType;
+  personType: PersonType;
   legalName: string;
   tradeName: string | null;
   taxId: string | null;
@@ -20,4 +20,16 @@ export interface Customer {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CustomerSearchFilters {
+  search?: string;
+  active?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
+export interface CustomerListResult {
+  items: Customer[];
+  total: number;
 }

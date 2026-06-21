@@ -1,12 +1,26 @@
 import type { ErrorCode } from './error-codes';
 
+interface ApplicationErrorOptions {
+  details?: unknown;
+  cause?: unknown;
+}
+
 export class ApplicationError extends Error {
+  readonly details?: unknown;
+  override readonly cause?: unknown;
+
   constructor(
     readonly code: ErrorCode,
-    readonly publicMessage: string,
-    message = publicMessage
+    message: string,
+    options: ApplicationErrorOptions = {}
   ) {
-    super(message);
+    super(message, { cause: options.cause });
     this.name = 'ApplicationError';
+    this.details = options.details;
+    this.cause = options.cause;
+  }
+
+  get publicMessage(): string {
+    return this.message;
   }
 }

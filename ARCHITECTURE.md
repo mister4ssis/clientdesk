@@ -152,7 +152,9 @@ UpdateCustomerInput
 
 ListCustomersQuery
   search?
-  status: "active" | "inactive" | "all"
+  active?
+  limit?
+  offset?
 
 SetCustomerActiveInput
   id
@@ -166,18 +168,27 @@ Schemas compartilháveis serão definidos em `src/shared/customers/customer.sche
 - `personTypeSchema`: enum `FISICA | JURIDICA`.
 - `createCustomerSchema`: valida cadastro.
 - `updateCustomerSchema`: valida edição.
-- `listCustomersQuerySchema`: valida busca e filtro.
+- `customerSearchFiltersSchema`: valida busca, filtro e paginação.
 - `customerIdSchema`: valida identificador.
-- `setCustomerActiveSchema`: valida ativação/inativação.
 - `customerDtoSchema`: valida saída quando necessário.
 
 Regras principais:
 
 - `personType` obrigatório.
-- `legalName` obrigatório e sem string vazia.
+- `legalName` obrigatório, com 2 a 200 caracteres.
 - `taxId` normalizado para dígitos antes de persistir.
+- CPF com 11 dígitos para pessoa física e CNPJ com 14 para pessoa jurídica.
 - `email` válido quando informado.
-- `estado` com exatamente duas letras quando informado.
+- `email` normalizado com `trim` e `lowercase`.
+- `phone` e `postalCode` normalizados para dígitos.
+- `state` normalizado em maiúsculas e com exatamente duas letras quando informado.
+- Campos opcionais vazios convertidos para `null`.
+
+## Domínio de Clientes
+
+`CustomerRepository` recebe a conexão `better-sqlite3` por injeção e não abre banco. Ele usa prepared statements, mapeia `snake_case` para `camelCase`, implementa busca case-insensitive por nome, nome fantasia e e-mail, busca por CPF/CNPJ e telefone normalizados, filtro por `active`, paginação com `limit`/`offset` e ordenação por `legal_name`.
+
+`CustomerService` não depende de Electron e não executa SQL. Ele valida entradas com Zod, gera UUID com `crypto.randomUUID()`, define datas ISO 8601 com `new Date().toISOString()`, verifica duplicidade de CPF/CNPJ no cadastro e na edição, preserva `createdAt` e atualiza `updatedAt` em edição e ativação/inativação.
 
 ## Tratamento de Erros
 

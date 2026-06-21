@@ -1,8 +1,10 @@
-import type { Customer } from './customer.types';
+import type { Customer, CustomerListResult, CustomerSearchFilters } from './customer.types';
 
 export type CustomerDto = Customer;
+export type CustomerListResultDto = CustomerListResult;
+export type CustomerSearchFiltersDto = CustomerSearchFilters;
 
-export type CreateCustomerDto = Pick<Customer, 'personType' | 'legalName'> &
+export type EditableCustomerFields = Pick<Customer, 'personType' | 'legalName'> &
   Partial<
     Pick<
       Customer,
@@ -19,7 +21,12 @@ export type CreateCustomerDto = Pick<Customer, 'personType' | 'legalName'> &
       | 'city'
       | 'state'
       | 'notes'
+      | 'active'
     >
   >;
 
+export type CreateCustomerInput = EditableCustomerFields;
+export type UpdateCustomerInput = Partial<EditableCustomerFields>;
+
+export type CreateCustomerDto = CreateCustomerInput;
 export type UpdateCustomerDto = Partial<CreateCustomerDto>;

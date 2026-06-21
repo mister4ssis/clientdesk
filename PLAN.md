@@ -25,13 +25,13 @@ O projeto deve iniciar com funcionamento para um único usuário em um único co
 - Configurar Vitest e Testing Library.
 - Configurar electron-builder para Windows, mantendo alvos futuros para macOS e Linux.
 
-### 2. Contratos Compartilhados
+### 2. Contratos Compartilhados - Concluído
 
 - Criar `src/shared` com tipos, DTOs, contratos IPC e schemas Zod seguros.
 - Evitar duplicação de tipos entre processos.
 - Definir respostas padronizadas de sucesso e erro.
 
-### 3. Banco e Migrations
+### 3. Banco e Migrations - Concluído
 
 - Criar módulo de conexão SQLite no processo `main`.
 - Salvar o arquivo do banco em subpasta de `app.getPath('userData')`.
@@ -39,12 +39,21 @@ O projeto deve iniciar com funcionamento para um único usuário em um único co
 - Criar mecanismo simples de migrations SQL versionadas.
 - Garantir fechamento da conexão ao encerrar o aplicativo.
 
-### 4. Camada de Domínio no Main
+### 4. Camada de Domínio no Main - Concluído
 
 - Implementar schemas de validação no IPC e nos services.
 - Criar `CustomerRepository` com prepared statements.
 - Criar `CustomerService` com regras de negócio.
 - Implementar tratamento centralizado de erros e logs com dados sensíveis mascarados.
+
+Implementado nesta etapa:
+
+- Tipos `PersonType`, `Customer`, `CreateCustomerInput`, `UpdateCustomerInput`, `CustomerSearchFilters` e `CustomerListResult`.
+- Schemas Zod para cadastro, edição, ID e filtros.
+- Normalização de CPF/CNPJ, telefone, CEP, e-mail, estado e campos opcionais vazios.
+- `CustomerRepository` com create, busca, listagem, atualização e ativação/inativação lógica.
+- `CustomerService` com UUID, timestamps, validação, duplicidade de CPF/CNPJ e erros de domínio.
+- Testes de schemas, repository e service.
 
 ### 5. IPC e Preload
 
