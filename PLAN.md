@@ -72,13 +72,30 @@ Implementado nesta etapa:
 - Camada `customer-client` no renderer para consumir a API tipada.
 - Testes de contratos, handlers, preload e client do renderer.
 
-### 6. Interface React
+### 6. Interface React - Em andamento
 
 - Criar layout com menu lateral simples.
 - Criar página de clientes com busca, filtro por situação e tabela.
 - Criar formulário de cadastro/edição com React Hook Form e Zod.
 - Criar tela ou modal de detalhes.
 - Exibir mensagens amigáveis para sucesso, erro, carregamento e lista vazia.
+
+Implementado nesta etapa:
+
+- Layout principal com menu lateral e área de conteúdo.
+- Página de listagem de clientes com pesquisa, filtro por situação e tabela.
+- Debounce de pesquisa de 400 ms.
+- Filtro inicial em clientes ativos.
+- Estados de loading, atualização, erro e lista vazia.
+- Ativação e inativação com confirmação e feedback.
+- Client do renderer encapsulado em `customer-client`.
+- Testes de formatadores, hooks e página de listagem.
+
+Ainda pendente nesta etapa macro:
+
+- Formulário de cadastro.
+- Formulário de edição.
+- Página completa de detalhes.
 
 ### 7. Testes
 

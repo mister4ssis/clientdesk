@@ -48,9 +48,15 @@ ClientDesk será um aplicativo Electron com React e TypeScript, executando local
 │   │       ├── global.d.ts
 │   │       ├── main.tsx
 │   │       ├── components/
+│   │       │   ├── feedback/
+│   │       │   └── layout/
 │   │       ├── hooks/
 │   │       ├── pages/
 │   │       │   └── customers/
+│   │       │       ├── components/
+│   │       │       ├── hooks/
+│   │       │       ├── customer-formatters.ts
+│   │       │       └── CustomerListPage.tsx
 │   │       ├── services/
 │   │       │   └── customer-client.ts
 │   │       └── styles/
@@ -109,6 +115,31 @@ O renderer conterá a UI React:
 O renderer só conversa com o sistema local pela API exposta no `window.clientDesk`.
 
 `src/renderer/src/services/customer-client.ts` encapsula `window.clientDesk.customers`, retorna `data` em caso de sucesso e converte falhas públicas em `ClientDeskClientError`.
+
+## Interface de Clientes
+
+`CustomerListPage` monta a primeira tela funcional de clientes. Ela usa `useCustomerFilters` para controlar pesquisa e situação e `useCustomers` para carregar, recarregar e alterar a situação dos clientes.
+
+Fluxo de carregamento:
+
+- primeira carga exibe `LoadingState`;
+- mudanças de pesquisa/filtro preservam a estrutura e mostram indicador de atualização;
+- erros são convertidos para mensagens amigáveis;
+- respostas antigas são descartadas por identificador incremental de requisição.
+
+Filtros:
+
+- `ACTIVE` envia `active: true`;
+- `INACTIVE` envia `active: false`;
+- `ALL` não envia `active`;
+- pesquisa usa `trim` e debounce de 400 ms.
+
+Ativação/inativação:
+
+- ações por linha abrem `ConfirmDialog`;
+- inativação informa que o cliente continuará armazenado;
+- somente a linha em operação fica desabilitada;
+- após sucesso, a lista é recarregada e um feedback é exibido.
 
 ## Canais IPC
 
