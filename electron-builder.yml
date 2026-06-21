@@ -1,0 +1,21 @@
+appId: com.clientdesk.app
+productName: ClientDesk
+directories:
+  output: release
+files:
+  - out/**
+  - package.json
+extraResources:
+  - from: src/main/database/migrations
+    to: migrations
+npmRebuild: true
+buildDependenciesFromSource: false
+win:
+  target:
+    - nsis
+mac:
+  target:
+    - dmg
+linux:
+  target:
+    - AppImage
