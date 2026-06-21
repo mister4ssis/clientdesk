@@ -47,6 +47,10 @@
 - Services concentrarão regras funcionais, validações de negócio e mensagens de domínio.
 - Handlers IPC serão responsáveis por validar payloads e converter respostas.
 - `shared` conterá somente contratos seguros, sem dependência de Electron ou Node.js.
+- `window.clientDesk` é o único objeto exposto pelo preload.
+- `ClientDeskApi` fica em `src/shared/ipc/ipc-contracts.ts`; a declaração global de `window.clientDesk` fica em `src/renderer/src/global.d.ts`, pois é o ponto onde o renderer consome a API e o arquivo entra nos dois tsconfigs.
+- Handlers IPC removem o handler anterior antes de registrar um novo para reduzir duplicidade em testes e hot reload.
+- `IpcResult<T>` usa `success` como discriminante público.
 
 ## Decisões de Qualidade
 

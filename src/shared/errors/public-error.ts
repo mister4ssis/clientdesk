@@ -4,6 +4,8 @@ export interface PublicError {
     | 'CUSTOMER_NOT_FOUND'
     | 'CUSTOMER_TAX_ID_ALREADY_EXISTS'
     | 'DATABASE_ERROR'
+    | 'INTERNAL_ERROR'
     | 'UNEXPECTED_ERROR';
   message: string;
+  details?: unknown;
 }

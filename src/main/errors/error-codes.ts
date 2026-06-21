@@ -3,5 +3,6 @@ export enum ErrorCode {
   CustomerNotFound = 'CUSTOMER_NOT_FOUND',
   CustomerTaxIdAlreadyExists = 'CUSTOMER_TAX_ID_ALREADY_EXISTS',
   DatabaseError = 'DATABASE_ERROR',
+  InternalError = 'INTERNAL_ERROR',
   UnexpectedError = 'UNEXPECTED_ERROR'
 }

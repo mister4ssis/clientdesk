@@ -45,12 +45,14 @@ ClientDesk será um aplicativo Electron com React e TypeScript, executando local
 │   │   ├── index.html
 │   │   └── src/
 │   │       ├── App.tsx
+│   │       ├── global.d.ts
 │   │       ├── main.tsx
 │   │       ├── components/
 │   │       ├── hooks/
 │   │       ├── pages/
 │   │       │   └── customers/
 │   │       ├── services/
+│   │       │   └── customer-client.ts
 │   │       └── styles/
 │   └── shared/
 │       ├── customers/
@@ -91,6 +93,8 @@ window.clientDesk.customers.getById(id)
 window.clientDesk.customers.setActive(id, active)
 ```
 
+Cada método chama um canal específico com `ipcRenderer.invoke`. Não há API genérica de invoke, `send`, acesso a arquivos, shell, banco ou módulos Node.js.
+
 ## Renderer
 
 O renderer conterá a UI React:
@@ -104,11 +108,14 @@ O renderer conterá a UI React:
 
 O renderer só conversa com o sistema local pela API exposta no `window.clientDesk`.
 
+`src/renderer/src/services/customer-client.ts` encapsula `window.clientDesk.customers`, retorna `data` em caso de sucesso e converte falhas públicas em `ClientDeskClientError`.
+
 ## Canais IPC
 
-Todos os canais serão constantes em `src/shared/ipc/channels.ts`.
+Todos os canais são constantes em `src/shared/ipc/ipc-channels.ts`.
 
 ```text
+app:get-version
 customers:create
 customers:update
 customers:list
@@ -116,7 +123,7 @@ customers:get-by-id
 customers:set-active
 ```
 
-Cada handler IPC validará entrada com Zod no processo principal antes de chamar o service.
+Cada handler IPC valida entrada com Zod no processo principal antes de chamar o service e retorna `IpcResult<T>`.
 
 ## DTOs
 
@@ -192,9 +199,9 @@ Regras principais:
 
 ## Tratamento de Erros
 
-O `main` terá erro de domínio padronizado, por exemplo `AppError`, com código seguro para UI. Handlers IPC transformarão exceções em respostas controladas.
+O `main` usa `ApplicationError` com código seguro para UI. Handlers IPC transformam exceções em respostas controladas via `toIpcFailure`.
 
-Erros técnicos serão registrados com dados sensíveis mascarados. A UI receberá mensagens amigáveis, sem stack trace.
+Erros técnicos são registrados de forma sanitizada. A UI recebe mensagens amigáveis, sem stack trace, SQL bruto ou caminhos locais.
 
 ## Segurança
 

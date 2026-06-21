@@ -55,12 +55,22 @@ Implementado nesta etapa:
 - `CustomerService` com UUID, timestamps, validação, duplicidade de CPF/CNPJ e erros de domínio.
 - Testes de schemas, repository e service.
 
-### 5. IPC e Preload
+### 5. IPC e Preload - Concluído
 
 - Definir canais IPC explícitos.
 - Expor API mínima e tipada via `contextBridge`.
 - Manter `nodeIntegration: false` e `contextIsolation: true`.
 - Não expor `ipcRenderer` diretamente ao `window`.
+
+Implementado nesta etapa:
+
+- Contratos IPC compartilhados em `src/shared/ipc`.
+- Resultado padronizado `IpcResult<T>` com união por `success`.
+- Handlers `ipcMain.handle` para create, list, getById, update e setActive.
+- Conversão centralizada de erros internos para erros públicos.
+- API segura `window.clientDesk.customers` exposta pelo preload.
+- Camada `customer-client` no renderer para consumir a API tipada.
+- Testes de contratos, handlers, preload e client do renderer.
 
 ### 6. Interface React
 

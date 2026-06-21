@@ -8,6 +8,8 @@
     "vitest.config.ts",
     "src/main/**/*.ts",
     "src/preload/**/*.ts",
+    "src/preload/**/*.d.ts",
+    "src/renderer/**/*.d.ts",
     "src/shared/**/*.ts",
     "tests/**/*.ts"
   ]

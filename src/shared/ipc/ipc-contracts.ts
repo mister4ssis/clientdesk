@@ -1,35 +1,62 @@
-import type { CustomerDto, CreateCustomerDto, UpdateCustomerDto } from '../customers/customer.dto';
+import type {
+  CreateCustomerInput,
+  CustomerDto,
+  CustomerListResultDto,
+  CustomerSearchFiltersDto,
+  UpdateCustomerInput
+} from '../customers/customer.dto';
 import type { IpcResult } from './ipc-result';
-
-export interface CustomerListQuery {
-  search?: string;
-  status: 'active' | 'inactive' | 'all';
-}
 
 export interface CustomerSetActiveInput {
   id: string;
   active: boolean;
 }
 
+export interface CustomerGetByIdInput {
+  id: string;
+}
+
+export interface CustomerUpdateInput {
+  id: string;
+  data: UpdateCustomerInput;
+}
+
 export interface IpcContracts {
+  'app:get-version': {
+    input: void;
+    output: IpcResult<string>;
+  };
   'customers:create': {
-    input: CreateCustomerDto;
+    input: CreateCustomerInput;
     output: IpcResult<CustomerDto>;
   };
   'customers:list': {
-    input: CustomerListQuery;
-    output: IpcResult<CustomerDto[]>;
+    input: CustomerSearchFiltersDto;
+    output: IpcResult<CustomerListResultDto>;
   };
   'customers:get-by-id': {
-    input: { id: string };
+    input: CustomerGetByIdInput;
     output: IpcResult<CustomerDto>;
   };
   'customers:update': {
-    input: { id: string; data: UpdateCustomerDto };
+    input: CustomerUpdateInput;
     output: IpcResult<CustomerDto>;
   };
   'customers:set-active': {
     input: CustomerSetActiveInput;
     output: IpcResult<CustomerDto>;
+  };
+}
+
+export interface ClientDeskApi {
+  app: {
+    getVersion(): Promise<IpcResult<string>>;
+  };
+  customers: {
+    create(input: CreateCustomerInput): Promise<IpcResult<CustomerDto>>;
+    list(filters?: CustomerSearchFiltersDto): Promise<IpcResult<CustomerListResultDto>>;
+    getById(id: string): Promise<IpcResult<CustomerDto>>;
+    update(id: string, data: UpdateCustomerInput): Promise<IpcResult<CustomerDto>>;
+    setActive(id: string, active: boolean): Promise<IpcResult<CustomerDto>>;
   };
 }
