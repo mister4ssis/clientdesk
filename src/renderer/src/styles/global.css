@@ -11,7 +11,9 @@ body {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -26,6 +28,8 @@ button:disabled {
 
 button:focus-visible,
 input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
 a:focus-visible {
   outline: 3px solid #8ab4ff;
   outline-offset: 2px;
@@ -140,6 +144,32 @@ a {
   border-radius: 6px;
   color: #172033;
   background: #ffffff;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #b8c3d3;
+  border-radius: 6px;
+  color: #172033;
+  background: #ffffff;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field [aria-invalid='true'] {
+  border-color: #b42318;
+}
+
+.field-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.86rem;
 }
 
 .status-filter {
@@ -367,6 +397,68 @@ a {
   margin-top: 24px;
 }
 
+.customer-form {
+  display: flex;
+  width: min(980px, 100%);
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-section {
+  margin: 0;
+  padding: 18px;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.form-section legend {
+  padding: 0 6px;
+  color: #24324a;
+  font-weight: 700;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.field--wide {
+  grid-column: 1 / -1;
+}
+
+.checkbox-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: #354257;
+  font-weight: 600;
+}
+
+.checkbox-field input {
+  width: 18px;
+  height: 18px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  width: min(980px, 100%);
+  padding: 16px 0 0;
+}
+
+.form-alert {
+  width: min(980px, 100%);
+  padding: 10px 12px;
+  border: 1px solid #f2b8b5;
+  border-radius: 6px;
+  color: #7f1d1d;
+  background: #fef3f2;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -384,7 +476,8 @@ a {
   }
 
   .toolbar,
-  .page-header {
+  .page-header,
+  .form-grid {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: stretch;

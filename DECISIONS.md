@@ -28,6 +28,8 @@
 - O banco será salvo em `app.getPath('userData')/data/clientdesk.sqlite`.
 - Migrations SQL ficarão versionadas no repositório em `src/main/database/migrations/`.
 - A aplicação não dependerá de conexão com internet após instalada.
+- CPF/CNPJ, telefone e CEP terão máscaras somente visuais no renderer; os DTOs enviados ao main continuam normalizados.
+- A navegação do renderer usará History API nesta etapa, sem React Router, por haver apenas rotas simples de clientes.
 
 ## Decisões de Stack
 
@@ -35,6 +37,7 @@
 - `better-sqlite3` será usado por ser síncrono, simples e adequado para um app desktop local de usuário único.
 - `Zod` será a fonte de validação para IPC e poderá ser reaproveitado pelo React Hook Form.
 - `React Hook Form` será usado para performance e controle simples de formulários.
+- `@hookform/resolvers` será usado para integrar Zod ao React Hook Form sem adaptador próprio.
 - `Vitest` será usado para testes unitários e de componentes.
 - `Testing Library` será usada para testar comportamento visível ao usuário.
 - `electron-builder` será usado para empacotamento, com Windows como primeiro alvo.
@@ -51,6 +54,7 @@
 - `ClientDeskApi` fica em `src/shared/ipc/ipc-contracts.ts`; a declaração global de `window.clientDesk` fica em `src/renderer/src/global.d.ts`, pois é o ponto onde o renderer consome a API e o arquivo entra nos dois tsconfigs.
 - Handlers IPC removem o handler anterior antes de registrar um novo para reduzir duplicidade em testes e hot reload.
 - `IpcResult<T>` usa `success` como discriminante público.
+- O formulário usa um schema de apresentação no renderer para mensagens e máscaras, mas o processo principal continua validando com os schemas compartilhados antes de persistir.
 
 ## Decisões de Qualidade
 

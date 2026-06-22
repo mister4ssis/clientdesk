@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Customer } from '@shared/customers/customer.types';
 import { EmptyState } from '@renderer/components/feedback/EmptyState';
 import { ErrorState } from '@renderer/components/feedback/ErrorState';
@@ -16,7 +16,17 @@ interface PendingStatusChange {
   active: boolean;
 }
 
-export function CustomerListPage() {
+interface CustomerListPageProps {
+  initialFeedbackMessage?: string | null;
+  onNewCustomer?: () => void;
+  onEditCustomer?: (id: string) => void;
+}
+
+export function CustomerListPage({
+  initialFeedbackMessage = null,
+  onNewCustomer,
+  onEditCustomer
+}: CustomerListPageProps) {
   const { search, debouncedSearch, status, filters, setSearch, clearSearch, setStatus } =
     useCustomerFilters();
   const {
@@ -30,7 +40,11 @@ export function CustomerListPage() {
     setCustomerActive
   } = useCustomers(filters);
   const [pendingStatusChange, setPendingStatusChange] = useState<PendingStatusChange | null>(null);
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(initialFeedbackMessage);
+
+  useEffect(() => {
+    setFeedbackMessage(initialFeedbackMessage);
+  }, [initialFeedbackMessage]);
 
   const hasSearch = debouncedSearch.length > 0;
   const emptyState = useMemo(() => {
@@ -66,6 +80,8 @@ export function CustomerListPage() {
       setStatus('ACTIVE');
       return;
     }
+
+    onNewCustomer?.();
   }
 
   return (
@@ -75,7 +91,7 @@ export function CustomerListPage() {
         title="Clientes"
         subtitle="Consulte, pesquise e gerencie a situação dos clientes cadastrados."
         actions={
-          <button className="button button--primary" type="button" disabled title="Próxima etapa">
+          <button className="button button--primary" type="button" onClick={onNewCustomer}>
             Novo cliente
           </button>
         }
@@ -127,6 +143,7 @@ export function CustomerListPage() {
                 active
               })
             }
+            onEditCustomer={onEditCustomer}
           />
         </>
       ) : null}

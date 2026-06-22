@@ -4,9 +4,15 @@ interface CustomerActionsProps {
   customer: Customer;
   isBusy: boolean;
   onRequestStatusChange: (customer: Customer, active: boolean) => void;
+  onEditCustomer?: (id: string) => void;
 }
 
-export function CustomerActions({ customer, isBusy, onRequestStatusChange }: CustomerActionsProps) {
+export function CustomerActions({
+  customer,
+  isBusy,
+  onRequestStatusChange,
+  onEditCustomer
+}: CustomerActionsProps) {
   const nextActive = !customer.active;
 
   return (
@@ -24,8 +30,7 @@ export function CustomerActions({ customer, isBusy, onRequestStatusChange }: Cus
         className="button button--ghost"
         type="button"
         aria-label={`Editar cliente ${customer.legalName}`}
-        title="Disponível em etapa futura"
-        disabled
+        onClick={() => onEditCustomer?.(customer.id)}
       >
         Editar
       </button>

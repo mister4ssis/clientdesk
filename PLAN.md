@@ -84,17 +84,21 @@ Implementado nesta etapa:
 
 - Layout principal com menu lateral e área de conteúdo.
 - Página de listagem de clientes com pesquisa, filtro por situação e tabela.
+- Rotas internas `/customers`, `/customers/new` e `/customers/:id/edit`.
 - Debounce de pesquisa de 400 ms.
 - Filtro inicial em clientes ativos.
 - Estados de loading, atualização, erro e lista vazia.
 - Ativação e inativação com confirmação e feedback.
+- Formulário compartilhado de cadastro e edição com React Hook Form, Zod e `@hookform/resolvers`.
+- Máscaras visuais para CPF, CNPJ, telefone e CEP, removidas antes do envio.
+- Normalização de e-mail, estado, campos opcionais e documentos fiscais antes de chamar o client.
+- Carregamento de cliente na edição com retry e tratamento de cliente inexistente.
+- Confirmação ao cancelar formulário alterado.
 - Client do renderer encapsulado em `customer-client`.
-- Testes de formatadores, hooks e página de listagem.
+- Testes de formatadores, hooks, listagem, formulário, cadastro e edição.
 
 Ainda pendente nesta etapa macro:
 
-- Formulário de cadastro.
-- Formulário de edição.
 - Página completa de detalhes.
 
 ### 7. Testes

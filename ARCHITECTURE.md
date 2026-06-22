@@ -56,10 +56,13 @@ ClientDesk será um aplicativo Electron com React e TypeScript, executando local
 │   │       │       ├── components/
 │   │       │       ├── hooks/
 │   │       │       ├── customer-formatters.ts
+│   │       │       ├── CustomerCreatePage.tsx
+│   │       │       ├── CustomerEditPage.tsx
 │   │       │       └── CustomerListPage.tsx
 │   │       ├── services/
 │   │       │   └── customer-client.ts
-│   │       └── styles/
+│   │       ├── styles/
+│   │       └── utils/
 │   └── shared/
 │       ├── customers/
 │       │   ├── customer.dto.ts
@@ -116,6 +119,8 @@ O renderer só conversa com o sistema local pela API exposta no `window.clientDe
 
 `src/renderer/src/services/customer-client.ts` encapsula `window.clientDesk.customers`, retorna `data` em caso de sucesso e converte falhas públicas em `ClientDeskClientError`.
 
+`App.tsx` usa um roteamento leve baseado em History API para as rotas `/customers`, `/customers/new` e `/customers/:id/edit`. React Router não foi adicionado nesta etapa porque o fluxo atual exige apenas três rotas locais e sem recursos avançados de navegação.
+
 ## Interface de Clientes
 
 `CustomerListPage` monta a primeira tela funcional de clientes. Ela usa `useCustomerFilters` para controlar pesquisa e situação e `useCustomers` para carregar, recarregar e alterar a situação dos clientes.
@@ -140,6 +145,18 @@ Ativação/inativação:
 - inativação informa que o cliente continuará armazenado;
 - somente a linha em operação fica desabilitada;
 - após sucesso, a lista é recarregada e um feedback é exibido.
+
+Cadastro e edição:
+
+- `CustomerCreatePage` renderiza formulário vazio e salva via `createCustomer`;
+- `CustomerEditPage` obtém o ID da rota, carrega dados via `getCustomerById` e salva via `updateCustomer`;
+- `CustomerForm` compartilha as seções dados principais, contato, endereço, observações e situação;
+- o formulário usa React Hook Form com Zod e `@hookform/resolvers`;
+- campos `null` vindos do domínio são convertidos para string vazia nos inputs;
+- CPF/CNPJ, telefone e CEP recebem máscara apenas visual e são enviados somente com dígitos;
+- e-mail é enviado com `trim` e `lowercase`, estado com `uppercase` e campos opcionais vazios como `null`;
+- ao cancelar com alterações, a UI exibe confirmação simples antes de sair;
+- erros de negócio do `customer-client` são convertidos para mensagens amigáveis no renderer.
 
 ## Canais IPC
 

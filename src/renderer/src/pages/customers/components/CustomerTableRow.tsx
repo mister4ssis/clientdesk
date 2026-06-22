@@ -7,12 +7,14 @@ interface CustomerTableRowProps {
   customer: Customer;
   isBusy: boolean;
   onRequestStatusChange: (customer: Customer, active: boolean) => void;
+  onEditCustomer?: (id: string) => void;
 }
 
 export function CustomerTableRow({
   customer,
   isBusy,
-  onRequestStatusChange
+  onRequestStatusChange,
+  onEditCustomer
 }: CustomerTableRowProps) {
   return (
     <tr className={customer.active ? undefined : 'customer-row--inactive'}>
@@ -30,6 +32,7 @@ export function CustomerTableRow({
           customer={customer}
           isBusy={isBusy}
           onRequestStatusChange={onRequestStatusChange}
+          onEditCustomer={onEditCustomer}
         />
       </td>
     </tr>
