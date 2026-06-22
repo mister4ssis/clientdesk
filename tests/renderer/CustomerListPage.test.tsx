@@ -249,6 +249,18 @@ describe('CustomerListPage', () => {
       within(row).getByRole('button', { name: 'Inativar cliente Maria Silva' })
     ).toBeInTheDocument();
   });
+
+  it('navigates to details without changing status', async () => {
+    const onViewCustomer = vi.fn();
+    mockCustomerList([activeCustomer]);
+
+    render(<CustomerListPage onViewCustomer={onViewCustomer} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Visualizar cliente Maria Silva' }));
+
+    expect(onViewCustomer).toHaveBeenCalledWith(activeCustomer.id);
+    expect(customerClientMock.setCustomerActive).not.toHaveBeenCalled();
+  });
 });
 
 function mockCustomerList(customers: Customer[]): void {

@@ -72,7 +72,7 @@ Implementado nesta etapa:
 - Camada `customer-client` no renderer para consumir a API tipada.
 - Testes de contratos, handlers, preload e client do renderer.
 
-### 6. Interface React - Em andamento
+### 6. Interface React - Concluído
 
 - Criar layout com menu lateral simples.
 - Criar página de clientes com busca, filtro por situação e tabela.
@@ -94,12 +94,12 @@ Implementado nesta etapa:
 - Normalização de e-mail, estado, campos opcionais e documentos fiscais antes de chamar o client.
 - Carregamento de cliente na edição com retry e tratamento de cliente inexistente.
 - Confirmação ao cancelar formulário alterado.
+- Página de detalhes em `/customers/:id` com dados completos organizados por seção.
+- Navegação da listagem para visualizar, editar, ativar e inativar clientes.
+- Ativação e inativação também disponíveis nos detalhes, com confirmação e feedback.
+- Tratamento de cliente inexistente e erros de carregamento sem expor mensagens técnicas.
 - Client do renderer encapsulado em `customer-client`.
-- Testes de formatadores, hooks, listagem, formulário, cadastro e edição.
-
-Ainda pendente nesta etapa macro:
-
-- Página completa de detalhes.
+- Testes de formatadores, hooks, listagem, formulário, cadastro, edição e detalhes.
 
 ### 7. Testes
 

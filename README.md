@@ -36,12 +36,15 @@ Fluxos implementados:
 - filtrar por Ativos, Inativos ou Todos;
 - formatar CPF/CNPJ e telefone apenas para apresentação;
 - inativar e reativar clientes com confirmação;
+- visualizar detalhes completos em `/customers/:id`;
 - cadastrar cliente em `/customers/new`;
 - editar cliente em `/customers/:id/edit`;
 - validar formulário com React Hook Form, Zod e `@hookform/resolvers`;
 - aplicar máscaras visuais de CPF/CNPJ, telefone e CEP sem persistir a máscara;
 - normalizar CPF/CNPJ, telefone, CEP, e-mail, estado e campos opcionais antes do envio;
 - confirmar cancelamento quando houver alterações não salvas;
+- ativar e inativar clientes pela listagem ou pelos detalhes;
+- tratar cliente inexistente com mensagem amigável e retorno para a listagem;
 - exibir loading, atualização, erro e estados vazios.
 
 Os componentes não acessam Electron, IPC, SQLite, `fs`, `path` ou SQL diretamente. A comunicação passa por `window.clientDesk.customers`, exposta pelo preload seguro.
@@ -51,8 +54,20 @@ Rotas disponíveis no renderer:
 ```text
 /customers
 /customers/new
+/customers/:id
 /customers/:id/edit
 ```
+
+## Detalhes do Cliente
+
+A página de detalhes exibe dados principais, contato, endereço, observações e
+informações do cadastro. CPF/CNPJ, telefone, CEP e datas são formatados apenas
+para leitura; o valor persistido continua normalizado. Valores opcionais vazios
+aparecem como `Não informado`.
+
+Ao editar a partir dos detalhes, o usuário retorna para `/customers/:id` após
+salvar. A ativação e inativação usam confirmação, feedback de sucesso e mensagens
+de erro sem stack trace, SQL ou caminhos locais.
 
 ## Testes do Renderer
 

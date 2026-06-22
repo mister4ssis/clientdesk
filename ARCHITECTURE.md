@@ -57,6 +57,7 @@ ClientDesk será um aplicativo Electron com React e TypeScript, executando local
 │   │       │       ├── hooks/
 │   │       │       ├── customer-formatters.ts
 │   │       │       ├── CustomerCreatePage.tsx
+│   │       │       ├── CustomerDetailsPage.tsx
 │   │       │       ├── CustomerEditPage.tsx
 │   │       │       └── CustomerListPage.tsx
 │   │       ├── services/
@@ -111,7 +112,7 @@ O renderer conterá a UI React:
 - Menu lateral com item `Clientes`.
 - Página de listagem com pesquisa e filtro `ativos`, `inativos` e `todos`.
 - Formulário de cadastro/edição com React Hook Form.
-- Modal ou página de detalhes.
+- Página de detalhes.
 - Confirmação antes de inativar.
 - Mensagens amigáveis de erro e sucesso.
 
@@ -119,7 +120,7 @@ O renderer só conversa com o sistema local pela API exposta no `window.clientDe
 
 `src/renderer/src/services/customer-client.ts` encapsula `window.clientDesk.customers`, retorna `data` em caso de sucesso e converte falhas públicas em `ClientDeskClientError`.
 
-`App.tsx` usa um roteamento leve baseado em History API para as rotas `/customers`, `/customers/new` e `/customers/:id/edit`. React Router não foi adicionado nesta etapa porque o fluxo atual exige apenas três rotas locais e sem recursos avançados de navegação.
+`App.tsx` usa um roteamento leve baseado em History API para as rotas `/customers`, `/customers/new`, `/customers/:id` e `/customers/:id/edit`. React Router não foi adicionado nesta etapa porque o fluxo atual exige poucas rotas locais e sem recursos avançados de navegação.
 
 ## Interface de Clientes
 
@@ -146,6 +147,17 @@ Ativação/inativação:
 - somente a linha em operação fica desabilitada;
 - após sucesso, a lista é recarregada e um feedback é exibido.
 
+Detalhes:
+
+- `CustomerDetailsPage` carrega o cliente por ID via `useCustomerById`;
+- a página organiza os dados em dados principais, contato, endereço, observações e informações do cadastro;
+- valores ausentes são exibidos como `Não informado`;
+- CPF/CNPJ, telefone, CEP e datas são formatados apenas para apresentação;
+- datas de nascimento são exibidas como data e `createdAt`/`updatedAt` como data e horário em `pt-BR`;
+- `CUSTOMER_NOT_FOUND` exibe estado próprio com retorno para a listagem;
+- erros de banco e erros inesperados são convertidos para mensagens amigáveis e permitem tentar novamente;
+- ativar e inativar pela página de detalhes usa confirmação, atualiza o estado local e não recarrega a janela inteira.
+
 Cadastro e edição:
 
 - `CustomerCreatePage` renderiza formulário vazio e salva via `createCustomer`;
@@ -157,6 +169,8 @@ Cadastro e edição:
 - e-mail é enviado com `trim` e `lowercase`, estado com `uppercase` e campos opcionais vazios como `null`;
 - ao cancelar com alterações, a UI exibe confirmação simples antes de sair;
 - erros de negócio do `customer-client` são convertidos para mensagens amigáveis no renderer.
+- quando a edição é aberta a partir dos detalhes, o salvamento retorna para `/customers/:id`;
+- quando a edição é aberta a partir da listagem, o salvamento retorna para `/customers`.
 
 ## Canais IPC
 

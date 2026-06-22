@@ -30,6 +30,7 @@
 - A aplicação não dependerá de conexão com internet após instalada.
 - CPF/CNPJ, telefone e CEP terão máscaras somente visuais no renderer; os DTOs enviados ao main continuam normalizados.
 - A navegação do renderer usará History API nesta etapa, sem React Router, por haver apenas rotas simples de clientes.
+- A edição retorna para a origem do fluxo: listagem quando iniciada pela listagem e detalhes quando iniciada por `/customers/:id`.
 
 ## Decisões de Stack
 
@@ -55,6 +56,7 @@
 - Handlers IPC removem o handler anterior antes de registrar um novo para reduzir duplicidade em testes e hot reload.
 - `IpcResult<T>` usa `success` como discriminante público.
 - O formulário usa um schema de apresentação no renderer para mensagens e máscaras, mas o processo principal continua validando com os schemas compartilhados antes de persistir.
+- A página de detalhes reutiliza `useCustomerById` e os formatadores do renderer para manter apresentação consistente com listagem e formulário.
 
 ## Decisões de Qualidade
 

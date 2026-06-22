@@ -4,6 +4,7 @@ interface CustomerActionsProps {
   customer: Customer;
   isBusy: boolean;
   onRequestStatusChange: (customer: Customer, active: boolean) => void;
+  onViewCustomer?: (id: string) => void;
   onEditCustomer?: (id: string) => void;
 }
 
@@ -11,6 +12,7 @@ export function CustomerActions({
   customer,
   isBusy,
   onRequestStatusChange,
+  onViewCustomer,
   onEditCustomer
 }: CustomerActionsProps) {
   const nextActive = !customer.active;
@@ -21,8 +23,7 @@ export function CustomerActions({
         className="button button--ghost"
         type="button"
         aria-label={`Visualizar cliente ${customer.legalName}`}
-        title="Disponível em etapa futura"
-        disabled
+        onClick={() => onViewCustomer?.(customer.id)}
       >
         Visualizar
       </button>

@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { AppLayout } from '@renderer/layouts/AppLayout';
 import { ErrorState } from '@renderer/components/feedback/ErrorState';
 import { CustomerCreatePage } from '@renderer/pages/customers/CustomerCreatePage';
+import { CustomerDetailsPage } from '@renderer/pages/customers/CustomerDetailsPage';
 import { CustomerEditPage } from '@renderer/pages/customers/CustomerEditPage';
 import { CustomerListPage } from '@renderer/pages/customers/CustomerListPage';
 
 export function App(): ReactElement {
   const [locationKey, setLocationKey] = useState(0);
   const [flashMessage, setFlashMessage] = useState<string | null>(null);
+  const [editReturnPath, setEditReturnPath] = useState<string | null>(null);
   const route = useMemo(() => parseRoute(window.location.pathname), [locationKey]);
 
   useEffect(() => {
@@ -26,13 +28,19 @@ export function App(): ReactElement {
     setLocationKey((current) => current + 1);
   }
 
+  function navigateToEdit(customerId: string, returnPath: string): void {
+    setEditReturnPath(returnPath);
+    navigate(`/customers/${customerId}/edit`);
+  }
+
   return (
     <AppLayout>
       {route.name === 'customers' ? (
         <CustomerListPage
           initialFeedbackMessage={flashMessage}
           onNewCustomer={() => navigate('/customers/new')}
-          onEditCustomer={(id) => navigate(`/customers/${id}/edit`)}
+          onViewCustomer={(id) => navigate(`/customers/${id}`)}
+          onEditCustomer={(id) => navigateToEdit(id, '/customers')}
         />
       ) : null}
 
@@ -46,8 +54,19 @@ export function App(): ReactElement {
       {route.name === 'customer-edit' ? (
         <CustomerEditPage
           customerId={route.customerId}
-          onCancel={() => navigate('/customers')}
-          onSaved={() => navigate('/customers', 'Cliente atualizado com sucesso.')}
+          onCancel={() => navigate(editReturnPath ?? `/customers/${route.customerId}`)}
+          onSaved={() =>
+            navigate(editReturnPath ?? `/customers/${route.customerId}`, 'Cliente atualizado com sucesso.')
+          }
+        />
+      ) : null}
+
+      {route.name === 'customer-details' ? (
+        <CustomerDetailsPage
+          customerId={route.customerId}
+          initialFeedbackMessage={flashMessage}
+          onBack={() => navigate('/customers')}
+          onEdit={(id) => navigateToEdit(id, `/customers/${id}`)}
         />
       ) : null}
 
@@ -61,6 +80,7 @@ export function App(): ReactElement {
 type AppRoute =
   | { name: 'customers' }
   | { name: 'customer-create' }
+  | { name: 'customer-details'; customerId: string }
   | { name: 'customer-edit'; customerId: string }
   | { name: 'not-found' };
 
@@ -77,6 +97,12 @@ function parseRoute(pathname: string): AppRoute {
 
   if (editMatch) {
     return { name: 'customer-edit', customerId: decodeURIComponent(editMatch[1]) };
+  }
+
+  const detailsMatch = /^\/customers\/([^/]+)$/.exec(pathname);
+
+  if (detailsMatch) {
+    return { name: 'customer-details', customerId: decodeURIComponent(detailsMatch[1]) };
   }
 
   return { name: 'not-found' };

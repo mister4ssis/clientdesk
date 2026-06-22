@@ -7,6 +7,7 @@ interface CustomerTableRowProps {
   customer: Customer;
   isBusy: boolean;
   onRequestStatusChange: (customer: Customer, active: boolean) => void;
+  onViewCustomer?: (id: string) => void;
   onEditCustomer?: (id: string) => void;
 }
 
@@ -14,6 +15,7 @@ export function CustomerTableRow({
   customer,
   isBusy,
   onRequestStatusChange,
+  onViewCustomer,
   onEditCustomer
 }: CustomerTableRowProps) {
   return (
@@ -32,6 +34,7 @@ export function CustomerTableRow({
           customer={customer}
           isBusy={isBusy}
           onRequestStatusChange={onRequestStatusChange}
+          onViewCustomer={onViewCustomer}
           onEditCustomer={onEditCustomer}
         />
       </td>

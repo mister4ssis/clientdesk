@@ -19,12 +19,14 @@ interface PendingStatusChange {
 interface CustomerListPageProps {
   initialFeedbackMessage?: string | null;
   onNewCustomer?: () => void;
+  onViewCustomer?: (id: string) => void;
   onEditCustomer?: (id: string) => void;
 }
 
 export function CustomerListPage({
   initialFeedbackMessage = null,
   onNewCustomer,
+  onViewCustomer,
   onEditCustomer
 }: CustomerListPageProps) {
   const { search, debouncedSearch, status, filters, setSearch, clearSearch, setStatus } =
@@ -143,6 +145,7 @@ export function CustomerListPage({
                 active
               })
             }
+            onViewCustomer={onViewCustomer}
             onEditCustomer={onEditCustomer}
           />
         </>
