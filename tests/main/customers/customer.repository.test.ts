@@ -7,7 +7,7 @@ import { createMigratedMemoryDatabase } from '../../helpers/test-database';
 const createdAt = '2026-06-21T10:00:00.000Z';
 const updatedAt = '2026-06-21T10:00:00.000Z';
 
-let database: DatabaseConnection;
+let database: DatabaseConnection | null;
 let repository: CustomerRepository;
 
 beforeEach(() => {
@@ -16,7 +16,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  database.close();
+  if (database?.open) {
+    database.close();
+  }
+
+  database = null;
 });
 
 describe('CustomerRepository', () => {
@@ -65,6 +69,15 @@ describe('CustomerRepository', () => {
 
     expect(result.items).toHaveLength(1);
     expect(result.items[0]?.id).toBe('customer-1');
+  });
+
+  it('searches text containing LIKE wildcard characters literally', () => {
+    repository.create(makeCustomer({ id: 'customer-1', legalName: 'Cliente 100% Ficticio' }));
+    repository.create(makeCustomer({ id: 'customer-2', legalName: 'Cliente 100 Ficticio' }));
+
+    const result = repository.list({ search: '100%' });
+
+    expect(result.items.map((customer) => customer.id)).toEqual(['customer-1']);
   });
 
   it('filters active and inactive customers', () => {

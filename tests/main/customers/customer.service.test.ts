@@ -6,7 +6,7 @@ import { CustomerRepository } from '@main/modules/customers/customer.repository'
 import { CustomerService } from '@main/modules/customers/customer.service';
 import { createMigratedMemoryDatabase } from '../../helpers/test-database';
 
-let database: DatabaseConnection;
+let database: DatabaseConnection | null;
 let service: CustomerService;
 
 beforeEach(() => {
@@ -18,7 +18,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  database.close();
+  if (database?.open) {
+    database.close();
+  }
+
+  database = null;
   vi.useRealTimers();
 });
 

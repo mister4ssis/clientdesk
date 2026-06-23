@@ -31,6 +31,8 @@
 - CPF/CNPJ, telefone e CEP terão máscaras somente visuais no renderer; os DTOs enviados ao main continuam normalizados.
 - A navegação do renderer usará History API nesta etapa, sem React Router, por haver apenas rotas simples de clientes.
 - A edição retorna para a origem do fluxo: listagem quando iniciada pela listagem e detalhes quando iniciada por `/customers/:id`.
+- Testes E2E com Electron real não foram adicionados na revisão do MVP para evitar nova dependência pesada antes da etapa de empacotamento.
+- O rebuild do `better-sqlite3` permanece nos scripts porque o módulo nativo precisa alternar entre ABI do Node usado pelo Vitest e ABI do Electron usado pelo app.
 
 ## Decisões de Stack
 

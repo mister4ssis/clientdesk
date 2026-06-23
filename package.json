@@ -10,8 +10,12 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "npm rebuild better-sqlite3 && vitest run",
+    "test:watch": "vitest",
     "posttest": "npm run rebuild:electron",
     "postinstall": "npm run rebuild:electron",
+    "package": "npm run build && electron-builder",
+    "package:dir": "npm run build && electron-builder --dir",
+    "package:win": "npm run build && electron-builder --win",
     "dist:win": "npm run build && electron-builder --win",
     "rebuild:electron": "electron-rebuild -f -w better-sqlite3 -v 42.4.1"
   },

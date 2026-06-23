@@ -218,9 +218,9 @@ function buildListQuery(filters: CustomerSearchFilters): ListQueryParts {
 
   if (search) {
     const searchConditions = [
-      'legal_name LIKE @searchText COLLATE NOCASE',
-      'trade_name LIKE @searchText COLLATE NOCASE',
-      'email LIKE @searchText COLLATE NOCASE'
+      "legal_name COLLATE NOCASE LIKE @searchText ESCAPE '\\'",
+      "trade_name COLLATE NOCASE LIKE @searchText ESCAPE '\\'",
+      "email COLLATE NOCASE LIKE @searchText ESCAPE '\\'"
     ];
     const searchDigits = search.replace(/\D/g, '');
 

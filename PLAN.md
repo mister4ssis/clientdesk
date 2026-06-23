@@ -109,6 +109,21 @@ Implementado nesta etapa:
 - Testar componentes principais com Testing Library.
 - Rodar `lint`, `typecheck`, `test` e `build` antes de considerar o incremento pronto.
 
+### 8. Revisão e Estabilização do MVP - Concluído
+
+- Revisar arquitetura, segurança, banco, erros, interface e dependências.
+- Criar documentação de revisão, testes e checklist de release.
+- Adicionar fixtures reutilizáveis.
+- Adicionar teste integrado `CustomerService -> CustomerRepository -> SQLite` com arquivo temporário.
+- Adicionar teste de fumaça para arquivos essenciais e scripts.
+- Preparar scripts de empacotamento `package`, `package:dir` e `package:win`.
+
+### 9. Próximo Passo
+
+- Validar empacotamento com `electron-builder`.
+- Testar pacote em máquina limpa.
+- Definir ícone definitivo, assinatura digital e política de backup.
+
 ## Scripts Planejados
 
 Os scripts abaixo devem ser definidos quando o projeto for inicializado:
@@ -118,6 +133,10 @@ Os scripts abaixo devem ser definidos quando o projeto for inicializado:
 - `npm run lint`: executa ESLint.
 - `npm run typecheck`: executa checagem TypeScript sem emitir arquivos.
 - `npm test`: executa Vitest.
+- `npm run test:watch`: executa Vitest em modo observação.
+- `npm run package`: executa build e empacotamento padrão do electron-builder.
+- `npm run package:dir`: gera diretório empacotado sem instalador.
+- `npm run package:win`: gera pacote Windows.
 - `npm run dist:win`: gera instalador Windows com electron-builder.
 
 ## Critérios de Aceite

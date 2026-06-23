@@ -244,6 +244,7 @@ describe('customer IPC handlers', () => {
   });
 
   it('converts database errors to public database error', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const service = createCustomerServiceMock({
       list: () => {
         throw new ApplicationError(ErrorCode.DatabaseError, 'SQLITE_ERROR: /private/path', {
@@ -263,9 +264,13 @@ describe('customer IPC handlers', () => {
     });
     expect(serialized).not.toContain('SQLITE');
     expect(serialized).not.toContain('/private/path');
+    expect(consoleError).toHaveBeenCalledWith('IPC operation failed.', { name: 'Error' });
+
+    consoleError.mockRestore();
   });
 
   it('converts unknown errors to internal error without stack trace', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const service = createCustomerServiceMock({
       list: () => {
         throw new Error('unexpected stack details');
@@ -283,6 +288,9 @@ describe('customer IPC handlers', () => {
     });
     expect(serialized).not.toContain('stack');
     expect(serialized).not.toContain('unexpected stack details');
+    expect(consoleError).toHaveBeenCalledWith('IPC operation failed.', { name: 'Error' });
+
+    consoleError.mockRestore();
   });
 });
 

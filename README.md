@@ -2,6 +2,12 @@
 
 Aplicativo desktop local para cadastro e gerenciamento de clientes.
 
+## Requisitos
+
+- Node.js compatível com Electron 42 e TypeScript 5.
+- npm.
+- Toolchain nativa disponível para reconstruir `better-sqlite3`.
+
 ## Desenvolvimento
 
 Instale as dependências:
@@ -23,7 +29,36 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
+npm run test:watch
 ```
+
+Empacotamento local:
+
+```bash
+npm run package:dir
+npm run package:win
+```
+
+`better-sqlite3` é reconstruído por scripts do projeto. Use `npm test` para rodar a suíte, pois ele recompila o módulo para o runtime do Node antes do Vitest e recompila para Electron ao final.
+
+## Arquitetura
+
+- `src/main`: Electron, SQLite, migrations, repositories, services e IPC.
+- `src/preload`: `contextBridge` e API segura `window.clientDesk`.
+- `src/renderer`: React, páginas, componentes, hooks e client do renderer.
+- `src/shared`: tipos, DTOs, schemas Zod e contratos IPC.
+
+O renderer não acessa Electron, `ipcRenderer`, SQLite, `fs`, `path` ou SQL. Toda persistência passa por IPC explícito, service e repository no processo principal.
+
+## Banco de Dados
+
+O banco SQLite fica em:
+
+```text
+path.join(app.getPath('userData'), 'data', 'clientdesk.sqlite')
+```
+
+Migrations SQL versionadas ficam em `src/main/database/migrations` e são incluídas no pacote via `electron-builder.yml`. Os testes usam banco em memória ou arquivo temporário, nunca o banco de desenvolvimento.
 
 ## Interface Atual
 
@@ -69,7 +104,7 @@ Ao editar a partir dos detalhes, o usuário retorna para `/customers/:id` após
 salvar. A ativação e inativação usam confirmação, feedback de sucesso e mensagens
 de erro sem stack trace, SQL ou caminhos locais.
 
-## Testes do Renderer
+## Testes
 
 Os testes de interface usam Vitest, jsdom e Testing Library:
 
@@ -78,3 +113,18 @@ npm test -- tests/renderer
 ```
 
 Os testes do renderer usam mocks de `customer-client.ts`; não inicializam Electron real e não acessam o banco.
+
+Mais detalhes estão em `TESTING.md`.
+
+## Documentos de Release
+
+- `MVP_REVIEW.md`: achados da revisão do MVP.
+- `RELEASE_CHECKLIST.md`: checklist para validação e empacotamento.
+- `TESTING.md`: estratégia e comandos de teste.
+
+## Limitações Conhecidas
+
+- Ainda não há backup automático.
+- Ainda não há importação/exportação.
+- Ainda não há teste E2E automatizado na janela Electron.
+- Validação matemática de dígitos de CPF/CNPJ não faz parte do MVP atual.
