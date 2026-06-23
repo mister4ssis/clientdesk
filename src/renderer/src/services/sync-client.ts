@@ -1,4 +1,9 @@
-import type { SyncRunResult, SyncStatus } from '@shared/sync/sync.types';
+import type {
+  SyncConflictDetails,
+  SyncConflictSummary,
+  SyncRunResult,
+  SyncStatus
+} from '@shared/sync/sync.types';
 import type { IpcResult } from '@shared/ipc/ipc-result';
 
 export class ClientDeskSyncError extends Error {
@@ -18,6 +23,22 @@ export async function getSyncStatus(): Promise<SyncStatus> {
 
 export async function runSyncNow(): Promise<SyncRunResult> {
   return unwrapIpcResult(await window.clientDesk.sync.runNow());
+}
+
+export async function listSyncConflicts(): Promise<SyncConflictSummary[]> {
+  return unwrapIpcResult(await window.clientDesk.sync.listConflicts());
+}
+
+export async function getSyncConflict(id: string): Promise<SyncConflictDetails> {
+  return unwrapIpcResult(await window.clientDesk.sync.getConflict(id));
+}
+
+export async function resolveSyncConflictKeepLocal(id: string): Promise<SyncConflictDetails> {
+  return unwrapIpcResult(await window.clientDesk.sync.resolveKeepLocal(id));
+}
+
+export async function resolveSyncConflictUseRemote(id: string): Promise<SyncConflictDetails> {
+  return unwrapIpcResult(await window.clientDesk.sync.resolveUseRemote(id));
 }
 
 function unwrapIpcResult<T>(result: IpcResult<T>): T {

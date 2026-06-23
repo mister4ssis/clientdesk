@@ -25,6 +25,10 @@ interface MigrationExecutedAtRow {
   executed_at: string;
 }
 
+interface TableColumnRow {
+  name: string;
+}
+
 const tempDirectories: string[] = [];
 
 afterEach(() => {
@@ -52,7 +56,7 @@ describe('database infrastructure', () => {
     expect(() => getDatabase()).toThrow('Database connection has not been opened.');
   });
 
-  it('creates schema_migrations and applies the initial customer migration once', () => {
+  it('creates schema_migrations and applies customer and sync migrations once', () => {
     const database = createMemoryDatabase();
     const migrationsDirectory = path.resolve('src/main/database/migrations');
 
@@ -63,16 +67,35 @@ describe('database infrastructure', () => {
 
     expect(tableExists(database, 'schema_migrations')).toBe(true);
     expect(tableExists(database, 'customers')).toBe(true);
+    expect(tableExists(database, 'sync_outbox')).toBe(true);
+    expect(tableExists(database, 'sync_cursors')).toBe(true);
+    expect(tableExists(database, 'sync_conflicts')).toBe(true);
+    expect(customerColumns(database)).toEqual(
+      expect.arrayContaining([
+        'representative',
+        'sync_status',
+        'remote_version',
+        'remote_updated_at',
+        'deleted_at',
+        'sync_conflict'
+      ])
+    );
     expect(indexNames(database)).toEqual(
       expect.arrayContaining([
         'idx_customers_legal_name',
         'idx_customers_trade_name',
         'idx_customers_email',
         'idx_customers_phone',
-        'idx_customers_active'
+        'idx_customers_active',
+        'idx_customers_sync_status',
+        'idx_customers_remote_version',
+        'idx_customers_deleted_at',
+        'idx_customers_sync_conflict'
       ])
     );
     expect(migrationCount(database, 1)).toBe(1);
+    expect(migrationCount(database, 2)).toBe(1);
+    expect(migrationCount(database, 3)).toBe(1);
     expect(migrationExecutedAt(database, 1)).toBe('2026-06-21T00:00:00.000Z');
 
     runMigrations(database, {
@@ -81,6 +104,8 @@ describe('database infrastructure', () => {
     });
 
     expect(migrationCount(database, 1)).toBe(1);
+    expect(migrationCount(database, 2)).toBe(1);
+    expect(migrationCount(database, 3)).toBe(1);
     expect(migrationExecutedAt(database, 1)).toBe('2026-06-21T00:00:00.000Z');
 
     database.close();
@@ -111,6 +136,12 @@ function createMemoryDatabase(): DatabaseConnection {
   const database = new Database(':memory:');
   configureDatabase(database);
   return database;
+}
+
+function customerColumns(database: DatabaseConnection): string[] {
+  const rows = database.prepare('PRAGMA table_info(customers)').all() as TableColumnRow[];
+
+  return rows.map((row) => row.name);
 }
 
 function createTrackedTempDirectory(prefix: string): string {

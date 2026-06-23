@@ -46,6 +46,10 @@ Não retornar `Error`, stack trace, SQL bruto, caminhos locais ou dados pessoais
 | `backup:validate` | `void` | `IpcResult<BackupValidationResult>` |
 | `sync:get-status` | `void` | `IpcResult<SyncStatus>` |
 | `sync:run-now` | `void` | `IpcResult<SyncRunResult>` |
+| `sync:list-conflicts` | `void` | `IpcResult<SyncConflictSummary[]>` |
+| `sync:get-conflict` | `{ id: string }` | `IpcResult<SyncConflictDetails>` |
+| `sync:resolve-keep-local` | `{ id: string }` | `IpcResult<SyncConflictDetails>` |
+| `sync:resolve-use-remote` | `{ id: string }` | `IpcResult<SyncConflictDetails>` |
 
 Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 
@@ -70,6 +74,9 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - `SYNC_OPERATION_IN_PROGRESS`: sincronização já em execução.
 - `SYNC_DISABLED`: sincronização desabilitada.
 - `SYNC_CONFIGURATION_ERROR`: configuração Supabase ausente ou inválida.
+- `SYNC_CONFLICT`: alteração local e remota concorrentes.
+- `SYNC_CONFLICT_NOT_FOUND`: conflito inexistente ou já resolvido.
+- `SYNC_PULL_DISABLED`: recebimento remoto desabilitado por configuração.
 
 `details` só deve ser preservado quando vier de validação Zod e for seguro para o renderer.
 
@@ -81,6 +88,7 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - Não expor `ipcRenderer`, invoke genérico, canais arbitrários ou APIs de arquivo/shell/banco.
 - Backup e restauração não retornam caminhos internos ao renderer.
 - Sync não expõe URL, chaves, cliente Supabase ou fila completa ao renderer.
+- Sync expõe somente resumo/detalhe de conflito necessários para resolução manual.
 - Remover handler anterior antes de registrar novo handler para evitar duplicidade em desenvolvimento e testes.
 
 ## Novo Canal

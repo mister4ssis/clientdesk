@@ -2,10 +2,10 @@
 
 ## Arquitetura
 
-O SQLite local continua sendo a fonte primária do ClientDesk. O Supabase é um destino de sincronização em segundo plano, somente no sentido local -> remoto.
+O SQLite local continua sendo a fonte primária do ClientDesk. O Supabase é usado em segundo plano para envio local e, quando `SYNC_PULL_ENABLED=true` com Auth/RLS seguro, para recebimento incremental remoto.
 
 ```text
-Renderer -> preload -> IPC -> CustomerService -> SQLite -> sync_outbox -> BackgroundSyncService -> Supabase
+Renderer -> preload -> IPC -> CustomerService -> SQLite -> sync_outbox -> BackgroundSyncService -> Supabase -> CustomerPullService -> SQLite
 ```
 
 ## Outbox
@@ -23,6 +23,12 @@ A sincronização pode ser solicitada:
 
 Falhas remotas não impedem o sucesso local. A UI deve informar que a alteração está salva localmente e ficará pendente.
 
+## Pull Remoto
+
+O ciclo executa push antes de pull. O recebimento usa cursor composto em `sync_cursors` (`last_remote_updated_at`, `last_remote_id`) e ordenação remota determinística por `updated_at ASC, id ASC`.
+
+`SYNC_PULL_ENABLED=false` é o padrão porque o repositório ainda não possui fluxo de autenticação do usuário final. Habilite apenas quando a tabela remota estiver protegida por RLS por `user_id = auth.uid()`.
+
 ## Retry e Backoff
 
 Falhas incrementam `attempts`, mantêm o item na fila e definem `next_attempt_at` com atraso progressivo: 1, 2, 5, 15 e 30 minutos, com pequeno jitter.
@@ -32,7 +38,12 @@ Falhas incrementam `attempts`, mantêm o item na fila e definem `next_attempt_at
 - `PENDING`: alteração local ainda não confirmada no Supabase.
 - `SYNCED`: versão local enviada com sucesso.
 - `ERROR`: falha remota registrada com código sanitizado.
+- `CONFLICT`: alteração local e remota concorrentes exigem resolução manual.
+
+## Conflitos
+
+Conflitos são registrados em `sync_conflicts` quando há alteração local pendente e versão remota mais nova. A interface em `/settings/sync/conflicts` permite manter a versão local ou usar a versão do servidor. Não há merge campo a campo nesta etapa.
 
 ## Limitações
 
-Não há sincronização Supabase -> SQLite nesta etapa. Alterações feitas diretamente no Supabase podem ser sobrescritas por uma sincronização local futura.
+Não há Realtime, Broadcast, merge automático ou sincronização de exclusão física. O pull permanece desabilitado por padrão até existir autenticação e RLS seguros.

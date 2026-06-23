@@ -173,6 +173,9 @@ Qualquer exceção deve ser documentada em `docs/DECISIONS.md`.
 - Não chamar Supabase dentro de transações SQLite.
 - Não expor Supabase, URL ou chaves ao renderer.
 - Não utilizar `service_role` ou secret key no aplicativo desktop.
+- Pull remoto só pode ser habilitado com Auth/RLS seguro e escopo por usuário ou organização.
+- Alterações remotas aplicadas localmente não podem criar novo item na outbox.
+- Conflitos devem ser registrados e resolvidos explicitamente, sem sobrescrever alterações concorrentes em silêncio.
 - Testes padrão devem funcionar offline e com Supabase mockado.
 - Nenhuma migration aplicada pode ser alterada.
 

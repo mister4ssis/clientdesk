@@ -105,6 +105,22 @@ A migration `002-add-representative-and-sync.sql` adiciona:
 
 Clientes existentes após a migration começam como `PENDING`. O bootstrap idempotente cria itens de outbox para clientes pendentes sem duplicar registros.
 
+A migration `003-add-bidirectional-sync.sql` adiciona suporte ao pull remoto:
+
+- `customers.remote_version`;
+- `customers.remote_updated_at`;
+- `customers.deleted_at`;
+- `customers.sync_conflict`;
+- status adicional `CONFLICT`;
+- tabela `sync_cursors`;
+- tabela `sync_conflicts`.
+
+`sync_cursors` guarda o cursor incremental por escopo. Para clientes, o escopo é `CUSTOMERS` e o cursor composto usa `updated_at` remoto e `id`.
+
+`sync_conflicts` guarda snapshots JSON local/remoto para resolução manual. Esses dados podem conter informações pessoais e não devem ser registrados em logs.
+
+Clientes com `deleted_at` preenchido não aparecem na listagem normal. Isso representa exclusão lógica remota e não executa DELETE físico.
+
 ## Migrations
 
 O controle de migrations usa:

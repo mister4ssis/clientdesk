@@ -19,7 +19,10 @@ export interface PublicError {
     | 'SYNC_DUPLICATE_TAX_ID'
     | 'SYNC_OPERATION_IN_PROGRESS'
     | 'SYNC_DISABLED'
-    | 'SYNC_CONFIGURATION_ERROR';
+    | 'SYNC_CONFIGURATION_ERROR'
+    | 'SYNC_CONFLICT'
+    | 'SYNC_CONFLICT_NOT_FOUND'
+    | 'SYNC_PULL_DISABLED';
   message: string;
   details?: unknown;
 }

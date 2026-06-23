@@ -5,6 +5,7 @@ import type {
   CustomerListResult,
   CustomerSearchFilters
 } from '@shared/customers/customer.types';
+import type { CustomerConflictSnapshot, SyncStatusCode } from '@shared/sync/sync.types';
 import { mapCustomerRow, type CustomerRow } from './customer.mapper';
 
 type CustomerUpdateInput = Partial<
@@ -42,6 +43,24 @@ interface CountRow {
 interface ListQueryParts {
   whereSql: string;
   parameters: Record<string, string | number>;
+}
+
+export interface CustomerSyncMetadata {
+  syncStatus: SyncStatusCode;
+  remoteVersion: number | null;
+  remoteUpdatedAt: string | null;
+  deletedAt: string | null;
+  syncConflict: boolean;
+  updatedAt: string;
+}
+
+interface CustomerSyncMetadataRow {
+  sync_status: SyncStatusCode;
+  remote_version: number | null;
+  remote_updated_at: string | null;
+  deleted_at: string | null;
+  sync_conflict: 0 | 1;
+  updated_at: string;
 }
 
 const defaultLimit = 50;
@@ -247,14 +266,23 @@ export class CustomerRepository {
     return this.findById(id);
   }
 
-  markSyncedIfUnchanged(id: string, expectedUpdatedAt: string, syncedAt: string): boolean {
+  markSyncedIfUnchanged(
+    id: string,
+    expectedUpdatedAt: string,
+    syncedAt: string,
+    remoteVersion?: number,
+    remoteUpdatedAt?: string
+  ): boolean {
     const result = this.database
       .prepare(
         `
           UPDATE customers
           SET sync_status = 'SYNCED',
               last_synced_at = @syncedAt,
-              sync_error_code = NULL
+              sync_error_code = NULL,
+              remote_version = COALESCE(@remoteVersion, remote_version),
+              remote_updated_at = COALESCE(@remoteUpdatedAt, remote_updated_at),
+              sync_conflict = 0
           WHERE id = @id
             AND updated_at = @expectedUpdatedAt
         `
@@ -262,7 +290,9 @@ export class CustomerRepository {
       .run({
         id,
         expectedUpdatedAt,
-        syncedAt
+        syncedAt,
+        remoteVersion: remoteVersion ?? null,
+        remoteUpdatedAt: remoteUpdatedAt ?? null
       });
 
     return result.changes > 0;
@@ -283,10 +313,165 @@ export class CustomerRepository {
         errorCode
       });
   }
+
+  markConflict(id: string, errorCode: string): void {
+    this.database
+      .prepare(
+        `
+          UPDATE customers
+          SET sync_status = 'CONFLICT',
+              sync_conflict = 1,
+              sync_error_code = @errorCode
+          WHERE id = @id
+        `
+      )
+      .run({
+        id,
+        errorCode
+      });
+  }
+
+  getSyncMetadata(id: string): CustomerSyncMetadata | null {
+    const row = this.database
+      .prepare(
+        `
+          SELECT
+            sync_status,
+            remote_version,
+            remote_updated_at,
+            deleted_at,
+            sync_conflict,
+            updated_at
+          FROM customers
+          WHERE id = ?
+        `
+      )
+      .get(id) as CustomerSyncMetadataRow | undefined;
+
+    return row
+      ? {
+          syncStatus: row.sync_status,
+          remoteVersion: row.remote_version,
+          remoteUpdatedAt: row.remote_updated_at,
+          deletedAt: row.deleted_at,
+          syncConflict: row.sync_conflict === 1,
+          updatedAt: row.updated_at
+        }
+      : null;
+  }
+
+  applyRemoteCustomer(customer: CustomerConflictSnapshot): Customer {
+    const transaction = this.database.transaction(() => {
+      this.database
+        .prepare(
+          `
+            INSERT INTO customers (
+              id,
+              person_type,
+              legal_name,
+              trade_name,
+              representative,
+              tax_id,
+              email,
+              phone,
+              birth_date,
+              postal_code,
+              street,
+              address_number,
+              address_complement,
+              neighborhood,
+              city,
+              state,
+              notes,
+              active,
+              created_at,
+              updated_at,
+              sync_status,
+              last_synced_at,
+              sync_error_code,
+              remote_version,
+              remote_updated_at,
+              deleted_at,
+              sync_conflict
+            ) VALUES (
+              @id,
+              @personType,
+              @legalName,
+              @tradeName,
+              @representative,
+              @taxId,
+              @email,
+              @phone,
+              @birthDate,
+              @postalCode,
+              @street,
+              @addressNumber,
+              @addressComplement,
+              @neighborhood,
+              @city,
+              @state,
+              @notes,
+              @active,
+              @createdAt,
+              @updatedAt,
+              'SYNCED',
+              @syncedAt,
+              NULL,
+              @remoteVersion,
+              @remoteUpdatedAt,
+              @deletedAt,
+              0
+            )
+            ON CONFLICT(id) DO UPDATE SET
+              person_type = excluded.person_type,
+              legal_name = excluded.legal_name,
+              trade_name = excluded.trade_name,
+              representative = excluded.representative,
+              tax_id = excluded.tax_id,
+              email = excluded.email,
+              phone = excluded.phone,
+              birth_date = excluded.birth_date,
+              postal_code = excluded.postal_code,
+              street = excluded.street,
+              address_number = excluded.address_number,
+              address_complement = excluded.address_complement,
+              neighborhood = excluded.neighborhood,
+              city = excluded.city,
+              state = excluded.state,
+              notes = excluded.notes,
+              active = excluded.active,
+              created_at = excluded.created_at,
+              updated_at = excluded.updated_at,
+              sync_status = 'SYNCED',
+              last_synced_at = excluded.last_synced_at,
+              sync_error_code = NULL,
+              remote_version = excluded.remote_version,
+              remote_updated_at = excluded.remote_updated_at,
+              deleted_at = excluded.deleted_at,
+              sync_conflict = 0
+          `
+        )
+        .run({
+          ...customer,
+          active: customer.active ? 1 : 0,
+          syncedAt: new Date().toISOString()
+        });
+    });
+
+    transaction();
+
+    const appliedCustomer = this.findById(customer.id);
+
+    if (!appliedCustomer) {
+      throw new Error('Remote customer was not applied.');
+    }
+
+    return appliedCustomer;
+  }
 }
 
 function buildListQuery(filters: CustomerSearchFilters): ListQueryParts {
-  const conditions: string[] = [];
+  const conditions: string[] = ['deleted_at IS NULL'];
   const parameters: Record<string, string | number> = {};
 
   if (typeof filters.active === 'boolean') {

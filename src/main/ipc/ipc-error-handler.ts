@@ -125,6 +125,21 @@ function toPublicApplicationError(error: ApplicationError): IpcFailure['error'] 
         code: error.code,
         message: 'Não foi possível sincronizar os dados.'
       };
+    case ErrorCode.SyncConflict:
+      return {
+        code: error.code,
+        message: 'Existe um conflito de sincronização para este cliente.'
+      };
+    case ErrorCode.SyncConflictNotFound:
+      return {
+        code: error.code,
+        message: 'Conflito não encontrado.'
+      };
+    case ErrorCode.SyncPullDisabled:
+      return {
+        code: error.code,
+        message: 'A sincronização remota para este computador está desabilitada.'
+      };
     default:
       logSanitizedError(error.cause ?? error);
       return {

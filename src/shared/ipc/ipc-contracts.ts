@@ -10,7 +10,12 @@ import type {
   BackupValidationResult,
   RestoreResult
 } from '../backup/backup.types';
-import type { SyncRunResult, SyncStatus } from '../sync/sync.types';
+import type {
+  SyncConflictDetails,
+  SyncConflictSummary,
+  SyncRunResult,
+  SyncStatus
+} from '../sync/sync.types';
 import type { IpcResult } from './ipc-result';
 
 export interface CustomerSetActiveInput {
@@ -25,6 +30,10 @@ export interface CustomerGetByIdInput {
 export interface CustomerUpdateInput {
   id: string;
   data: UpdateCustomerInput;
+}
+
+export interface SyncConflictInput {
+  id: string;
 }
 
 export interface IpcContracts {
@@ -72,6 +81,22 @@ export interface IpcContracts {
     input: void;
     output: IpcResult<SyncRunResult>;
   };
+  'sync:list-conflicts': {
+    input: void;
+    output: IpcResult<SyncConflictSummary[]>;
+  };
+  'sync:get-conflict': {
+    input: SyncConflictInput;
+    output: IpcResult<SyncConflictDetails>;
+  };
+  'sync:resolve-keep-local': {
+    input: SyncConflictInput;
+    output: IpcResult<SyncConflictDetails>;
+  };
+  'sync:resolve-use-remote': {
+    input: SyncConflictInput;
+    output: IpcResult<SyncConflictDetails>;
+  };
 }
 
 export interface ClientDeskApi {
@@ -93,5 +118,9 @@ export interface ClientDeskApi {
   sync: {
     getStatus(): Promise<IpcResult<SyncStatus>>;
     runNow(): Promise<IpcResult<SyncRunResult>>;
+    listConflicts(): Promise<IpcResult<SyncConflictSummary[]>>;
+    getConflict(id: string): Promise<IpcResult<SyncConflictDetails>>;
+    resolveKeepLocal(id: string): Promise<IpcResult<SyncConflictDetails>>;
+    resolveUseRemote(id: string): Promise<IpcResult<SyncConflictDetails>>;
   };
 }

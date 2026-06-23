@@ -4,12 +4,15 @@ export interface SupabaseSyncConfig {
   publishableKey: string | null;
   intervalMinutes: number;
   batchSize: number;
+  pullEnabled: boolean;
+  pullBatchSize: number;
   requestTimeoutMs: number;
   hasForbiddenSecret: boolean;
 }
 
 const defaultIntervalMinutes = 5;
 const defaultBatchSize = 50;
+const defaultPullBatchSize = 100;
 const defaultTimeoutMs = 10000;
 
 export function loadSupabaseSyncConfig(env: NodeJS.ProcessEnv = process.env): SupabaseSyncConfig {
@@ -33,6 +36,8 @@ export function loadSupabaseSyncConfig(env: NodeJS.ProcessEnv = process.env): Su
       60
     ),
     batchSize: parseBoundedInteger(env.SYNC_BATCH_SIZE, defaultBatchSize, 1, 200),
+    pullEnabled: parseBoolean(env.SYNC_PULL_ENABLED, false),
+    pullBatchSize: parseBoundedInteger(env.SYNC_PULL_BATCH_SIZE, defaultPullBatchSize, 1, 500),
     requestTimeoutMs: parseBoundedInteger(env.SYNC_REQUEST_TIMEOUT_MS, defaultTimeoutMs, 1000, 30000),
     hasForbiddenSecret
   };

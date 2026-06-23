@@ -59,6 +59,10 @@ describe('preload clientDesk API', () => {
     await api.backup.validate();
     await api.sync.getStatus();
     await api.sync.runNow();
+    await api.sync.listConflicts();
+    await api.sync.getConflict('conflict-id');
+    await api.sync.resolveKeepLocal('conflict-id');
+    await api.sync.resolveUseRemote('conflict-id');
 
     expect(electronMock.invoke).toHaveBeenNthCalledWith(1, IPC_CHANNELS.app.getVersion);
     expect(electronMock.invoke).toHaveBeenNthCalledWith(2, IPC_CHANNELS.customers.create, {
@@ -87,5 +91,15 @@ describe('preload clientDesk API', () => {
     expect(electronMock.invoke).toHaveBeenNthCalledWith(9, IPC_CHANNELS.backup.validate);
     expect(electronMock.invoke).toHaveBeenNthCalledWith(10, IPC_CHANNELS.sync.getStatus);
     expect(electronMock.invoke).toHaveBeenNthCalledWith(11, IPC_CHANNELS.sync.runNow);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(12, IPC_CHANNELS.sync.listConflicts);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(13, IPC_CHANNELS.sync.getConflict, {
+      id: 'conflict-id'
+    });
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(14, IPC_CHANNELS.sync.resolveKeepLocal, {
+      id: 'conflict-id'
+    });
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(15, IPC_CHANNELS.sync.resolveUseRemote, {
+      id: 'conflict-id'
+    });
   });
 });

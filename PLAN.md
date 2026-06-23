@@ -144,7 +144,20 @@ Implementado nesta etapa:
 - Adicionar seção de sincronização em `/settings/backup`.
 - Criar migration remota Supabase sem policies públicas permissivas.
 
-Próximo passo: definir Auth/RLS seguro no Supabase antes de habilitar sincronização remota em produção.
+### 12. Sincronização Bidirecional com Conflitos - Concluído parcialmente
+
+- Criar migration local `003` com metadados remotos, cursor incremental e conflitos.
+- Criar migration Supabase com `user_id`, `version`, `deleted_at`, trigger de versionamento, RLS e RPC versionada.
+- Enviar alterações locais por RPC com controle otimista.
+- Baixar alterações remotas por cursor composto quando `SYNC_PULL_ENABLED=true`.
+- Aplicar alterações remotas sem criar outbox.
+- Registrar conflitos quando houver pendência local e versão remota mais nova.
+- Expor IPC/preload/client do renderer para listar e resolver conflitos.
+- Criar página `/settings/sync/conflicts` para manter versão local ou usar versão remota.
+
+Bloqueio mantido: `SYNC_PULL_ENABLED=false` é o padrão até existir autenticação de usuário final e RLS validado em ambiente Supabase seguro.
+
+Próximo passo: implementar fluxo de autenticação Supabase seguro ou validar a implantação Auth/RLS antes de habilitar pull remoto em produção.
 
 ## Scripts Planejados
 

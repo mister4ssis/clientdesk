@@ -34,6 +34,14 @@ export class SupabaseConnectivityService {
     const timeout = setTimeout(() => abortController.abort(), this.config.requestTimeoutMs);
 
     try {
+      if (this.config.pullEnabled) {
+        const { data, error } = await this.supabaseClient.auth.getSession();
+
+        if (error || !data.session) {
+          return 'AUTH_ERROR';
+        }
+      }
+
       const { error, status } = await this.supabaseClient
         .from('customers')
         .select('id', { head: true, count: 'exact' })

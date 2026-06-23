@@ -116,6 +116,34 @@ export class SyncOutboxRepository {
     this.database.prepare('DELETE FROM sync_outbox WHERE id = ?').run(id);
   }
 
+  removeCustomer(customerId: string): void {
+    this.database
+      .prepare(
+        `
+          DELETE FROM sync_outbox
+          WHERE entity_type = 'CUSTOMER'
+            AND entity_id = ?
+        `
+      )
+      .run(customerId);
+  }
+
+  hasPendingCustomer(customerId: string): boolean {
+    const row = this.database
+      .prepare(
+        `
+          SELECT id
+          FROM sync_outbox
+          WHERE entity_type = 'CUSTOMER'
+            AND entity_id = ?
+          LIMIT 1
+        `
+      )
+      .get(customerId) as { id: string } | undefined;
+
+    return row !== undefined;
+  }
+
   countPending(): number {
     const row = this.database
       .prepare('SELECT COUNT(*) as total FROM sync_outbox')

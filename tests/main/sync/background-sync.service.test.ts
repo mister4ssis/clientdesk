@@ -124,6 +124,8 @@ function createService(
       publishableKey: 'publishable-key',
       intervalMinutes: 5,
       batchSize: 50,
+      pullEnabled: false,
+      pullBatchSize: 100,
       requestTimeoutMs: 10000,
       hasForbiddenSecret: false,
       ...configOverrides

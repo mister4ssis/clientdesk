@@ -6,6 +6,7 @@ import { CustomerDetailsPage } from '@renderer/pages/customers/CustomerDetailsPa
 import { CustomerEditPage } from '@renderer/pages/customers/CustomerEditPage';
 import { CustomerListPage } from '@renderer/pages/customers/CustomerListPage';
 import { BackupSettingsPage } from '@renderer/pages/settings/BackupSettingsPage';
+import { SyncConflictsPage } from '@renderer/pages/settings/SyncConflictsPage';
 
 export function App(): ReactElement {
   const [locationKey, setLocationKey] = useState(0);
@@ -74,7 +75,12 @@ export function App(): ReactElement {
       {route.name === 'backup-settings' ? (
         <BackupSettingsPage
           onRestoreCompleted={() => navigate('/customers', 'Backup restaurado com sucesso.')}
+          onViewSyncConflicts={() => navigate('/settings/sync/conflicts')}
         />
+      ) : null}
+
+      {route.name === 'sync-conflicts' ? (
+        <SyncConflictsPage onBack={() => navigate('/settings/backup')} />
       ) : null}
 
       {route.name === 'not-found' ? (
@@ -90,6 +96,7 @@ type AppRoute =
   | { name: 'customer-details'; customerId: string }
   | { name: 'customer-edit'; customerId: string }
   | { name: 'backup-settings' }
+  | { name: 'sync-conflicts' }
   | { name: 'not-found' };
 
 function parseRoute(pathname: string): AppRoute {
@@ -103,6 +110,10 @@ function parseRoute(pathname: string): AppRoute {
 
   if (pathname === '/settings/backup') {
     return { name: 'backup-settings' };
+  }
+
+  if (pathname === '/settings/sync/conflicts') {
+    return { name: 'sync-conflicts' };
   }
 
   const editMatch = /^\/customers\/([^/]+)\/edit$/.exec(pathname);
@@ -121,5 +132,7 @@ function parseRoute(pathname: string): AppRoute {
 }
 
 function getActiveMenuItem(route: AppRoute): 'customers' | 'settings' {
-  return route.name === 'backup-settings' ? 'settings' : 'customers';
+  return route.name === 'backup-settings' || route.name === 'sync-conflicts'
+    ? 'settings'
+    : 'customers';
 }

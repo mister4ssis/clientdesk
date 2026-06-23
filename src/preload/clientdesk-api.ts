@@ -25,7 +25,13 @@ export function createClientDeskApi(ipcRenderer: IpcRendererInvoke): ClientDeskA
     },
     sync: {
       getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.sync.getStatus),
-      runNow: () => ipcRenderer.invoke(IPC_CHANNELS.sync.runNow)
+      runNow: () => ipcRenderer.invoke(IPC_CHANNELS.sync.runNow),
+      listConflicts: () => ipcRenderer.invoke(IPC_CHANNELS.sync.listConflicts),
+      getConflict: (id) => ipcRenderer.invoke(IPC_CHANNELS.sync.getConflict, { id }),
+      resolveKeepLocal: (id) =>
+        ipcRenderer.invoke(IPC_CHANNELS.sync.resolveKeepLocal, { id }),
+      resolveUseRemote: (id) =>
+        ipcRenderer.invoke(IPC_CHANNELS.sync.resolveUseRemote, { id })
     }
   } satisfies ClientDeskApi;
 }

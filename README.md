@@ -92,6 +92,7 @@ Fluxos implementados:
 - ativar e inativar clientes pela listagem ou pelos detalhes;
 - criar e restaurar backup local em `/settings/backup`;
 - informar estado básico de sincronização e permitir "Sincronizar agora" em `/settings/backup`;
+- listar e resolver conflitos de sincronização em `/settings/sync/conflicts`;
 - cadastrar, listar, pesquisar e visualizar o campo Representante;
 - tratar cliente inexistente com mensagem amigável e retorno para a listagem;
 - exibir loading, atualização, erro e estados vazios.
@@ -106,6 +107,7 @@ Rotas disponíveis no renderer:
 /customers/:id
 /customers/:id/edit
 /settings/backup
+/settings/sync/conflicts
 ```
 
 ## Detalhes do Cliente
@@ -139,11 +141,15 @@ Consulte `BACKUP.md` para detalhes de validação, recuperação em caso de falh
 
 ## Sincronização Supabase
 
-A sincronização é offline-first: o cliente é salvo no SQLite, a alteração entra em `sync_outbox` e o envio para Supabase ocorre em segundo plano. O sentido atual é apenas local -> remoto.
+A sincronização é offline-first: o cliente é salvo no SQLite, a alteração entra em `sync_outbox` e o envio para Supabase ocorre em segundo plano. A infraestrutura bidirecional inclui cursor incremental, RPC com controle de versão e resolução manual de conflitos.
+
+Por segurança, `SYNC_PULL_ENABLED=false` é o padrão até existir sessão autenticada e RLS validado no Supabase.
 
 Com `SYNC_ENABLED=false`, o app opera normalmente sem internet. Consulte:
 
 - `SYNC.md`: arquitetura, outbox, retry e limitações.
+- `BIDIRECTIONAL_SYNC.md`: cursor, pull incremental, versionamento e exclusão lógica.
+- `CONFLICT_RESOLUTION.md`: detecção e resolução manual de conflitos.
 - `SUPABASE.md`: variáveis, tabela remota e migration.
 - `SUPABASE_SECURITY.md`: chaves permitidas, RLS/Auth e riscos.
 
@@ -161,9 +167,8 @@ Com `SYNC_ENABLED=false`, o app opera normalmente sem internet. Consulte:
 ## Limitações Conhecidas
 
 - Ainda não há backup automático.
-- Sincronização Supabase -> SQLite não foi implementada.
-- A sincronização remota só deve ser habilitada em produção após Auth/RLS seguro.
-- Alterações feitas diretamente no Supabase podem ser sobrescritas pela versão local.
+- O pull Supabase -> SQLite fica desabilitado por padrão até Auth/RLS seguro.
+- Não há merge automático campo a campo em conflitos.
 - Ainda não há importação/exportação.
 - Ainda não há teste E2E automatizado na janela Electron.
 - Validação matemática de dígitos de CPF/CNPJ não faz parte do MVP atual.

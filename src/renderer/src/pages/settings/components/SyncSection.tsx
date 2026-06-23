@@ -6,7 +6,11 @@ import {
   runSyncNow
 } from '@renderer/services/sync-client';
 
-export function SyncSection() {
+interface SyncSectionProps {
+  onViewConflicts: () => void;
+}
+
+export function SyncSection({ onViewConflicts }: SyncSectionProps) {
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
@@ -69,8 +73,20 @@ export function SyncSection() {
             <dd>{status.pendingCount}</dd>
           </div>
           <div>
+            <dt>Conflitos</dt>
+            <dd>{status.conflictCount}</dd>
+          </div>
+          <div>
             <dt>Última sincronização</dt>
             <dd>{formatOptionalDateTime(status.lastSuccessfulAt)}</dd>
+          </div>
+          <div>
+            <dt>Último envio</dt>
+            <dd>{formatOptionalDateTime(status.lastPushAt)}</dd>
+          </div>
+          <div>
+            <dt>Último recebimento</dt>
+            <dd>{formatOptionalDateTime(status.lastPullAt)}</dd>
           </div>
         </dl>
       ) : null}
@@ -104,6 +120,14 @@ export function SyncSection() {
         >
           Atualizar estado
         </button>
+        <button
+          className="button button--secondary"
+          type="button"
+          disabled={isRunning || status?.conflictCount === 0}
+          onClick={onViewConflicts}
+        >
+          Conflitos pendentes
+        </button>
       </div>
     </section>
   );
@@ -115,7 +139,20 @@ function formatSyncStatus(status: SyncStatus): string {
   }
 
   if (status.running) {
-    return 'Sincronizando';
+    switch (status.direction) {
+      case 'PUSHING':
+        return 'Enviando alterações';
+      case 'PULLING':
+        return 'Recebendo alterações';
+      case 'RESOLVING_CONFLICT':
+        return 'Resolvendo conflito';
+      default:
+        return 'Sincronizando';
+    }
+  }
+
+  if (status.conflictCount > 0) {
+    return `Conflitos pendentes (${status.conflictCount})`;
   }
 
   if (status.pendingCount > 0) {

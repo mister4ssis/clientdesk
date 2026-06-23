@@ -47,11 +47,16 @@ beforeEach(() => {
   syncClientMock.runSyncNow.mockReset();
   syncClientMock.getSyncStatus.mockResolvedValue({
     enabled: false,
+    pullEnabled: false,
     connectivity: 'DISABLED',
     running: false,
+    direction: 'IDLE',
     pendingCount: 0,
+    conflictCount: 0,
     lastStartedAt: null,
     lastCompletedAt: null,
+    lastPushAt: null,
+    lastPullAt: null,
     lastSuccessfulAt: null,
     lastErrorCode: null
   });
@@ -202,9 +207,16 @@ describe('BackupSettingsPage', () => {
 });
 
 function renderPage({
-  onRestoreCompleted = vi.fn()
+  onRestoreCompleted = vi.fn(),
+  onViewSyncConflicts = vi.fn()
 }: {
   onRestoreCompleted?: () => void;
+  onViewSyncConflicts?: () => void;
 } = {}) {
-  return render(<BackupSettingsPage onRestoreCompleted={onRestoreCompleted} />);
+  return render(
+    <BackupSettingsPage
+      onRestoreCompleted={onRestoreCompleted}
+      onViewSyncConflicts={onViewSyncConflicts}
+    />
+  );
 }

@@ -17,11 +17,15 @@ import { SyncSection } from './components/SyncSection';
 
 interface BackupSettingsPageProps {
   onRestoreCompleted: () => void;
+  onViewSyncConflicts: () => void;
 }
 
 type Operation = 'backup' | 'restore' | 'validate' | null;
 
-export function BackupSettingsPage({ onRestoreCompleted }: BackupSettingsPageProps) {
+export function BackupSettingsPage({
+  onRestoreCompleted,
+  onViewSyncConflicts
+}: BackupSettingsPageProps) {
   const [operation, setOperation] = useState<Operation>(null);
   const [backupResult, setBackupResult] = useState<BackupResult | null>(null);
   const [restoreResult, setRestoreResult] = useState<RestoreResult | null>(null);
@@ -106,7 +110,7 @@ export function BackupSettingsPage({ onRestoreCompleted }: BackupSettingsPagePro
         onValidateBackup={() => void handleValidateBackup()}
       />
 
-      <SyncSection />
+      <SyncSection onViewConflicts={onViewSyncConflicts} />
     </section>
   );
 }

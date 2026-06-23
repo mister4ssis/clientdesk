@@ -1,19 +1,28 @@
-import type { ConnectivityStatus, SyncStatus } from '@shared/sync/sync.types';
+import type { ConnectivityStatus, SyncDirection, SyncStatus } from '@shared/sync/sync.types';
 import type { SyncOutboxRepository } from './sync-outbox.repository';
+import type { SyncConflictRepository } from './sync-conflict.repository';
 
 export class SyncStatusService {
-  private status: Omit<SyncStatus, 'pendingCount'>;
+  private status: Omit<SyncStatus, 'pendingCount' | 'conflictCount'>;
 
   constructor(
     enabled: boolean,
-    private readonly syncOutboxRepository: SyncOutboxRepository
+    private readonly syncOutboxRepository: SyncOutboxRepository,
+    private readonly options: {
+      pullEnabled?: boolean;
+      syncConflictRepository?: SyncConflictRepository;
+    } = {}
   ) {
     this.status = {
       enabled,
+      pullEnabled: options.pullEnabled ?? false,
       connectivity: enabled ? 'OFFLINE' : 'DISABLED',
       running: false,
+      direction: 'IDLE',
       lastStartedAt: null,
       lastCompletedAt: null,
+      lastPushAt: null,
+      lastPullAt: null,
       lastSuccessfulAt: null,
       lastErrorCode: null
     };
@@ -22,7 +31,8 @@ export class SyncStatusService {
   getStatus(): SyncStatus {
     return {
       ...this.status,
-      pendingCount: this.syncOutboxRepository.countPending()
+      pendingCount: this.syncOutboxRepository.countPending(),
+      conflictCount: this.options.syncConflictRepository?.countPending() ?? 0
     };
   }
 
@@ -37,12 +47,14 @@ export class SyncStatusService {
 
   markStarted(now = new Date().toISOString()): void {
     this.status.running = true;
+    this.status.direction = 'IDLE';
     this.status.lastStartedAt = now;
     this.status.lastErrorCode = null;
   }
 
   markCompleted(success: boolean, errorCode: string | null, now = new Date().toISOString()): void {
     this.status.running = false;
+    this.status.direction = 'IDLE';
     this.status.lastCompletedAt = now;
     this.status.lastErrorCode = errorCode;
 
@@ -53,5 +65,21 @@ export class SyncStatusService {
 
   markSkipped(errorCode: string): void {
     this.status.lastErrorCode = errorCode;
+  }
+
+  setDirection(direction: SyncDirection): void {
+    this.status.direction = direction;
+  }
+
+  markPushCompleted(now = new Date().toISOString()): void {
+    this.status.lastPushAt = now;
+  }
+
+  markPullCompleted(now = new Date().toISOString()): void {
+    this.status.lastPullAt = now;
+  }
+
+  setPullEnabled(enabled: boolean): void {
+    this.status.pullEnabled = enabled;
   }
 }

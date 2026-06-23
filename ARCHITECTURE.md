@@ -196,9 +196,11 @@ Durante a restauração, o serviço cria um backup automático em `app.getPath('
 
 O SQLite local é a fonte primária. Alterações em clientes são gravadas localmente e enfileiradas em `sync_outbox` na mesma transação. O Supabase é destino assíncrono local -> remoto e não participa da transação local.
 
-`BackgroundSyncService` processa a fila quando `SYNC_ENABLED=true`, há conectividade real com Supabase e não existe outra execução em andamento. O scheduler dispara na inicialização, em intervalo configurado e após gravações locais. Falhas remotas mantêm itens pendentes com backoff.
+`BackgroundSyncService` processa primeiro o push local e depois o pull remoto. O scheduler dispara na inicialização, em intervalo configurado e após gravações locais. Falhas remotas mantêm itens pendentes com backoff.
 
-Como não há Auth/RLS segura definida no repositório, a sincronização remota fica desabilitada por padrão. O renderer só acessa status e execução manual por `window.clientDesk.sync`; URL e chaves nunca são expostas.
+O pull remoto usa `CustomerPullService`, cursor incremental em `sync_cursors` e aplicação local por `applyRemoteCustomer()`, sem gerar nova outbox. Conflitos são registrados em `sync_conflicts` e resolvidos por `CustomerConflictService`.
+
+Como não há fluxo de autenticação do usuário final no app, `SYNC_PULL_ENABLED=false` fica como padrão. O renderer só acessa status, execução manual e resolução de conflitos por `window.clientDesk.sync`; URL, chaves, cliente Supabase e RPC genérico nunca são expostos.
 
 ## Canais IPC
 
@@ -216,6 +218,10 @@ backup:restore
 backup:validate
 sync:get-status
 sync:run-now
+sync:list-conflicts
+sync:get-conflict
+sync:resolve-keep-local
+sync:resolve-use-remote
 ```
 
 Cada handler IPC valida entrada com Zod no processo principal antes de chamar o service e retorna `IpcResult<T>`.

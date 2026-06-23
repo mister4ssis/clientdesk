@@ -18,5 +18,8 @@ export enum ErrorCode {
   SyncDuplicateTaxId = 'SYNC_DUPLICATE_TAX_ID',
   SyncOperationInProgress = 'SYNC_OPERATION_IN_PROGRESS',
   SyncDisabled = 'SYNC_DISABLED',
-  SyncConfigurationError = 'SYNC_CONFIGURATION_ERROR'
+  SyncConfigurationError = 'SYNC_CONFIGURATION_ERROR',
+  SyncConflict = 'SYNC_CONFLICT',
+  SyncConflictNotFound = 'SYNC_CONFLICT_NOT_FOUND',
+  SyncPullDisabled = 'SYNC_PULL_DISABLED'
 }

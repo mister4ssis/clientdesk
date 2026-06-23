@@ -11,6 +11,7 @@ import {
   type BackupServiceContract
 } from '../modules/backup/backup.ipc';
 import { registerSyncIpcHandlers, type SyncServiceContract } from '../modules/sync/sync.ipc';
+import type { CustomerConflictService } from '../modules/sync/customer-conflict.service';
 
 export type IpcMainLike = Pick<IpcMain, 'handle' | 'removeHandler'>;
 
@@ -18,6 +19,7 @@ export interface RegisterIpcHandlersDependencies {
   customerService: CustomerServiceContract;
   backupService: BackupServiceContract;
   syncService?: SyncServiceContract;
+  customerConflictService?: CustomerConflictService;
   ipcMain?: IpcMainLike;
   getAppVersion?: () => string;
 }
@@ -26,6 +28,7 @@ export function registerIpcHandlers({
   customerService,
   backupService,
   syncService,
+  customerConflictService,
   ipcMain = electronIpcMain,
   getAppVersion = () => app.getVersion()
 }: RegisterIpcHandlersDependencies): void {
@@ -46,7 +49,8 @@ export function registerIpcHandlers({
   if (syncService) {
     registerSyncIpcHandlers({
       ipcMain,
-      syncService
+      syncService,
+      customerConflictService
     });
   }
 }

@@ -16,7 +16,13 @@ Se uma chave secreta for detectada no ambiente, o app emite apenas aviso sanitiz
 
 A migration remota habilita RLS, mas não cria policy pública permissiva. Não desabilite RLS e não crie policy `USING (true)` para resolver sincronização.
 
-Como não há estratégia de Supabase Auth/RLS documentada neste repositório, `SYNC_ENABLED=false` permanece como padrão. A infraestrutura local e a migration remota estão prontas, mas a sincronização remota não deve ser tratada como pronta para produção até existir controle de acesso seguro.
+Como não há fluxo de autenticação de usuário final implementado no app, `SYNC_ENABLED=false` e `SYNC_PULL_ENABLED=false` permanecem como padrão. A infraestrutura local, migrations remotas, RLS por `user_id = auth.uid()` e RPC versionada estão prontas, mas a sincronização remota não deve ser tratada como pronta para produção até existir sessão autenticada segura.
+
+O pull remoto é bloqueado por segurança quando não há sessão. Não contorne isso criando policy pública, desabilitando RLS ou usando `service_role`.
+
+## Propriedade dos Registros
+
+A estratégia adotada para o remoto é `customers.user_id UUID NOT NULL REFERENCES auth.users(id)`. O valor é derivado de `auth.uid()` na RPC/policies e não deve ser aceito livremente do renderer ou de payloads locais.
 
 ## Renderer
 

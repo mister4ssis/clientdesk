@@ -34,8 +34,18 @@ describe('CustomerSyncService', () => {
       })
     );
     const item = syncOutboxRepository.getPendingBatch(10, now)[0];
-    const upsert = vi.fn(async () => ({ error: null }));
-    const supabaseClient = createSupabaseClientMock(upsert);
+    const rpc = vi.fn(async () => ({
+      data: [
+        {
+          result: 'UPSERTED',
+          remote_version: 1,
+          remote_updated_at: '2026-06-21T10:01:00.000Z',
+          remote_customer: null
+        }
+      ],
+      error: null
+    }));
+    const supabaseClient = createSupabaseClientMock(rpc);
     const service = new CustomerSyncService(
       database!,
       customerRepository,
@@ -48,17 +58,19 @@ describe('CustomerSyncService', () => {
       errorCode: null
     });
 
-    expect(upsert).toHaveBeenCalledWith(
-      expect.objectContaining({
+    expect(rpc).toHaveBeenCalledWith('sync_upsert_customer', {
+      customer_data: expect.objectContaining({
         id: '00000000-0000-4000-8000-000000000001',
         representative: 'Ana Souza'
       }),
-      { onConflict: 'id' }
-    );
+      expected_version: null
+    });
     expect(syncOutboxRepository.countPending()).toBe(0);
     expect(getCustomerSyncStatus('00000000-0000-4000-8000-000000000001')).toMatchObject({
       sync_status: 'SYNCED',
-      sync_error_code: null
+      sync_error_code: null,
+      remote_version: 1,
+      remote_updated_at: '2026-06-21T10:01:00.000Z'
     });
   });
 
@@ -121,11 +133,9 @@ function makeCustomer(overrides: Partial<Customer> = {}): Customer {
   };
 }
 
-function createSupabaseClientMock(upsert: ReturnType<typeof vi.fn>): ClientDeskSupabaseClient {
+function createSupabaseClientMock(rpc: ReturnType<typeof vi.fn>): ClientDeskSupabaseClient {
   return {
-    from: vi.fn(() => ({
-      upsert
-    }))
+    rpc
   } as unknown as ClientDeskSupabaseClient;
 }
 
@@ -133,7 +143,7 @@ function getCustomerSyncStatus(id: string) {
   return database!
     .prepare(
       `
-        SELECT sync_status, sync_error_code
+        SELECT sync_status, sync_error_code, remote_version, remote_updated_at
         FROM customers
         WHERE id = ?
       `

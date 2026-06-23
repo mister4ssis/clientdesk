@@ -12,7 +12,10 @@
 - [ ] backup criado e validado
 - [ ] restauração validada com backup automático
 - [ ] outbox de sincronização validada
+- [ ] cursor incremental validado
+- [ ] conflitos de sincronização validados
 - [ ] `SYNC_ENABLED=false` validado para uso offline
+- [ ] `SYNC_PULL_ENABLED=false` validado como padrão seguro
 - [ ] persistência validada
 - [ ] erros sanitizados
 - [ ] logs revisados
@@ -88,6 +91,9 @@
 - [ ] restauração local validada
 - [ ] arquivo inválido rejeitado
 - [ ] sincronização manual com ambiente seguro validada
+- [ ] pull remoto validado em ambiente com Auth/RLS
+- [ ] resolução de conflito local validada
+- [ ] resolução de conflito remoto validada
 - [ ] fila pendente preservada offline
 
 ## Segurança
@@ -101,6 +107,8 @@
 - [ ] `.env` não incluído no pacote
 - [ ] nenhuma chave Supabase exposta ao renderer
 - [ ] Supabase RLS/Auth revisados antes de habilitar sync
+- [ ] policies restringem `customers.user_id = auth.uid()`
+- [ ] RPC `sync_upsert_customer` testada sem `service_role`
 - [ ] assinatura digital avaliada
 
 ## Assinatura

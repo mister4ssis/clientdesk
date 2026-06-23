@@ -10,7 +10,11 @@ import { BackupService } from './modules/backup/backup.service';
 import { CustomerRepository } from './modules/customers/customer.repository';
 import { CustomerService } from './modules/customers/customer.service';
 import { BackgroundSyncService } from './modules/sync/background-sync.service';
+import { CustomerConflictService } from './modules/sync/customer-conflict.service';
+import { CustomerPullService } from './modules/sync/customer-pull.service';
 import { CustomerSyncService } from './modules/sync/customer-sync.service';
+import { SyncConflictRepository } from './modules/sync/sync-conflict.repository';
+import { SyncCursorRepository } from './modules/sync/sync-cursor.repository';
 import { SyncOutboxRepository } from './modules/sync/sync-outbox.repository';
 import { SyncScheduler } from './modules/sync/sync-scheduler';
 import { SyncStatusService } from './modules/sync/sync-status.service';
@@ -35,25 +39,47 @@ async function bootstrap(): Promise<void> {
 
   function registerServices(currentDatabase: DatabaseConnection, startScheduler: boolean): void {
     const syncOutboxRepository = new SyncOutboxRepository(currentDatabase);
+    const syncCursorRepository = new SyncCursorRepository(currentDatabase);
+    const syncConflictRepository = new SyncConflictRepository(currentDatabase);
     syncOutboxRepository.bootstrapPendingCustomers();
 
     const customerRepository = new CustomerRepository(currentDatabase, {
       syncOutboxRepository
     });
-    const syncStatusService = new SyncStatusService(syncConfig.enabled, syncOutboxRepository);
+    const syncStatusService = new SyncStatusService(syncConfig.enabled, syncOutboxRepository, {
+      pullEnabled: syncConfig.pullEnabled,
+      syncConflictRepository
+    });
     const connectivityService = new SupabaseConnectivityService(syncConfig, supabaseClient);
     const customerSyncService = new CustomerSyncService(
       currentDatabase,
       customerRepository,
       syncOutboxRepository,
-      supabaseClient
+      supabaseClient,
+      syncConflictRepository
+    );
+    const customerPullService = new CustomerPullService(
+      syncConfig,
+      supabaseClient,
+      customerRepository,
+      syncOutboxRepository,
+      syncCursorRepository,
+      syncConflictRepository
     );
     const backgroundSyncService = new BackgroundSyncService(
       syncConfig,
       connectivityService,
       syncOutboxRepository,
       customerSyncService,
-      syncStatusService
+      syncStatusService,
+      customerPullService
+    );
+    const customerConflictService = new CustomerConflictService(
+      currentDatabase,
+      customerRepository,
+      syncOutboxRepository,
+      syncConflictRepository,
+      customerSyncService
     );
     syncScheduler = new SyncScheduler(
       backgroundSyncService,
@@ -67,7 +93,8 @@ async function bootstrap(): Promise<void> {
     registerIpcHandlers({
       customerService,
       backupService,
-      syncService: backgroundSyncService
+      syncService: backgroundSyncService,
+      customerConflictService
     });
 
     if (startScheduler) {
