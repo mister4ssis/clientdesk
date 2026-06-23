@@ -10,6 +10,8 @@ path.join(app.getPath('userData'), 'data', 'clientdesk.sqlite')
 
 Em desenvolvimento e produção, o arquivo fica dentro da pasta `userData` do Electron, nunca em `src`, `dist`, `resources`, na raiz do projeto ou ao lado do executável. Em testes, o caminho pode ser injetado ou substituído por banco em memória.
 
+No aplicativo empacotado, `resources` contém apenas assets e migrations. O arquivo `clientdesk.sqlite` continua sendo criado em `app.getPath('userData')/data` na primeira execução.
+
 ## Conexão
 
 A conexão é centralizada em `src/main/database/database.ts`:
@@ -98,6 +100,8 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 ```
 
 `runMigrations()` carrega arquivos `NNN-name.sql`, ordena por versão, ignora versões já executadas e aplica cada migration dentro de transação. A migration só é registrada após o SQL executar com sucesso. Em caso de erro, a transação é revertida e a inicialização deve ser interrompida.
+
+Em produção, as migrations são copiadas pelo `electron-builder` para `process.resourcesPath/migrations` via `extraResources`.
 
 Para adicionar uma migration:
 

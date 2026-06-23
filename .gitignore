@@ -8,7 +8,9 @@ coverage/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+*.db
 
 .DS_Store
 .env
+.env.local
 .env.*

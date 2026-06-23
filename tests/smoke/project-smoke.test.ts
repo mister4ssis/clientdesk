@@ -30,6 +30,7 @@ describe('project smoke checks', () => {
       'package',
       'package:dir',
       'package:win',
+      'verify:package',
       'rebuild:electron'
     ];
 
@@ -37,11 +38,17 @@ describe('project smoke checks', () => {
       expect(typeof packageJson.scripts[scriptName], scriptName).toBe('string');
       expect(packageJson.scripts[scriptName]?.length, scriptName).toBeGreaterThan(0);
     }
+
+    expect(packageJson.dependencies['better-sqlite3']).toBeTruthy();
+    expect(packageJson.devDependencies.electron).toBeTruthy();
+    expect(packageJson.devDependencies['electron-builder']).toBeTruthy();
   });
 });
 
 interface PackageJson {
   scripts: Record<string, string>;
+  dependencies: Record<string, string>;
+  devDependencies: Record<string, string>;
 }
 
 function readPackageJson(): PackageJson {
@@ -60,6 +67,12 @@ function isPackageJson(value: unknown): value is PackageJson {
     value !== null &&
     'scripts' in value &&
     typeof value.scripts === 'object' &&
-    value.scripts !== null
+    value.scripts !== null &&
+    'dependencies' in value &&
+    typeof value.dependencies === 'object' &&
+    value.dependencies !== null &&
+    'devDependencies' in value &&
+    typeof value.devDependencies === 'object' &&
+    value.devDependencies !== null
   );
 }

@@ -33,6 +33,9 @@
 - A edição retorna para a origem do fluxo: listagem quando iniciada pela listagem e detalhes quando iniciada por `/customers/:id`.
 - Testes E2E com Electron real não foram adicionados na revisão do MVP para evitar nova dependência pesada antes da etapa de empacotamento.
 - O rebuild do `better-sqlite3` permanece nos scripts porque o módulo nativo precisa alternar entre ABI do Node usado pelo Vitest e ABI do Electron usado pelo app.
+- O `appId` do empacotamento é `com.clientdesk.app` e deve permanecer estável entre versões.
+- A desinstalação NSIS mantém `deleteAppDataOnUninstall: false` para preservar o banco local do usuário.
+- O ícone definitivo não foi configurado enquanto `resources/icon.ico` não existir, evitando falha artificial no primeiro empacotamento.
 
 ## Decisões de Stack
 

@@ -4,19 +4,23 @@
   "description": "ClientDesk desktop customer management app.",
   "main": "out/main/index.js",
   "private": true,
+  "engines": {
+    "node": ">=22 <25"
+  },
   "scripts": {
-    "dev": "npm run rebuild:electron && electron-vite dev",
+    "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "npm rebuild better-sqlite3 && vitest run",
     "test:watch": "vitest",
     "posttest": "npm run rebuild:electron",
-    "postinstall": "npm run rebuild:electron",
+    "postinstall": "electron-builder install-app-deps",
     "package": "npm run build && electron-builder",
     "package:dir": "npm run build && electron-builder --dir",
-    "package:win": "npm run build && electron-builder --win",
+    "package:win": "npm run build && electron-builder --win nsis --x64",
     "dist:win": "npm run build && electron-builder --win",
+    "verify:package": "node scripts/verify-package.mjs",
     "rebuild:electron": "electron-rebuild -f -w better-sqlite3 -v 42.4.1"
   },
   "dependencies": {

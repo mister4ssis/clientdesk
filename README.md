@@ -37,9 +37,12 @@ Empacotamento local:
 ```bash
 npm run package:dir
 npm run package:win
+npm run verify:package
 ```
 
 `better-sqlite3` é reconstruído por scripts do projeto. Use `npm test` para rodar a suíte, pois ele recompila o módulo para o runtime do Node antes do Vitest e recompila para Electron ao final.
+
+Os artefatos de empacotamento são salvos em `release/`, que não deve ser commitado. Para detalhes de build, NSIS, módulo nativo e assinatura, consulte `PACKAGING.md`.
 
 ## Arquitetura
 
@@ -119,6 +122,7 @@ Mais detalhes estão em `TESTING.md`.
 ## Documentos de Release
 
 - `MVP_REVIEW.md`: achados da revisão do MVP.
+- `PACKAGING.md`: configuração de pacote e instalador.
 - `RELEASE_CHECKLIST.md`: checklist para validação e empacotamento.
 - `TESTING.md`: estratégia e comandos de teste.
 
@@ -128,3 +132,5 @@ Mais detalhes estão em `TESTING.md`.
 - Ainda não há importação/exportação.
 - Ainda não há teste E2E automatizado na janela Electron.
 - Validação matemática de dígitos de CPF/CNPJ não faz parte do MVP atual.
+- O instalador inicial não está assinado digitalmente.
+- O ícone definitivo ainda está pendente em `resources/icon.ico` e `resources/icon.png`.

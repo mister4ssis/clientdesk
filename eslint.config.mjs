@@ -23,9 +23,12 @@ export default [
     }
   },
   {
-    files: ['**/*.cjs'],
+    files: ['**/*.{cjs,mjs}'],
     languageOptions: {
-      globals: globals.commonjs
+      globals: {
+        ...globals.commonjs,
+        ...globals.node
+      }
     }
   }
 ];
