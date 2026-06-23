@@ -10,5 +10,13 @@ export enum ErrorCode {
   BackupInvalidFile = 'BACKUP_INVALID_FILE',
   BackupIncompatibleVersion = 'BACKUP_INCOMPATIBLE_VERSION',
   BackupOperationInProgress = 'BACKUP_OPERATION_IN_PROGRESS',
-  BackupCancelled = 'BACKUP_CANCELLED'
+  BackupCancelled = 'BACKUP_CANCELLED',
+  SyncNetworkUnavailable = 'SYNC_NETWORK_UNAVAILABLE',
+  SyncAuthError = 'SYNC_AUTH_ERROR',
+  SyncRemoteError = 'SYNC_REMOTE_ERROR',
+  SyncValidationError = 'SYNC_VALIDATION_ERROR',
+  SyncDuplicateTaxId = 'SYNC_DUPLICATE_TAX_ID',
+  SyncOperationInProgress = 'SYNC_OPERATION_IN_PROGRESS',
+  SyncDisabled = 'SYNC_DISABLED',
+  SyncConfigurationError = 'SYNC_CONFIGURATION_ERROR'
 }

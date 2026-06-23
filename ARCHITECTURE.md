@@ -111,6 +111,8 @@ window.clientDesk.customers.setActive(id, active)
 window.clientDesk.backup.create()
 window.clientDesk.backup.restore()
 window.clientDesk.backup.validate()
+window.clientDesk.sync.getStatus()
+window.clientDesk.sync.runNow()
 ```
 
 Cada método chama um canal específico com `ipcRenderer.invoke`. Não há API genérica de invoke, `send`, acesso a arquivos, shell, banco ou módulos Node.js.
@@ -190,6 +192,14 @@ Cadastro e edição:
 
 Durante a restauração, o serviço cria um backup automático em `app.getPath('userData')/backups`, fecha a conexão atual, substitui o arquivo, reabre o banco, executa migrations e registra novamente os handlers com services apontando para a nova conexão. Se houver falha após a substituição, o backup automático é restaurado.
 
+## Sincronização Offline-First
+
+O SQLite local é a fonte primária. Alterações em clientes são gravadas localmente e enfileiradas em `sync_outbox` na mesma transação. O Supabase é destino assíncrono local -> remoto e não participa da transação local.
+
+`BackgroundSyncService` processa a fila quando `SYNC_ENABLED=true`, há conectividade real com Supabase e não existe outra execução em andamento. O scheduler dispara na inicialização, em intervalo configurado e após gravações locais. Falhas remotas mantêm itens pendentes com backoff.
+
+Como não há Auth/RLS segura definida no repositório, a sincronização remota fica desabilitada por padrão. O renderer só acessa status e execução manual por `window.clientDesk.sync`; URL e chaves nunca são expostas.
+
 ## Canais IPC
 
 Todos os canais são constantes em `src/shared/ipc/ipc-channels.ts`.
@@ -204,6 +214,8 @@ customers:set-active
 backup:create
 backup:restore
 backup:validate
+sync:get-status
+sync:run-now
 ```
 
 Cada handler IPC valida entrada com Zod no processo principal antes de chamar o service e retorna `IpcResult<T>`.
@@ -231,6 +243,7 @@ CustomerDTO
   active
   createdAt
   updatedAt
+  representative?
 
 CreateCustomerInput
   personType

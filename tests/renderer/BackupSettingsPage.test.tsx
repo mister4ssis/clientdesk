@@ -9,6 +9,11 @@ const backupClientMock = vi.hoisted(() => ({
   validateBackup: vi.fn()
 }));
 
+const syncClientMock = vi.hoisted(() => ({
+  getSyncStatus: vi.fn(),
+  runSyncNow: vi.fn()
+}));
+
 vi.mock('@renderer/services/backup-client', async () => {
   const actual = await vi.importActual<typeof import('@renderer/services/backup-client')>(
     '@renderer/services/backup-client'
@@ -22,19 +27,44 @@ vi.mock('@renderer/services/backup-client', async () => {
   };
 });
 
+vi.mock('@renderer/services/sync-client', async () => {
+  const actual = await vi.importActual<typeof import('@renderer/services/sync-client')>(
+    '@renderer/services/sync-client'
+  );
+
+  return {
+    ...actual,
+    getSyncStatus: syncClientMock.getSyncStatus,
+    runSyncNow: syncClientMock.runSyncNow
+  };
+});
+
 beforeEach(() => {
   backupClientMock.createBackup.mockReset();
   backupClientMock.restoreBackup.mockReset();
   backupClientMock.validateBackup.mockReset();
+  syncClientMock.getSyncStatus.mockReset();
+  syncClientMock.runSyncNow.mockReset();
+  syncClientMock.getSyncStatus.mockResolvedValue({
+    enabled: false,
+    connectivity: 'DISABLED',
+    running: false,
+    pendingCount: 0,
+    lastStartedAt: null,
+    lastCompletedAt: null,
+    lastSuccessfulAt: null,
+    lastErrorCode: null
+  });
 });
 
 describe('BackupSettingsPage', () => {
-  it('renders backup and restore sections', () => {
+  it('renders backup and restore sections', async () => {
     renderPage();
 
     expect(screen.getByRole('heading', { name: 'Backup e restauração' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Criar backup' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Restaurar backup' })).toBeInTheDocument();
+    expect(await screen.findByText('Sincronização desabilitada')).toBeInTheDocument();
   });
 
   it('creates backup and shows success', async () => {
@@ -98,8 +128,9 @@ describe('BackupSettingsPage', () => {
     expect(await screen.findByText('Backup inválido: Arquivo vazio.')).toBeInTheDocument();
   });
 
-  it('opens and cancels restore confirmation', () => {
+  it('opens and cancels restore confirmation', async () => {
     renderPage();
+    await screen.findByText('Sincronização desabilitada');
 
     fireEvent.click(screen.getByRole('button', { name: 'Selecionar backup' }));
     expect(screen.getByRole('dialog', { name: 'Restaurar backup' })).toBeInTheDocument();

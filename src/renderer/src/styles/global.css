@@ -130,6 +130,33 @@ a {
   gap: 12px;
 }
 
+.settings-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.settings-list div {
+  padding: 12px;
+  border: 1px solid #d9e0ea;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.settings-list dt {
+  color: #526070;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.settings-list dd {
+  margin: 4px 0 0;
+  color: #172033;
+  font-weight: 700;
+}
+
 .page-header {
   display: flex;
   align-items: flex-start;

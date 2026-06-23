@@ -63,6 +63,18 @@ export function CustomerMainFields() {
         ) : null}
 
         <div className="field">
+          <label htmlFor="representative">Representante</label>
+          <input
+            id="representative"
+            type="text"
+            aria-invalid={Boolean(errors.representative)}
+            aria-describedby={errors.representative ? 'representative-error' : undefined}
+            {...register('representative')}
+          />
+          <FieldError id="representative-error" message={errors.representative?.message} />
+        </div>
+
+        <div className="field">
           <label htmlFor="taxId">{isIndividual ? 'CPF' : 'CNPJ'}</label>
           <input
             id="taxId"

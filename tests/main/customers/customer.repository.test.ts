@@ -71,6 +71,16 @@ describe('CustomerRepository', () => {
     expect(result.items[0]?.id).toBe('customer-1');
   });
 
+  it('searches by representative case-insensitively', () => {
+    repository.create(makeCustomer({ id: 'customer-1', representative: 'Ana Souza' }));
+    repository.create(makeCustomer({ id: 'customer-2', representative: 'Carlos Lima' }));
+
+    const result = repository.list({ search: 'ana' });
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]?.id).toBe('customer-1');
+  });
+
   it('searches text containing LIKE wildcard characters literally', () => {
     repository.create(makeCustomer({ id: 'customer-1', legalName: 'Cliente 100% Ficticio' }));
     repository.create(makeCustomer({ id: 'customer-2', legalName: 'Cliente 100 Ficticio' }));
@@ -97,6 +107,7 @@ describe('CustomerRepository', () => {
 
     const updated = repository.update('customer-1', {
       legalName: 'Maria Souza',
+      representative: 'Ana Souza',
       email: 'maria@example.com',
       updatedAt: '2026-06-21T11:00:00.000Z'
     });
@@ -104,6 +115,7 @@ describe('CustomerRepository', () => {
     expect(updated).toMatchObject({
       id: 'customer-1',
       legalName: 'Maria Souza',
+      representative: 'Ana Souza',
       email: 'maria@example.com',
       createdAt,
       updatedAt: '2026-06-21T11:00:00.000Z'
@@ -139,6 +151,7 @@ function makeCustomer(overrides: Partial<Customer> = {}): Customer {
     personType: 'FISICA',
     legalName: 'Maria Silva',
     tradeName: null,
+    representative: null,
     taxId: null,
     email: null,
     phone: null,

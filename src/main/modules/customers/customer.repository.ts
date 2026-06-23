@@ -1,4 +1,5 @@
 import type { DatabaseConnection } from '../../database/database';
+import type { SyncOutboxRepository } from '../sync/sync-outbox.repository';
 import type {
   Customer,
   CustomerListResult,
@@ -12,6 +13,7 @@ type CustomerUpdateInput = Partial<
     | 'personType'
     | 'legalName'
     | 'tradeName'
+    | 'representative'
     | 'taxId'
     | 'email'
     | 'phone'
@@ -29,6 +31,10 @@ type CustomerUpdateInput = Partial<
   >
 >;
 
+interface CustomerRepositoryOptions {
+  syncOutboxRepository?: SyncOutboxRepository;
+}
+
 interface CountRow {
   total: number;
 }
@@ -42,7 +48,10 @@ const defaultLimit = 50;
 const maxLimit = 100;
 
 export class CustomerRepository {
-  constructor(private readonly database: DatabaseConnection) {}
+  constructor(
+    private readonly database: DatabaseConnection,
+    private readonly options: CustomerRepositoryOptions = {}
+  ) {}
 
   exists(): boolean {
     const row = this.database
@@ -62,6 +71,7 @@ export class CustomerRepository {
               person_type,
               legal_name,
               trade_name,
+              representative,
               tax_id,
               email,
               phone,
@@ -76,12 +86,16 @@ export class CustomerRepository {
               notes,
               active,
               created_at,
-              updated_at
+              updated_at,
+              sync_status,
+              last_synced_at,
+              sync_error_code
             ) VALUES (
               @id,
               @personType,
               @legalName,
               @tradeName,
+              @representative,
               @taxId,
               @email,
               @phone,
@@ -96,7 +110,10 @@ export class CustomerRepository {
               @notes,
               @active,
               @createdAt,
-              @updatedAt
+              @updatedAt,
+              'PENDING',
+              NULL,
+              NULL
             )
           `
         )
@@ -104,6 +121,8 @@ export class CustomerRepository {
           ...customer,
           active: customer.active ? 1 : 0
         });
+
+      this.options.syncOutboxRepository?.enqueueCustomer(customer.id, customer.updatedAt);
 
       return customer;
     });
@@ -166,42 +185,103 @@ export class CustomerRepository {
       return this.findById(id);
     }
 
-    const assignments = entries.map(([column]) => `${column} = @${column}`).join(', ');
-    const parameters = Object.fromEntries(entries);
+    const transaction = this.database.transaction(() => {
+      const assignments = [
+        ...entries.map(([column]) => `${column} = @${column}`),
+        "sync_status = 'PENDING'",
+        'last_synced_at = NULL',
+        'sync_error_code = NULL'
+      ].join(', ');
+      const parameters = Object.fromEntries(entries);
 
-    this.database
-      .prepare(
-        `
-          UPDATE customers
-          SET ${assignments}
-          WHERE id = @id
-        `
-      )
-      .run({
-        ...parameters,
-        id
-      });
+      const result = this.database
+        .prepare(
+          `
+            UPDATE customers
+            SET ${assignments}
+            WHERE id = @id
+          `
+        )
+        .run({
+          ...parameters,
+          id
+        });
+
+      if (result.changes > 0) {
+        this.options.syncOutboxRepository?.enqueueCustomer(id, getUpdatedAt(input));
+      }
+    });
+
+    transaction();
 
     return this.findById(id);
   }
 
   setActive(id: string, active: boolean, updatedAt: string): Customer | null {
+    const transaction = this.database.transaction(() => {
+      const result = this.database
+        .prepare(
+          `
+            UPDATE customers
+            SET active = @active,
+                updated_at = @updatedAt,
+                sync_status = 'PENDING',
+                last_synced_at = NULL,
+                sync_error_code = NULL
+            WHERE id = @id
+          `
+        )
+        .run({
+          id,
+          active: active ? 1 : 0,
+          updatedAt
+        });
+
+      if (result.changes > 0) {
+        this.options.syncOutboxRepository?.enqueueCustomer(id, updatedAt);
+      }
+    });
+
+    transaction();
+
+    return this.findById(id);
+  }
+
+  markSyncedIfUnchanged(id: string, expectedUpdatedAt: string, syncedAt: string): boolean {
+    const result = this.database
+      .prepare(
+        `
+          UPDATE customers
+          SET sync_status = 'SYNCED',
+              last_synced_at = @syncedAt,
+              sync_error_code = NULL
+          WHERE id = @id
+            AND updated_at = @expectedUpdatedAt
+        `
+      )
+      .run({
+        id,
+        expectedUpdatedAt,
+        syncedAt
+      });
+
+    return result.changes > 0;
+  }
+
+  markSyncError(id: string, errorCode: string): void {
     this.database
       .prepare(
         `
           UPDATE customers
-          SET active = @active,
-              updated_at = @updatedAt
+          SET sync_status = 'ERROR',
+              sync_error_code = @errorCode
           WHERE id = @id
         `
       )
       .run({
         id,
-        active: active ? 1 : 0,
-        updatedAt
+        errorCode
       });
-
-    return this.findById(id);
   }
 }
 
@@ -220,6 +300,7 @@ function buildListQuery(filters: CustomerSearchFilters): ListQueryParts {
     const searchConditions = [
       "legal_name COLLATE NOCASE LIKE @searchText ESCAPE '\\'",
       "trade_name COLLATE NOCASE LIKE @searchText ESCAPE '\\'",
+      "representative COLLATE NOCASE LIKE @searchText ESCAPE '\\'",
       "email COLLATE NOCASE LIKE @searchText ESCAPE '\\'"
     ];
     const searchDigits = search.replace(/\D/g, '');
@@ -265,6 +346,7 @@ function toColumnUpdateInput(input: CustomerUpdateInput): Record<string, string 
   assignIfDefined(columns, 'person_type', input.personType);
   assignIfDefined(columns, 'legal_name', input.legalName);
   assignIfDefined(columns, 'trade_name', input.tradeName);
+  assignIfDefined(columns, 'representative', input.representative);
   assignIfDefined(columns, 'tax_id', input.taxId);
   assignIfDefined(columns, 'email', input.email);
   assignIfDefined(columns, 'phone', input.phone);
@@ -284,6 +366,10 @@ function toColumnUpdateInput(input: CustomerUpdateInput): Record<string, string 
   }
 
   return columns;
+}
+
+function getUpdatedAt(input: CustomerUpdateInput): string {
+  return input.updatedAt ?? new Date().toISOString();
 }
 
 function assignIfDefined(

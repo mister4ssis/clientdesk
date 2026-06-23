@@ -14,6 +14,7 @@ export interface CustomerFormValues {
   personType: PersonType;
   legalName: string;
   tradeName: string;
+  representative: string;
   taxId: string;
   email: string;
   phone: string;
@@ -65,6 +66,10 @@ const customerFormSchema = z
     tradeName: optionalTextField(
       200,
       'O nome fantasia deve possuir no máximo 200 caracteres.'
+    ),
+    representative: optionalTextField(
+      200,
+      'O representante deve possuir no máximo 200 caracteres.'
     ),
     taxId: z.string(),
     email: z
@@ -190,6 +195,7 @@ export function customerToFormValues(customer: Customer | null): CustomerFormVal
     personType: customer?.personType ?? 'FISICA',
     legalName: customer?.legalName ?? '',
     tradeName: customer?.tradeName ?? '',
+    representative: customer?.representative ?? '',
     taxId: customer?.taxId ? formatTaxId(customer.taxId, customer.personType) : '',
     email: customer?.email ?? '',
     phone: customer?.phone ? formatPhone(customer.phone) : '',
@@ -211,6 +217,7 @@ export function formValuesToInput(values: CustomerFormValues): CreateCustomerInp
     personType: values.personType,
     legalName: values.legalName.trim(),
     tradeName: emptyToNull(values.tradeName),
+    representative: emptyToNull(values.representative),
     taxId: digitsToNull(values.taxId),
     email: emptyToNull(values.email)?.toLowerCase() ?? null,
     phone: digitsToNull(values.phone),
@@ -298,6 +305,7 @@ const customerFormFieldNames: Record<keyof CustomerFormValues, true> = {
   personType: true,
   legalName: true,
   tradeName: true,
+  representative: true,
   taxId: true,
   email: true,
   phone: true,

@@ -11,6 +11,8 @@
 - [ ] banco salvo em `userData`
 - [ ] backup criado e validado
 - [ ] restauração validada com backup automático
+- [ ] outbox de sincronização validada
+- [ ] `SYNC_ENABLED=false` validado para uso offline
 - [ ] persistência validada
 - [ ] erros sanitizados
 - [ ] logs revisados
@@ -24,6 +26,7 @@
 - [ ] pesquisa por CPF/CNPJ
 - [ ] pesquisa por e-mail
 - [ ] pesquisa por telefone
+- [ ] pesquisa por representante
 - [ ] filtros de ativos, inativos e todos
 - [ ] edição
 - [ ] detalhes
@@ -84,6 +87,8 @@
 - [ ] backup local criado
 - [ ] restauração local validada
 - [ ] arquivo inválido rejeitado
+- [ ] sincronização manual com ambiente seguro validada
+- [ ] fila pendente preservada offline
 
 ## Segurança
 
@@ -93,6 +98,9 @@
 - [ ] banco fora do executável
 - [ ] logs sem dados pessoais
 - [ ] instalador sem credenciais
+- [ ] `.env` não incluído no pacote
+- [ ] nenhuma chave Supabase exposta ao renderer
+- [ ] Supabase RLS/Auth revisados antes de habilitar sync
 - [ ] assinatura digital avaliada
 
 ## Assinatura

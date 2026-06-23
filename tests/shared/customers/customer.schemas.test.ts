@@ -77,10 +77,29 @@ describe('customer schemas', () => {
       personType: 'FISICA',
       legalName: 'Joao Silva',
       tradeName: ' ',
+      representative: '',
       notes: ''
     });
 
     expect(customer.tradeName).toBeNull();
+    expect(customer.representative).toBeNull();
     expect(customer.notes).toBeNull();
+  });
+
+  it('normalizes representative and rejects values longer than 200 characters', () => {
+    const customer = createCustomerSchema.parse({
+      personType: 'FISICA',
+      legalName: 'Joao Silva',
+      representative: '  Ana Souza  '
+    });
+
+    expect(customer.representative).toBe('Ana Souza');
+    expect(
+      createCustomerSchema.safeParse({
+        personType: 'FISICA',
+        legalName: 'Joao Silva',
+        representative: 'a'.repeat(201)
+      }).success
+    ).toBe(false);
   });
 });

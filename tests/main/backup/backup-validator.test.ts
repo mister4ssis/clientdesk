@@ -23,7 +23,7 @@ describe('validateBackupFile', () => {
 
     expect(validateBackupFile(filePath)).toMatchObject({
       valid: true,
-      version: 1
+      version: 2
     });
   });
 
@@ -106,7 +106,11 @@ describe('validateBackupFile', () => {
   it('accepts an older compatible migration version', () => {
     const filePath = createValidDatabase('old.sqlite');
     const database = new Database(filePath);
-    database.exec('UPDATE schema_migrations SET version = 0');
+    database.exec(`
+      DELETE FROM schema_migrations;
+      INSERT INTO schema_migrations (version, name, executed_at)
+      VALUES (0, 'legacy', '2026-06-22T00:00:00.000Z');
+    `);
     database.close();
 
     expect(validateBackupFile(filePath)).toMatchObject({
@@ -118,7 +122,11 @@ describe('validateBackupFile', () => {
   it('rejects a future incompatible migration version', () => {
     const filePath = createValidDatabase('future.sqlite');
     const database = new Database(filePath);
-    database.exec('UPDATE schema_migrations SET version = 999');
+    database.exec(`
+      DELETE FROM schema_migrations;
+      INSERT INTO schema_migrations (version, name, executed_at)
+      VALUES (999, 'future', '2026-06-22T00:00:00.000Z');
+    `);
     database.close();
 
     expect(validateBackupFile(filePath)).toMatchObject({

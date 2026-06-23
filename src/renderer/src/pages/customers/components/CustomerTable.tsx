@@ -22,6 +22,7 @@ export function CustomerTable({
         <thead>
           <tr>
             <th scope="col">Nome ou razão social</th>
+            <th scope="col">Representante</th>
             <th scope="col">CPF/CNPJ</th>
             <th scope="col">Telefone</th>
             <th scope="col">E-mail</th>

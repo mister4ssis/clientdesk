@@ -52,7 +52,7 @@ describe('CustomerListPage', () => {
     render(<CustomerListPage />);
 
     expect(await screen.findByText('Maria Silva')).toBeInTheDocument();
-    expect(screen.getAllByText('Não informado')).toHaveLength(3);
+    expect(screen.getAllByText('Não informado')).toHaveLength(4);
   });
 
   it('shows active badge', async () => {

@@ -23,6 +23,7 @@ export function CustomerTableRow({
       <td>
         <strong>{customer.legalName}</strong>
       </td>
+      <td>{customer.representative ?? 'Não informado'}</td>
       <td>{formatTaxId(customer.taxId)}</td>
       <td>{formatPhone(customer.phone)}</td>
       <td>{customer.email ?? 'Não informado'}</td>

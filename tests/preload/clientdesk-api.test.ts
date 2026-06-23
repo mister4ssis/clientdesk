@@ -57,6 +57,8 @@ describe('preload clientDesk API', () => {
     await api.backup.create();
     await api.backup.restore();
     await api.backup.validate();
+    await api.sync.getStatus();
+    await api.sync.runNow();
 
     expect(electronMock.invoke).toHaveBeenNthCalledWith(1, IPC_CHANNELS.app.getVersion);
     expect(electronMock.invoke).toHaveBeenNthCalledWith(2, IPC_CHANNELS.customers.create, {
@@ -83,5 +85,7 @@ describe('preload clientDesk API', () => {
     expect(electronMock.invoke).toHaveBeenNthCalledWith(7, IPC_CHANNELS.backup.create);
     expect(electronMock.invoke).toHaveBeenNthCalledWith(8, IPC_CHANNELS.backup.restore);
     expect(electronMock.invoke).toHaveBeenNthCalledWith(9, IPC_CHANNELS.backup.validate);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(10, IPC_CHANNELS.sync.getStatus);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(11, IPC_CHANNELS.sync.runNow);
   });
 });

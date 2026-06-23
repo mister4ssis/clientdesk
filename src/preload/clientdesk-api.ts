@@ -22,6 +22,10 @@ export function createClientDeskApi(ipcRenderer: IpcRendererInvoke): ClientDeskA
       create: () => ipcRenderer.invoke(IPC_CHANNELS.backup.create),
       restore: () => ipcRenderer.invoke(IPC_CHANNELS.backup.restore),
       validate: () => ipcRenderer.invoke(IPC_CHANNELS.backup.validate)
+    },
+    sync: {
+      getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.sync.getStatus),
+      runNow: () => ipcRenderer.invoke(IPC_CHANNELS.sync.runNow)
     }
   } satisfies ClientDeskApi;
 }

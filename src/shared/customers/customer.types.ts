@@ -5,6 +5,7 @@ export interface Customer {
   personType: PersonType;
   legalName: string;
   tradeName: string | null;
+  representative: string | null;
   taxId: string | null;
   email: string | null;
   phone: string | null;

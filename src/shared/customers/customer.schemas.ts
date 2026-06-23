@@ -68,6 +68,7 @@ const customerBaseInputShape = {
     .min(2, 'Nome ou razão social deve possuir pelo menos 2 caracteres.')
     .max(200, 'Nome ou razão social deve possuir no máximo 200 caracteres.'),
   tradeName: optionalShortTextSchema,
+  representative: optionalShortTextSchema,
   taxId: optionalDigitTextSchema,
   email: optionalEmailSchema,
   phone: optionalDigitTextSchema,

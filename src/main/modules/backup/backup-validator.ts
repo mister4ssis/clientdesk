@@ -21,7 +21,7 @@ interface MigrationRow {
   executed_at: string;
 }
 
-const currentSupportedMigrationVersion = 1;
+const currentSupportedMigrationVersion = 2;
 const requiredCustomerColumns = [
   'id',
   'person_type',

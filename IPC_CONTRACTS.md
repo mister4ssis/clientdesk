@@ -44,6 +44,8 @@ Não retornar `Error`, stack trace, SQL bruto, caminhos locais ou dados pessoais
 | `backup:create` | `void` | `IpcResult<BackupResult>` |
 | `backup:restore` | `void` | `IpcResult<RestoreResult>` |
 | `backup:validate` | `void` | `IpcResult<BackupValidationResult>` |
+| `sync:get-status` | `void` | `IpcResult<SyncStatus>` |
+| `sync:run-now` | `void` | `IpcResult<SyncRunResult>` |
 
 Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 
@@ -60,6 +62,14 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - `BACKUP_INCOMPATIBLE_VERSION`: backup criado por versão incompatível.
 - `BACKUP_OPERATION_IN_PROGRESS`: já há backup/restauração em andamento.
 - `BACKUP_CANCELLED`: operação cancelada pelo usuário.
+- `SYNC_NETWORK_UNAVAILABLE`: Supabase indisponível pela rede.
+- `SYNC_AUTH_ERROR`: autenticação ou RLS rejeitou a operação.
+- `SYNC_REMOTE_ERROR`: erro remoto sanitizado.
+- `SYNC_VALIDATION_ERROR`: registro rejeitado por validação remota.
+- `SYNC_DUPLICATE_TAX_ID`: CPF/CNPJ duplicado no destino remoto.
+- `SYNC_OPERATION_IN_PROGRESS`: sincronização já em execução.
+- `SYNC_DISABLED`: sincronização desabilitada.
+- `SYNC_CONFIGURATION_ERROR`: configuração Supabase ausente ou inválida.
 
 `details` só deve ser preservado quando vier de validação Zod e for seguro para o renderer.
 
@@ -70,6 +80,7 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - O preload expõe somente `window.clientDesk`.
 - Não expor `ipcRenderer`, invoke genérico, canais arbitrários ou APIs de arquivo/shell/banco.
 - Backup e restauração não retornam caminhos internos ao renderer.
+- Sync não expõe URL, chaves, cliente Supabase ou fila completa ao renderer.
 - Remover handler anterior antes de registrar novo handler para evitar duplicidade em desenvolvimento e testes.
 
 ## Novo Canal

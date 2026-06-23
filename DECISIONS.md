@@ -36,6 +36,12 @@
 - O `appId` do empacotamento é `com.clientdesk.app` e deve permanecer estável entre versões.
 - A desinstalação NSIS mantém `deleteAppDataOnUninstall: false` para preservar o banco local do usuário.
 - O ícone definitivo não foi configurado enquanto `resources/icon.ico` não existir, evitando falha artificial no primeiro empacotamento.
+- A sincronização Supabase será offline-first e somente local -> remoto nesta etapa.
+- `SYNC_ENABLED=false` é o padrão até existir Supabase Auth/RLS seguro documentado.
+- Alterações locais entram em `sync_outbox` na mesma transação SQLite da alteração do cliente.
+- O Supabase nunca será chamado dentro de transações SQLite.
+- `SUPABASE_SERVICE_ROLE_KEY` e chaves secretas equivalentes não serão usadas em aplicativo desktop.
+- Alterações feitas diretamente no Supabase podem ser sobrescritas pela versão local.
 
 ## Decisões de Stack
 
@@ -62,6 +68,8 @@
 - `IpcResult<T>` usa `success` como discriminante público.
 - O formulário usa um schema de apresentação no renderer para mensagens e máscaras, mas o processo principal continua validando com os schemas compartilhados antes de persistir.
 - A página de detalhes reutiliza `useCustomerById` e os formatadores do renderer para manter apresentação consistente com listagem e formulário.
+- O cliente Supabase fica somente no processo main e não é exposto pelo preload.
+- A UI de sincronização fica inicialmente em `/settings/backup` para evitar nova navegação e centralizar operações de dados.
 
 ## Decisões de Qualidade
 
@@ -79,3 +87,4 @@
 - Caminhos de migrations precisam funcionar tanto em desenvolvimento quanto no app empacotado.
 - WAL pode ter comportamento diferente em alguns ambientes; será avaliado e testado.
 - Como o banco é local, perda do arquivo implica perda dos dados se não houver backup futuro.
+- A sincronização remota depende de policies RLS seguras; sem isso, a infraestrutura local fica pronta, mas a sync remota deve permanecer desabilitada.

@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS customers (
     person_type TEXT NOT NULL CHECK (person_type IN ('FISICA', 'JURIDICA')),
     legal_name TEXT NOT NULL,
     trade_name TEXT,
+    representative TEXT,
     tax_id TEXT UNIQUE,
     email TEXT,
     phone TEXT,
@@ -88,6 +89,21 @@ A migration cria índices para listagem e pesquisa:
 - `idx_customers_active`
 
 Não há índice simples adicional para `tax_id`, pois `UNIQUE` já cria índice no SQLite.
+
+## Sincronização
+
+A migration `002-add-representative-and-sync.sql` adiciona:
+
+- `representative TEXT`;
+- `sync_status TEXT NOT NULL DEFAULT 'PENDING'`;
+- `last_synced_at TEXT`;
+- `sync_error_code TEXT`;
+- índices `idx_customers_representative` e `idx_customers_sync_status`;
+- tabela `sync_outbox`.
+
+`sync_outbox` armazena uma fila transacional para envio local -> Supabase. Ela não guarda payload permanente do cliente; o sincronizador sempre recarrega a versão atual de `customers`.
+
+Clientes existentes após a migration começam como `PENDING`. O bootstrap idempotente cria itens de outbox para clientes pendentes sem duplicar registros.
 
 ## Migrations
 

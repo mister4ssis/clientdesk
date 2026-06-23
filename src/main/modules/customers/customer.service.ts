@@ -16,8 +16,15 @@ import type {
 } from '@shared/customers/customer.types';
 import type { CreateCustomerInput, UpdateCustomerInput } from '@shared/customers/customer.dto';
 
+interface CustomerServiceOptions {
+  onCustomerChanged?: () => void;
+}
+
 export class CustomerService {
-  constructor(private readonly customerRepository: CustomerRepository) {}
+  constructor(
+    private readonly customerRepository: CustomerRepository,
+    private readonly options: CustomerServiceOptions = {}
+  ) {}
 
   isReady(): boolean {
     return this.customerRepository.exists();
@@ -35,6 +42,7 @@ export class CustomerService {
       ...parsedInput,
       id: randomUUID(),
       tradeName: parsedInput.tradeName ?? null,
+      representative: parsedInput.representative ?? null,
       taxId: parsedInput.taxId ?? null,
       email: parsedInput.email ?? null,
       phone: parsedInput.phone ?? null,
@@ -52,7 +60,10 @@ export class CustomerService {
       updatedAt: now
     };
 
-    return executeRepositoryOperation(() => this.customerRepository.create(customer));
+    const createdCustomer = executeRepositoryOperation(() => this.customerRepository.create(customer));
+    this.notifyCustomerChanged();
+
+    return createdCustomer;
   }
 
   getById(id: string): Customer {
@@ -98,6 +109,8 @@ export class CustomerService {
       throw new ApplicationError(ErrorCode.CustomerNotFound, 'Cliente não encontrado.');
     }
 
+    this.notifyCustomerChanged();
+
     return updatedCustomer;
   }
 
@@ -120,6 +133,8 @@ export class CustomerService {
       throw new ApplicationError(ErrorCode.CustomerNotFound, 'Cliente não encontrado.');
     }
 
+    this.notifyCustomerChanged();
+
     return updatedCustomer;
   }
 
@@ -131,6 +146,14 @@ export class CustomerService {
         ErrorCode.CustomerTaxIdAlreadyExists,
         'CPF/CNPJ já associado a outro cliente.'
       );
+    }
+  }
+
+  private notifyCustomerChanged(): void {
+    try {
+      this.options.onCustomerChanged?.();
+    } catch {
+      console.error('Customer change sync notification failed.');
     }
   }
 }
@@ -168,6 +191,7 @@ function toEditableInput(customer: Customer): CreateCustomerInput {
     personType: customer.personType,
     legalName: customer.legalName,
     tradeName: customer.tradeName,
+    representative: customer.representative,
     taxId: customer.taxId,
     email: customer.email,
     phone: customer.phone,

@@ -13,6 +13,7 @@ import type {
 } from '@shared/backup/backup.types';
 import { BackupSection } from './components/BackupSection';
 import { RestoreSection } from './components/RestoreSection';
+import { SyncSection } from './components/SyncSection';
 
 interface BackupSettingsPageProps {
   onRestoreCompleted: () => void;
@@ -104,6 +105,8 @@ export function BackupSettingsPage({ onRestoreCompleted }: BackupSettingsPagePro
         onConfirmRestore={() => void handleRestoreBackup()}
         onValidateBackup={() => void handleValidateBackup()}
       />
+
+      <SyncSection />
     </section>
   );
 }

@@ -107,7 +107,11 @@ describe('BackupService', () => {
   it('rejects incompatible backup versions', async () => {
     const futurePath = path.join(tempDirectory, 'future.sqlite');
     const futureDatabase = openMigratedDatabase(futurePath);
-    futureDatabase.exec('UPDATE schema_migrations SET version = 999');
+    futureDatabase.exec(`
+      DELETE FROM schema_migrations;
+      INSERT INTO schema_migrations (version, name, executed_at)
+      VALUES (999, 'future', '2026-06-22T00:00:00.000Z');
+    `);
     futureDatabase.close();
     openDialogPath = futurePath;
 

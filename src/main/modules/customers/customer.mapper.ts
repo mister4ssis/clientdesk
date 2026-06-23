@@ -7,6 +7,7 @@ export interface CustomerRow {
   person_type: PersonType;
   legal_name: string;
   trade_name: string | null;
+  representative: string | null;
   tax_id: string | null;
   email: string | null;
   phone: string | null;
@@ -30,6 +31,7 @@ export function mapCustomerRow(row: CustomerRow): Customer {
     personType: row.person_type,
     legalName: row.legal_name,
     tradeName: row.trade_name,
+    representative: row.representative,
     taxId: row.tax_id,
     email: row.email,
     phone: row.phone,

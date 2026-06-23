@@ -10,6 +10,7 @@ import type {
   BackupValidationResult,
   RestoreResult
 } from '../backup/backup.types';
+import type { SyncRunResult, SyncStatus } from '../sync/sync.types';
 import type { IpcResult } from './ipc-result';
 
 export interface CustomerSetActiveInput {
@@ -63,6 +64,14 @@ export interface IpcContracts {
     input: void;
     output: IpcResult<BackupValidationResult>;
   };
+  'sync:get-status': {
+    input: void;
+    output: IpcResult<SyncStatus>;
+  };
+  'sync:run-now': {
+    input: void;
+    output: IpcResult<SyncRunResult>;
+  };
 }
 
 export interface ClientDeskApi {
@@ -80,5 +89,9 @@ export interface ClientDeskApi {
     create(): Promise<IpcResult<BackupResult>>;
     restore(): Promise<IpcResult<RestoreResult>>;
     validate(): Promise<IpcResult<BackupValidationResult>>;
+  };
+  sync: {
+    getStatus(): Promise<IpcResult<SyncStatus>>;
+    runNow(): Promise<IpcResult<SyncRunResult>>;
   };
 }

@@ -9,6 +9,7 @@ export type EditableCustomerFields = Pick<Customer, 'personType' | 'legalName'> 
     Pick<
       Customer,
       | 'tradeName'
+      | 'representative'
       | 'taxId'
       | 'email'
       | 'phone'

@@ -93,6 +93,38 @@ function toPublicApplicationError(error: ApplicationError): IpcFailure['error'] 
         code: error.code,
         message: 'Operação cancelada.'
       };
+    case ErrorCode.SyncOperationInProgress:
+      return {
+        code: error.code,
+        message: 'Já existe uma sincronização em andamento.'
+      };
+    case ErrorCode.SyncDisabled:
+      return {
+        code: error.code,
+        message: 'A sincronização está desabilitada.'
+      };
+    case ErrorCode.SyncNetworkUnavailable:
+      return {
+        code: error.code,
+        message: 'Não foi possível conectar ao Supabase.'
+      };
+    case ErrorCode.SyncAuthError:
+    case ErrorCode.SyncConfigurationError:
+      return {
+        code: error.code,
+        message: 'A sincronização remota não está configurada corretamente.'
+      };
+    case ErrorCode.SyncDuplicateTaxId:
+      return {
+        code: error.code,
+        message: 'Já existe um cliente remoto com este CPF ou CNPJ.'
+      };
+    case ErrorCode.SyncRemoteError:
+    case ErrorCode.SyncValidationError:
+      return {
+        code: error.code,
+        message: 'Não foi possível sincronizar os dados.'
+      };
     default:
       logSanitizedError(error.cause ?? error);
       return {

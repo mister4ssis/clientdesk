@@ -118,11 +118,12 @@ Implementado nesta etapa:
 - Adicionar teste de fumaça para arquivos essenciais e scripts.
 - Preparar scripts de empacotamento `package`, `package:dir` e `package:win`.
 
-### 9. Próximo Passo
+### 9. Empacotamento - Concluído
 
-- Validar empacotamento com `electron-builder`.
-- Testar pacote em máquina limpa.
-- Definir ícone definitivo, assinatura digital e política de backup.
+- Configurar `electron-builder`.
+- Gerar pacote em diretório com `package:dir`.
+- Preparar build Windows NSIS x64.
+- Documentar limitações de assinatura e build Windows com dependência nativa.
 
 ### 10. Backup e Restauração Local - Concluído
 
@@ -132,6 +133,18 @@ Implementado nesta etapa:
 - Reabrir conexão e registrar services após restauração.
 - Adicionar página `/settings/backup` e item Configurações no menu.
 - Cobrir validator, service, IPC, preload, client e UI com testes.
+
+### 11. Sincronização Offline-First com Supabase - Em andamento
+
+- Adicionar campo Representante ao cadastro, listagem, pesquisa e detalhes.
+- Criar migration local `002` com campos de sincronização e `sync_outbox`.
+- Registrar alterações locais na outbox de forma transacional.
+- Criar infraestrutura main-only para Supabase, desabilitada por padrão.
+- Expor IPC específico `sync:get-status` e `sync:run-now`.
+- Adicionar seção de sincronização em `/settings/backup`.
+- Criar migration remota Supabase sem policies públicas permissivas.
+
+Próximo passo: definir Auth/RLS seguro no Supabase antes de habilitar sincronização remota em produção.
 
 ## Scripts Planejados
 
@@ -168,7 +181,6 @@ Os scripts abaixo devem ser definidos quando o projeto for inicializado:
 
 ## Fora do Escopo Inicial
 
-- Sincronização em nuvem.
 - Múltiplos usuários.
 - Controle de permissões.
 - Importação/exportação de dados.

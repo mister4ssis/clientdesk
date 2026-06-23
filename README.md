@@ -32,6 +32,14 @@ npm run build
 npm run test:watch
 ```
 
+Sincronização Supabase é opcional e desabilitada por padrão:
+
+```bash
+cp .env.example .env
+```
+
+Preencha apenas `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` quando houver Auth/RLS seguro. Não use chaves `service_role` no aplicativo desktop.
+
 Empacotamento local:
 
 ```bash
@@ -83,6 +91,8 @@ Fluxos implementados:
 - confirmar cancelamento quando houver alterações não salvas;
 - ativar e inativar clientes pela listagem ou pelos detalhes;
 - criar e restaurar backup local em `/settings/backup`;
+- informar estado básico de sincronização e permitir "Sincronizar agora" em `/settings/backup`;
+- cadastrar, listar, pesquisar e visualizar o campo Representante;
 - tratar cliente inexistente com mensagem amigável e retorno para a listagem;
 - exibir loading, atualização, erro e estados vazios.
 
@@ -127,10 +137,23 @@ A página `/settings/backup` permite criar backup local e restaurar um arquivo v
 
 Consulte `BACKUP.md` para detalhes de validação, recuperação em caso de falha e limitações.
 
+## Sincronização Supabase
+
+A sincronização é offline-first: o cliente é salvo no SQLite, a alteração entra em `sync_outbox` e o envio para Supabase ocorre em segundo plano. O sentido atual é apenas local -> remoto.
+
+Com `SYNC_ENABLED=false`, o app opera normalmente sem internet. Consulte:
+
+- `SYNC.md`: arquitetura, outbox, retry e limitações.
+- `SUPABASE.md`: variáveis, tabela remota e migration.
+- `SUPABASE_SECURITY.md`: chaves permitidas, RLS/Auth e riscos.
+
 ## Documentos de Release
 
 - `MVP_REVIEW.md`: achados da revisão do MVP.
 - `BACKUP.md`: fluxo de backup e restauração local.
+- `SYNC.md`: fluxo de sincronização offline-first.
+- `SUPABASE.md`: configuração e migration remota.
+- `SUPABASE_SECURITY.md`: regras de segurança Supabase.
 - `PACKAGING.md`: configuração de pacote e instalador.
 - `RELEASE_CHECKLIST.md`: checklist para validação e empacotamento.
 - `TESTING.md`: estratégia e comandos de teste.
@@ -138,6 +161,9 @@ Consulte `BACKUP.md` para detalhes de validação, recuperação em caso de falh
 ## Limitações Conhecidas
 
 - Ainda não há backup automático.
+- Sincronização Supabase -> SQLite não foi implementada.
+- A sincronização remota só deve ser habilitada em produção após Auth/RLS seguro.
+- Alterações feitas diretamente no Supabase podem ser sobrescritas pela versão local.
 - Ainda não há importação/exportação.
 - Ainda não há teste E2E automatizado na janela Electron.
 - Validação matemática de dígitos de CPF/CNPJ não faz parte do MVP atual.

@@ -166,6 +166,16 @@ Qualquer exceção deve ser documentada em `docs/DECISIONS.md`.
 - Cada alteração de estrutura deve gerar uma nova migration.
 - Clientes não devem ser removidos fisicamente no fluxo normal.
 
+### Sincronização offline-first
+
+- Operações locais não podem depender da nuvem.
+- Toda alteração sincronizável deve entrar na `sync_outbox` na mesma transação SQLite.
+- Não chamar Supabase dentro de transações SQLite.
+- Não expor Supabase, URL ou chaves ao renderer.
+- Não utilizar `service_role` ou secret key no aplicativo desktop.
+- Testes padrão devem funcionar offline e com Supabase mockado.
+- Nenhuma migration aplicada pode ser alterada.
+
 ---
 
 ## 7. Regras de domínio do cliente

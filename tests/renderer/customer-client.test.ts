@@ -107,6 +107,7 @@ const sampleCustomer: Customer = {
   personType: 'FISICA',
   legalName: 'Maria Silva',
   tradeName: null,
+  representative: null,
   taxId: '12345678901',
   email: 'maria@example.com',
   phone: '11999998888',

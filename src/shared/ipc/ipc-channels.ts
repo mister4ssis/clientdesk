@@ -13,5 +13,9 @@ export const IPC_CHANNELS = {
     create: 'backup:create',
     restore: 'backup:restore',
     validate: 'backup:validate'
+  },
+  sync: {
+    getStatus: 'sync:get-status',
+    runNow: 'sync:run-now'
   }
 } as const;

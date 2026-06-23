@@ -129,6 +129,10 @@ function CustomerDetailsContent({ customer }: { customer: Customer }) {
         {customer.tradeName || !isIndividual ? (
           <CustomerDetailsField label="Nome fantasia" value={formatOptionalValue(customer.tradeName)} />
         ) : null}
+        <CustomerDetailsField
+          label="Representante"
+          value={formatOptionalValue(customer.representative)}
+        />
         <CustomerDetailsField label={isIndividual ? 'CPF' : 'CNPJ'} value={formatTaxId(customer.taxId)} />
         {customer.birthDate || isIndividual ? (
           <CustomerDetailsField
