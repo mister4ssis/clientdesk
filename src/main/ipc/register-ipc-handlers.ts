@@ -6,17 +6,23 @@ import {
   registerCustomerIpcHandlers,
   type CustomerServiceContract
 } from '../modules/customers/customer.ipc';
+import {
+  registerBackupIpcHandlers,
+  type BackupServiceContract
+} from '../modules/backup/backup.ipc';
 
 export type IpcMainLike = Pick<IpcMain, 'handle' | 'removeHandler'>;
 
 export interface RegisterIpcHandlersDependencies {
   customerService: CustomerServiceContract;
+  backupService: BackupServiceContract;
   ipcMain?: IpcMainLike;
   getAppVersion?: () => string;
 }
 
 export function registerIpcHandlers({
   customerService,
+  backupService,
   ipcMain = electronIpcMain,
   getAppVersion = () => app.getVersion()
 }: RegisterIpcHandlersDependencies): void {
@@ -27,6 +33,11 @@ export function registerIpcHandlers({
   registerCustomerIpcHandlers({
     ipcMain,
     customerService
+  });
+
+  registerBackupIpcHandlers({
+    ipcMain,
+    backupService
   });
 }
 

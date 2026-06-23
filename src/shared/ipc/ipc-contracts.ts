@@ -5,6 +5,11 @@ import type {
   CustomerSearchFiltersDto,
   UpdateCustomerInput
 } from '../customers/customer.dto';
+import type {
+  BackupResult,
+  BackupValidationResult,
+  RestoreResult
+} from '../backup/backup.types';
 import type { IpcResult } from './ipc-result';
 
 export interface CustomerSetActiveInput {
@@ -46,6 +51,18 @@ export interface IpcContracts {
     input: CustomerSetActiveInput;
     output: IpcResult<CustomerDto>;
   };
+  'backup:create': {
+    input: void;
+    output: IpcResult<BackupResult>;
+  };
+  'backup:restore': {
+    input: void;
+    output: IpcResult<RestoreResult>;
+  };
+  'backup:validate': {
+    input: void;
+    output: IpcResult<BackupValidationResult>;
+  };
 }
 
 export interface ClientDeskApi {
@@ -58,5 +75,10 @@ export interface ClientDeskApi {
     getById(id: string): Promise<IpcResult<CustomerDto>>;
     update(id: string, data: UpdateCustomerInput): Promise<IpcResult<CustomerDto>>;
     setActive(id: string, active: boolean): Promise<IpcResult<CustomerDto>>;
+  };
+  backup: {
+    create(): Promise<IpcResult<BackupResult>>;
+    restore(): Promise<IpcResult<RestoreResult>>;
+    validate(): Promise<IpcResult<BackupValidationResult>>;
   };
 }

@@ -5,7 +5,13 @@ export interface PublicError {
     | 'CUSTOMER_TAX_ID_ALREADY_EXISTS'
     | 'DATABASE_ERROR'
     | 'INTERNAL_ERROR'
-    | 'UNEXPECTED_ERROR';
+    | 'UNEXPECTED_ERROR'
+    | 'BACKUP_CREATE_FAILED'
+    | 'BACKUP_RESTORE_FAILED'
+    | 'BACKUP_INVALID_FILE'
+    | 'BACKUP_INCOMPATIBLE_VERSION'
+    | 'BACKUP_OPERATION_IN_PROGRESS'
+    | 'BACKUP_CANCELLED';
   message: string;
   details?: unknown;
 }

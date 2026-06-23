@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ApplicationError } from '@main/errors/application-error';
 import { ErrorCode } from '@main/errors/error-codes';
 import { registerIpcHandlers, type IpcMainLike } from '@main/ipc/register-ipc-handlers';
+import type { BackupServiceContract } from '@main/modules/backup/backup.ipc';
 import type { CustomerServiceContract } from '@main/modules/customers/customer.ipc';
 import type { Customer } from '@shared/customers/customer.types';
 import { IPC_CHANNELS } from '@shared/ipc/ipc-channels';
@@ -41,12 +42,16 @@ describe('customer IPC handlers', () => {
     registerIpcHandlers({
       ipcMain,
       customerService: createCustomerServiceMock(),
+      backupService: createBackupServiceMock(),
       getAppVersion: () => '0.1.0'
     });
 
     expect([...ipcMain.handlers.keys()].sort()).toEqual(
       [
         IPC_CHANNELS.app.getVersion,
+        IPC_CHANNELS.backup.create,
+        IPC_CHANNELS.backup.restore,
+        IPC_CHANNELS.backup.validate,
         IPC_CHANNELS.customers.create,
         IPC_CHANNELS.customers.getById,
         IPC_CHANNELS.customers.list,
@@ -300,10 +305,19 @@ function registerMockHandlers(customerService: CustomerServiceContract): MockIpc
   registerIpcHandlers({
     ipcMain,
     customerService,
+    backupService: createBackupServiceMock(),
     getAppVersion: () => '0.1.0'
   });
 
   return ipcMain;
+}
+
+function createBackupServiceMock(): BackupServiceContract {
+  return {
+    createBackup: vi.fn(async () => ({ success: true })),
+    restoreBackup: vi.fn(async () => ({ success: true })),
+    validateBackup: vi.fn(async () => ({ valid: true, version: 1 }))
+  };
 }
 
 function createCustomerServiceMock(

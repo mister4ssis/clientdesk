@@ -30,6 +30,8 @@ PRAGMA journal_mode = WAL;
 
 `journal_mode = WAL` é aplicado na abertura. Em banco em memória, o SQLite pode manter outro modo internamente, mas a configuração é executada.
 
+Backups usam `database.backup()` do `better-sqlite3`, evitando cópia ingênua do arquivo principal enquanto WAL/SHM podem existir.
+
 ## Tabela `customers`
 
 A migration inicial fica em `src/main/database/migrations/001-create-customers.sql` e cria:
@@ -121,6 +123,20 @@ O `main` segue esta ordem:
 5. `createMainWindow()`.
 
 A conexão é fechada no evento `before-quit`.
+
+Durante restauração de backup, a conexão também é fechada temporariamente, o arquivo é substituído, o banco é reaberto e as migrations são executadas antes de o aplicativo voltar a usar a conexão.
+
+## Backups
+
+Backups escolhidos pelo usuário podem usar `.sqlite` ou `.clientdesk-backup`. Antes de restaurar, o arquivo é validado com `PRAGMA integrity_check`, presença de `schema_migrations`, presença de `customers`, colunas essenciais e versão de migrations compatível.
+
+Antes de substituir o banco atual, o aplicativo cria uma cópia de segurança em:
+
+```text
+app.getPath('userData')/backups/before-restore-YYYY-MM-DD-HHmmss.sqlite
+```
+
+Esses backups automáticos não são removidos automaticamente nesta etapa.
 
 ## Testes
 

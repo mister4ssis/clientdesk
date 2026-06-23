@@ -41,6 +41,9 @@ Não retornar `Error`, stack trace, SQL bruto, caminhos locais ou dados pessoais
 | `customers:get-by-id` | `{ id: string }` | `IpcResult<Customer>` |
 | `customers:update` | `{ id: string; data: UpdateCustomerInput }` | `IpcResult<Customer>` |
 | `customers:set-active` | `{ id: string; active: boolean }` | `IpcResult<Customer>` |
+| `backup:create` | `void` | `IpcResult<BackupResult>` |
+| `backup:restore` | `void` | `IpcResult<RestoreResult>` |
+| `backup:validate` | `void` | `IpcResult<BackupValidationResult>` |
 
 Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 
@@ -51,6 +54,12 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - `CUSTOMER_TAX_ID_ALREADY_EXISTS`: CPF/CNPJ duplicado.
 - `DATABASE_ERROR`: falha ao acessar dados.
 - `INTERNAL_ERROR`: erro inesperado.
+- `BACKUP_CREATE_FAILED`: falha ao criar backup.
+- `BACKUP_RESTORE_FAILED`: falha ao restaurar backup.
+- `BACKUP_INVALID_FILE`: arquivo selecionado não é backup válido.
+- `BACKUP_INCOMPATIBLE_VERSION`: backup criado por versão incompatível.
+- `BACKUP_OPERATION_IN_PROGRESS`: já há backup/restauração em andamento.
+- `BACKUP_CANCELLED`: operação cancelada pelo usuário.
 
 `details` só deve ser preservado quando vier de validação Zod e for seguro para o renderer.
 
@@ -60,6 +69,7 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - Validar payloads no `main`, mesmo que o renderer valide antes.
 - O preload expõe somente `window.clientDesk`.
 - Não expor `ipcRenderer`, invoke genérico, canais arbitrários ou APIs de arquivo/shell/banco.
+- Backup e restauração não retornam caminhos internos ao renderer.
 - Remover handler anterior antes de registrar novo handler para evitar duplicidade em desenvolvimento e testes.
 
 ## Novo Canal

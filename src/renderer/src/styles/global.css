@@ -62,10 +62,21 @@ a {
   font-weight: 700;
 }
 
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .sidebar__link {
   display: block;
+  width: 100%;
   padding: 10px 12px;
   border-radius: 6px;
+  border: 0;
+  color: inherit;
+  font-weight: 600;
+  text-align: left;
   text-decoration: none;
   background: rgb(255 255 255 / 12%);
 }
@@ -84,6 +95,39 @@ a {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.settings-page {
+  display: flex;
+  max-width: 960px;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.settings-section h2 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+}
+
+.settings-section p {
+  margin: 0;
+  color: #526070;
+}
+
+.settings-section__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .page-header {

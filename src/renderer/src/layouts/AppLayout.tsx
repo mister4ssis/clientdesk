@@ -3,12 +3,14 @@ import { Sidebar } from '@renderer/components/layout/Sidebar';
 
 interface AppLayoutProps {
   children: ReactNode;
+  activeItem: 'customers' | 'settings';
+  onNavigate: (path: string) => void;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout({ children, activeItem, onNavigate }: AppLayoutProps) {
   return (
     <div className="app-shell">
-      <Sidebar />
+      <Sidebar activeItem={activeItem} onNavigate={onNavigate} />
       <main className="app-content">{children}</main>
     </div>
   );

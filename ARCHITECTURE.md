@@ -33,6 +33,11 @@ ClientDesk será um aplicativo Electron com React e TypeScript, executando local
 │   │   │   ├── ipc-error-handler.ts
 │   │   │   └── register-ipc-handlers.ts
 │   │   └── modules/
+│   │       ├── backup/
+│   │       │   ├── backup.ipc.ts
+│   │       │   ├── backup-path.ts
+│   │       │   ├── backup-validator.ts
+│   │       │   └── backup.service.ts
 │   │       └── customers/
 │   │           ├── customer.ipc.ts
 │   │           ├── customer.mapper.ts
@@ -52,15 +57,17 @@ ClientDesk será um aplicativo Electron com React e TypeScript, executando local
 │   │       │   └── layout/
 │   │       ├── hooks/
 │   │       ├── pages/
-│   │       │   └── customers/
-│   │       │       ├── components/
-│   │       │       ├── hooks/
-│   │       │       ├── customer-formatters.ts
-│   │       │       ├── CustomerCreatePage.tsx
-│   │       │       ├── CustomerDetailsPage.tsx
-│   │       │       ├── CustomerEditPage.tsx
-│   │       │       └── CustomerListPage.tsx
+│   │       │   ├── customers/
+│   │       │   │   ├── components/
+│   │       │   │   ├── hooks/
+│   │       │   │   ├── customer-formatters.ts
+│   │       │   │   ├── CustomerCreatePage.tsx
+│   │       │   │   ├── CustomerDetailsPage.tsx
+│   │       │   │   ├── CustomerEditPage.tsx
+│   │       │   │   └── CustomerListPage.tsx
+│   │       │   └── settings/
 │   │       ├── services/
+│   │       │   ├── backup-client.ts
 │   │       │   └── customer-client.ts
 │   │       ├── styles/
 │   │       └── utils/
@@ -101,6 +108,9 @@ window.clientDesk.customers.update(id, input)
 window.clientDesk.customers.list(query)
 window.clientDesk.customers.getById(id)
 window.clientDesk.customers.setActive(id, active)
+window.clientDesk.backup.create()
+window.clientDesk.backup.restore()
+window.clientDesk.backup.validate()
 ```
 
 Cada método chama um canal específico com `ipcRenderer.invoke`. Não há API genérica de invoke, `send`, acesso a arquivos, shell, banco ou módulos Node.js.
@@ -120,7 +130,9 @@ O renderer só conversa com o sistema local pela API exposta no `window.clientDe
 
 `src/renderer/src/services/customer-client.ts` encapsula `window.clientDesk.customers`, retorna `data` em caso de sucesso e converte falhas públicas em `ClientDeskClientError`.
 
-`App.tsx` usa um roteamento leve baseado em History API para as rotas `/customers`, `/customers/new`, `/customers/:id` e `/customers/:id/edit`. React Router não foi adicionado nesta etapa porque o fluxo atual exige poucas rotas locais e sem recursos avançados de navegação.
+`src/renderer/src/services/backup-client.ts` encapsula `window.clientDesk.backup`, sem expor caminhos internos ou APIs de arquivo.
+
+`App.tsx` usa um roteamento leve baseado em History API para as rotas `/customers`, `/customers/new`, `/customers/:id`, `/customers/:id/edit` e `/settings/backup`. React Router não foi adicionado nesta etapa porque o fluxo atual exige poucas rotas locais e sem recursos avançados de navegação.
 
 ## Interface de Clientes
 
@@ -172,6 +184,12 @@ Cadastro e edição:
 - quando a edição é aberta a partir dos detalhes, o salvamento retorna para `/customers/:id`;
 - quando a edição é aberta a partir da listagem, o salvamento retorna para `/customers`.
 
+## Backup e Restauração
+
+`BackupService` fica no processo principal e é independente do módulo de clientes. Ele usa diálogos nativos para seleção de arquivos, `better-sqlite3` para criar backups consistentes e validação estrutural antes de qualquer restauração.
+
+Durante a restauração, o serviço cria um backup automático em `app.getPath('userData')/backups`, fecha a conexão atual, substitui o arquivo, reabre o banco, executa migrations e registra novamente os handlers com services apontando para a nova conexão. Se houver falha após a substituição, o backup automático é restaurado.
+
 ## Canais IPC
 
 Todos os canais são constantes em `src/shared/ipc/ipc-channels.ts`.
@@ -183,6 +201,9 @@ customers:update
 customers:list
 customers:get-by-id
 customers:set-active
+backup:create
+backup:restore
+backup:validate
 ```
 
 Cada handler IPC valida entrada com Zod no processo principal antes de chamar o service e retorna `IpcResult<T>`.

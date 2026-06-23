@@ -82,6 +82,7 @@ Fluxos implementados:
 - normalizar CPF/CNPJ, telefone, CEP, e-mail, estado e campos opcionais antes do envio;
 - confirmar cancelamento quando houver alterações não salvas;
 - ativar e inativar clientes pela listagem ou pelos detalhes;
+- criar e restaurar backup local em `/settings/backup`;
 - tratar cliente inexistente com mensagem amigável e retorno para a listagem;
 - exibir loading, atualização, erro e estados vazios.
 
@@ -94,6 +95,7 @@ Rotas disponíveis no renderer:
 /customers/new
 /customers/:id
 /customers/:id/edit
+/settings/backup
 ```
 
 ## Detalhes do Cliente
@@ -119,9 +121,16 @@ Os testes do renderer usam mocks de `customer-client.ts`; não inicializam Elect
 
 Mais detalhes estão em `TESTING.md`.
 
+## Backup Local
+
+A página `/settings/backup` permite criar backup local e restaurar um arquivo validado. A restauração cria uma cópia de segurança automática do banco atual em `app.getPath('userData')/backups`.
+
+Consulte `BACKUP.md` para detalhes de validação, recuperação em caso de falha e limitações.
+
 ## Documentos de Release
 
 - `MVP_REVIEW.md`: achados da revisão do MVP.
+- `BACKUP.md`: fluxo de backup e restauração local.
 - `PACKAGING.md`: configuração de pacote e instalador.
 - `RELEASE_CHECKLIST.md`: checklist para validação e empacotamento.
 - `TESTING.md`: estratégia e comandos de teste.

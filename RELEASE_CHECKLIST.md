@@ -9,6 +9,8 @@
 - [ ] migrations validadas
 - [ ] segurança revisada
 - [ ] banco salvo em `userData`
+- [ ] backup criado e validado
+- [ ] restauração validada com backup automático
 - [ ] persistência validada
 - [ ] erros sanitizados
 - [ ] logs revisados
@@ -79,6 +81,9 @@
 - [ ] desinstalação validada
 - [ ] banco preservado após desinstalação
 - [ ] reinstalação reconhece dados anteriores
+- [ ] backup local criado
+- [ ] restauração local validada
+- [ ] arquivo inválido rejeitado
 
 ## Segurança
 

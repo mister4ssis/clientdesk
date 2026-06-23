@@ -124,6 +124,15 @@ Implementado nesta etapa:
 - Testar pacote em máquina limpa.
 - Definir ícone definitivo, assinatura digital e política de backup.
 
+### 10. Backup e Restauração Local - Concluído
+
+- Criar backup com diálogo nativo e `better-sqlite3.backup()`.
+- Validar backups antes de restauração.
+- Criar backup automático antes de substituir o banco.
+- Reabrir conexão e registrar services após restauração.
+- Adicionar página `/settings/backup` e item Configurações no menu.
+- Cobrir validator, service, IPC, preload, client e UI com testes.
+
 ## Scripts Planejados
 
 Os scripts abaixo devem ser definidos quando o projeto for inicializado:

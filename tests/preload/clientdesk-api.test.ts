@@ -54,6 +54,9 @@ describe('preload clientDesk API', () => {
     await api.customers.getById('customer-id');
     await api.customers.update('customer-id', { legalName: 'Maria Souza' });
     await api.customers.setActive('customer-id', false);
+    await api.backup.create();
+    await api.backup.restore();
+    await api.backup.validate();
 
     expect(electronMock.invoke).toHaveBeenNthCalledWith(1, IPC_CHANNELS.app.getVersion);
     expect(electronMock.invoke).toHaveBeenNthCalledWith(2, IPC_CHANNELS.customers.create, {
@@ -77,5 +80,8 @@ describe('preload clientDesk API', () => {
       id: 'customer-id',
       active: false
     });
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(7, IPC_CHANNELS.backup.create);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(8, IPC_CHANNELS.backup.restore);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(9, IPC_CHANNELS.backup.validate);
   });
 });

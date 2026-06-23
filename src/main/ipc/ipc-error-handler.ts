@@ -61,6 +61,38 @@ function toPublicApplicationError(error: ApplicationError): IpcFailure['error'] 
         code: error.code,
         message: 'Não foi possível acessar os dados dos clientes.'
       };
+    case ErrorCode.BackupCreateFailed:
+      logSanitizedError(error.cause ?? error);
+      return {
+        code: error.code,
+        message: 'Não foi possível criar o backup.'
+      };
+    case ErrorCode.BackupRestoreFailed:
+      logSanitizedError(error.cause ?? error);
+      return {
+        code: error.code,
+        message: 'Não foi possível restaurar o backup.'
+      };
+    case ErrorCode.BackupInvalidFile:
+      return {
+        code: error.code,
+        message: 'O arquivo selecionado não é um backup válido do ClientDesk.'
+      };
+    case ErrorCode.BackupIncompatibleVersion:
+      return {
+        code: error.code,
+        message: 'O backup foi criado por uma versão incompatível do ClientDesk.'
+      };
+    case ErrorCode.BackupOperationInProgress:
+      return {
+        code: error.code,
+        message: 'Já existe uma operação de backup ou restauração em andamento.'
+      };
+    case ErrorCode.BackupCancelled:
+      return {
+        code: error.code,
+        message: 'Operação cancelada.'
+      };
     default:
       logSanitizedError(error.cause ?? error);
       return {

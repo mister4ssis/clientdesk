@@ -5,6 +5,7 @@ import { CustomerCreatePage } from '@renderer/pages/customers/CustomerCreatePage
 import { CustomerDetailsPage } from '@renderer/pages/customers/CustomerDetailsPage';
 import { CustomerEditPage } from '@renderer/pages/customers/CustomerEditPage';
 import { CustomerListPage } from '@renderer/pages/customers/CustomerListPage';
+import { BackupSettingsPage } from '@renderer/pages/settings/BackupSettingsPage';
 
 export function App(): ReactElement {
   const [locationKey, setLocationKey] = useState(0);
@@ -34,7 +35,7 @@ export function App(): ReactElement {
   }
 
   return (
-    <AppLayout>
+    <AppLayout activeItem={getActiveMenuItem(route)} onNavigate={navigate}>
       {route.name === 'customers' ? (
         <CustomerListPage
           initialFeedbackMessage={flashMessage}
@@ -70,6 +71,12 @@ export function App(): ReactElement {
         />
       ) : null}
 
+      {route.name === 'backup-settings' ? (
+        <BackupSettingsPage
+          onRestoreCompleted={() => navigate('/customers', 'Backup restaurado com sucesso.')}
+        />
+      ) : null}
+
       {route.name === 'not-found' ? (
         <ErrorState message="Página não encontrada." onRetry={() => navigate('/customers')} />
       ) : null}
@@ -82,6 +89,7 @@ type AppRoute =
   | { name: 'customer-create' }
   | { name: 'customer-details'; customerId: string }
   | { name: 'customer-edit'; customerId: string }
+  | { name: 'backup-settings' }
   | { name: 'not-found' };
 
 function parseRoute(pathname: string): AppRoute {
@@ -91,6 +99,10 @@ function parseRoute(pathname: string): AppRoute {
 
   if (pathname === '/customers/new') {
     return { name: 'customer-create' };
+  }
+
+  if (pathname === '/settings/backup') {
+    return { name: 'backup-settings' };
   }
 
   const editMatch = /^\/customers\/([^/]+)\/edit$/.exec(pathname);
@@ -106,4 +118,8 @@ function parseRoute(pathname: string): AppRoute {
   }
 
   return { name: 'not-found' };
+}
+
+function getActiveMenuItem(route: AppRoute): 'customers' | 'settings' {
+  return route.name === 'backup-settings' ? 'settings' : 'customers';
 }

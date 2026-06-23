@@ -8,5 +8,10 @@ export const IPC_CHANNELS = {
     getById: 'customers:get-by-id',
     update: 'customers:update',
     setActive: 'customers:set-active'
+  },
+  backup: {
+    create: 'backup:create',
+    restore: 'backup:restore',
+    validate: 'backup:validate'
   }
 } as const;
