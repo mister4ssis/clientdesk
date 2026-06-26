@@ -59,3 +59,9 @@ Se houver alteração local pendente e `remote.version > customers.remote_versio
 - Sem merge campo a campo.
 - Sem múltiplas organizações.
 - Pull remoto fica bloqueado por padrão até Auth/RLS seguro estar configurado.
+
+## Testes de Convergência
+
+A validação multi-instância fica em `tests/integration/sync`. A suíte padrão usa Supabase mockado para garantir que duas instalações com a mesma conta convergem sem duplicação e que conflitos não sobrescrevem dados silenciosamente.
+
+Testes reais com Supabase devem usar ambiente dedicado e variáveis `SUPABASE_TEST_*`, protegidos por `RUN_SUPABASE_INTEGRATION_TESTS=true`.

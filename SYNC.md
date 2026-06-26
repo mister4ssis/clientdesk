@@ -23,6 +23,18 @@ A sincronização pode ser solicitada:
 
 Falhas remotas não impedem o sucesso local. A UI deve informar que a alteração está salva localmente e ficará pendente.
 
+## Observabilidade
+
+O ciclo de sincronização registra logs sanitizados com:
+
+- `syncRunId`;
+- fase (`START`, `PUSH`, `PULL`, `SKIPPED`, `COMPLETE`);
+- contadores processados, pendentes e conflitos;
+- duração;
+- código de erro.
+
+Os logs não incluem nome de cliente, CPF/CNPJ, e-mail, telefone, representante, snapshots, tokens ou chaves.
+
 ## Autenticação
 
 O ciclo remoto só executa em `AUTHENTICATED`. Em `OFFLINE_AUTHENTICATED` ou `SESSION_EXPIRED`, o app mantém outbox/cursor/conflitos locais, mas não chama Supabase.
@@ -53,3 +65,9 @@ Conflitos são registrados em `sync_conflicts` quando há alteração local pend
 ## Limitações
 
 Não há Realtime, Broadcast, merge automático ou sincronização de exclusão física. O pull permanece desabilitado por padrão até existir autenticação e RLS seguros.
+
+## Validação Multi-Instância
+
+Os testes padrão em `tests/integration/sync` simulam duas instalações com bancos SQLite separados e Supabase mockado. Eles validam convergência, conflitos, cursor, offline/reinício e isolamento de usuários sem exigir internet.
+
+Consulte `MULTI_INSTANCE_TESTING.md` e `SYNC_VALIDATION_REPORT.md`.

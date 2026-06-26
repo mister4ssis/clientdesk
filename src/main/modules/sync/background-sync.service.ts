@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { SyncRunResult } from '@shared/sync/sync.types';
 import { ErrorCode } from '../../errors/error-codes';
 import type { SupabaseConnectivityService } from '../../integrations/supabase/supabase-connectivity.service';
@@ -25,10 +26,19 @@ export class BackgroundSyncService {
   }
 
   async runNow(): Promise<SyncRunResult> {
+    const syncRunId = randomUUID();
+    const runStartedAt = Date.now();
+
     if (!this.config.enabled) {
       this.syncStatusService.setEnabled(false);
       this.syncStatusService.setConnectivity('DISABLED');
       this.syncStatusService.markCompleted(false, ErrorCode.SyncDisabled);
+      logSyncRun({
+        syncRunId,
+        phase: 'COMPLETE',
+        durationMs: Date.now() - runStartedAt,
+        errorCode: ErrorCode.SyncDisabled
+      });
 
       return {
         started: false,
@@ -38,6 +48,12 @@ export class BackgroundSyncService {
 
     if (this.running) {
       this.syncStatusService.markSkipped(ErrorCode.SyncOperationInProgress);
+      logSyncRun({
+        syncRunId,
+        phase: 'SKIPPED',
+        durationMs: Date.now() - runStartedAt,
+        errorCode: ErrorCode.SyncOperationInProgress
+      });
 
       return {
         started: false,
@@ -47,11 +63,22 @@ export class BackgroundSyncService {
 
     this.running = true;
     this.syncStatusService.markStarted();
+    logSyncRun({
+      syncRunId,
+      phase: 'START',
+      pendingCount: this.syncOutboxRepository.countPending()
+    });
 
     try {
       if (this.options.canSynchronize && !this.options.canSynchronize()) {
         this.syncStatusService.setConnectivity('AUTH_ERROR');
         this.syncStatusService.markCompleted(false, ErrorCode.SyncAuthError);
+        logSyncRun({
+          syncRunId,
+          phase: 'COMPLETE',
+          durationMs: Date.now() - runStartedAt,
+          errorCode: ErrorCode.SyncAuthError
+        });
 
         return {
           started: false,
@@ -65,6 +92,12 @@ export class BackgroundSyncService {
       if (connectivity !== 'ONLINE') {
         const errorCode = connectivityToErrorCode(connectivity);
         this.syncStatusService.markCompleted(false, errorCode);
+        logSyncRun({
+          syncRunId,
+          phase: 'COMPLETE',
+          durationMs: Date.now() - runStartedAt,
+          errorCode
+        });
 
         return {
           started: false,
@@ -73,15 +106,29 @@ export class BackgroundSyncService {
       }
 
       this.syncStatusService.setDirection('PUSHING');
-      const pushErrorCode = await this.pushPendingChanges();
+      const pushResult = await this.pushPendingChanges();
       this.syncStatusService.markPushCompleted();
+      logSyncRun({
+        syncRunId,
+        phase: 'PUSH',
+        processedCount: pushResult.processedCount,
+        pendingCount: this.syncOutboxRepository.countPending(),
+        errorCode: pushResult.errorCode
+      });
 
-      let lastErrorCode = pushErrorCode;
+      let lastErrorCode = pushResult.errorCode;
 
-      if (this.customerPullService && shouldRunPullAfterPush(pushErrorCode)) {
+      if (this.customerPullService && shouldRunPullAfterPush(pushResult.errorCode)) {
         this.syncStatusService.setDirection('PULLING');
         const pullResult = await this.customerPullService.pullRemoteChanges();
         this.syncStatusService.markPullCompleted();
+        logSyncRun({
+          syncRunId,
+          phase: 'PULL',
+          processedCount: pullResult.pulledCount,
+          conflictCount: pullResult.conflictCount,
+          errorCode: pullResult.errorCode
+        });
 
         if (!pullResult.success && pullResult.errorCode) {
           lastErrorCode = pullResult.errorCode;
@@ -89,6 +136,12 @@ export class BackgroundSyncService {
       }
 
       this.syncStatusService.markCompleted(lastErrorCode === null, lastErrorCode);
+      logSyncRun({
+        syncRunId,
+        phase: 'COMPLETE',
+        durationMs: Date.now() - runStartedAt,
+        errorCode: lastErrorCode
+      });
 
       return {
         started: true,
@@ -96,6 +149,12 @@ export class BackgroundSyncService {
       };
     } catch {
       this.syncStatusService.markCompleted(false, ErrorCode.SyncRemoteError);
+      logSyncRun({
+        syncRunId,
+        phase: 'COMPLETE',
+        durationMs: Date.now() - runStartedAt,
+        errorCode: ErrorCode.SyncRemoteError
+      });
 
       return {
         started: false,
@@ -106,7 +165,10 @@ export class BackgroundSyncService {
     }
   }
 
-  private async pushPendingChanges(): Promise<string | null> {
+  private async pushPendingChanges(): Promise<{
+    errorCode: string | null;
+    processedCount: number;
+  }> {
     const items = this.syncOutboxRepository.getPendingBatch(
       this.config.batchSize,
       new Date().toISOString()
@@ -127,7 +189,10 @@ export class BackgroundSyncService {
       }
     }
 
-    return lastErrorCode;
+    return {
+      errorCode: lastErrorCode,
+      processedCount: items.length
+    };
   }
 }
 
@@ -157,4 +222,30 @@ function shouldRunPullAfterPush(pushErrorCode: string | null): boolean {
     ErrorCode.SyncAuthError,
     ErrorCode.SyncConfigurationError
   ].includes(pushErrorCode as ErrorCode);
+}
+
+type SyncLogPhase = 'START' | 'PUSH' | 'PULL' | 'SKIPPED' | 'COMPLETE';
+
+function logSyncRun(input: {
+  syncRunId: string;
+  phase: SyncLogPhase;
+  processedCount?: number;
+  pendingCount?: number;
+  conflictCount?: number;
+  durationMs?: number;
+  errorCode?: string | null;
+}): void {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
+
+  console.info('[sync]', {
+    syncRunId: input.syncRunId,
+    phase: input.phase,
+    processedCount: input.processedCount,
+    pendingCount: input.pendingCount,
+    conflictCount: input.conflictCount,
+    durationMs: input.durationMs,
+    errorCode: input.errorCode ?? null
+  });
 }

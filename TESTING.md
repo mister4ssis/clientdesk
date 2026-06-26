@@ -27,6 +27,7 @@ npm rebuild better-sqlite3
 - `tests/main/database`: abertura, pragmas, migrations, rollback e fechamento.
 - `tests/main/customers`: repository, service e integração com SQLite temporário.
 - `tests/main/ipc`: handlers IPC, validação e sanitização de erros.
+- `tests/integration/sync`: sincronização bidirecional entre duas instalações SQLite independentes com Supabase mockado.
 - `tests/preload`: API exposta pelo `contextBridge`.
 - `tests/renderer`: listagem, filtros, cadastro, edição, detalhes, hooks, formatadores e client.
 - `tests/smoke`: arquivos essenciais e scripts de validação/empacotamento.
@@ -36,6 +37,23 @@ npm rebuild better-sqlite3
 Os testes usam banco em memória ou arquivo temporário em diretório do sistema. O banco de desenvolvimento e o banco de produção em `app.getPath('userData')` não são usados pelos testes.
 
 Fixtures reutilizáveis ficam em `tests/fixtures/customer-fixtures.ts` e usam CPF/CNPJ fictícios.
+
+## Testes Multi-Instância
+
+Os cenários em `tests/integration/sync` cobrem duas instalações lógicas do aplicativo:
+
+- criação em A e recebimento em B;
+- atualização em B e recebimento em A;
+- ativação e inativação;
+- offline, reinício e recuperação da outbox;
+- conflitos e as duas formas de resolução;
+- cursor composto com mesmo `updated_at`;
+- falhas de push/pull;
+- isolamento entre usuários.
+
+Esses testes usam Supabase mockado e funcionam sem internet. Consulte `MULTI_INSTANCE_TESTING.md` e `SYNC_VALIDATION_REPORT.md`.
+
+Testes reais contra Supabase devem ser opcionais e protegidos por `RUN_SUPABASE_INTEGRATION_TESTS=true`, além de variáveis `SUPABASE_TEST_*`. Nunca use produção.
 
 ## Testes Manuais Recomendados
 

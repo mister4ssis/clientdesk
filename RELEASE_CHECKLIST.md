@@ -18,6 +18,9 @@
 - [ ] outbox de sincronização validada
 - [ ] cursor incremental validado
 - [ ] conflitos de sincronização validados
+- [ ] convergência entre duas instalações validada
+- [ ] cursor composto com `updated_at` igual validado
+- [ ] falha de push/pull validada sem perda de dados
 - [ ] `SYNC_ENABLED=false` validado para uso offline
 - [ ] `SYNC_PULL_ENABLED=false` validado como padrão seguro
 - [ ] persistência validada
@@ -102,6 +105,8 @@
 - [ ] resolução de conflito local validada
 - [ ] resolução de conflito remoto validada
 - [ ] fila pendente preservada offline
+- [ ] duas instalações com a mesma conta convergem
+- [ ] conflito real entre duas instalações resolvido
 
 ## Segurança
 

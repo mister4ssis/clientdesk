@@ -40,3 +40,14 @@ A página `/settings/sync/conflicts` lista conflitos pendentes, compara os princ
 ## Segurança
 
 Snapshots de conflito podem conter dados pessoais. Eles não devem ser enviados a telemetria nem registrados em logs.
+
+## Validação
+
+Os testes em `tests/integration/sync/conflict-resolution.test.ts` cobrem:
+
+- conflito entre duas instalações;
+- resolução mantendo dados locais;
+- resolução usando dados do servidor;
+- rejeição de resolução local quando a versão remota mudou novamente.
+
+O objetivo é garantir que nenhuma alteração concorrente seja sobrescrita silenciosamente.

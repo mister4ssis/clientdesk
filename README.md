@@ -75,11 +75,13 @@ Um usuário previamente autenticado pode usar o app offline com seus dados locai
 
 ## Banco de Dados
 
-O banco SQLite fica em:
+Com autenticação habilitada, o banco SQLite fica isolado por usuário:
 
 ```text
-path.join(app.getPath('userData'), 'data', 'clientdesk.sqlite')
+app.getPath('userData')/users/<user-id>/clientdesk.sqlite
 ```
+
+O caminho legado `app.getPath('userData')/data/clientdesk.sqlite` pode existir em instalações anteriores e não deve ser associado automaticamente a uma conta.
 
 Migrations SQL versionadas ficam em `src/main/database/migrations` e são incluídas no pacote via `electron-builder.yml`. Os testes usam banco em memória ou arquivo temporário, nunca o banco de desenvolvimento.
 
@@ -164,6 +166,8 @@ Com `MAIN_VITE_SYNC_ENABLED=false`, o app opera normalmente sem internet. Consul
 - `LOCAL_USER_PROFILES.md`: isolamento local por usuário e modo offline.
 - `BIDIRECTIONAL_SYNC.md`: cursor, pull incremental, versionamento e exclusão lógica.
 - `CONFLICT_RESOLUTION.md`: detecção e resolução manual de conflitos.
+- `MULTI_INSTANCE_TESTING.md`: testes com duas instalações e bancos locais isolados.
+- `SYNC_VALIDATION_REPORT.md`: cenários de sincronização validados e riscos restantes.
 - `SUPABASE.md`: variáveis, tabela remota e migration.
 - `SUPABASE_SECURITY.md`: chaves permitidas, RLS/Auth e riscos.
 
@@ -177,6 +181,8 @@ Com `MAIN_VITE_SYNC_ENABLED=false`, o app opera normalmente sem internet. Consul
 - `PACKAGING.md`: configuração de pacote e instalador.
 - `RELEASE_CHECKLIST.md`: checklist para validação e empacotamento.
 - `TESTING.md`: estratégia e comandos de teste.
+- `MULTI_INSTANCE_TESTING.md`: execução e isolamento de testes de sincronização.
+- `SYNC_VALIDATION_REPORT.md`: resultado da validação multi-instância.
 
 ## Limitações Conhecidas
 
