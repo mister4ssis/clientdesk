@@ -9,9 +9,21 @@ export type SyncStatusCode = 'PENDING' | 'SYNCED' | 'ERROR' | 'CONFLICT';
 
 export type SyncDirection = 'IDLE' | 'PUSHING' | 'PULLING' | 'RESOLVING_CONFLICT';
 
+export type RealtimeConnectionStatus =
+  | 'DISABLED'
+  | 'CONNECTING'
+  | 'SUBSCRIBED'
+  | 'RECONNECTING'
+  | 'CHANNEL_ERROR'
+  | 'TIMED_OUT'
+  | 'AUTH_ERROR'
+  | 'OFFLINE'
+  | 'STOPPED';
+
 export interface SyncStatus {
   enabled: boolean;
   pullEnabled: boolean;
+  realtimeStatus: RealtimeConnectionStatus;
   connectivity: ConnectivityStatus;
   running: boolean;
   direction: SyncDirection;
@@ -21,6 +33,8 @@ export interface SyncStatus {
   lastCompletedAt: string | null;
   lastPushAt: string | null;
   lastPullAt: string | null;
+  lastRealtimeEventAt: string | null;
+  lastRealtimeConnectedAt: string | null;
   lastSuccessfulAt: string | null;
   lastErrorCode: string | null;
 }

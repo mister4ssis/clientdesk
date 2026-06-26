@@ -170,6 +170,15 @@ Próximo passo: implementar fluxo de autenticação Supabase seguro ou validar a
 - RLS remota por `user_id = auth.uid()`.
 - Backup validado por proprietário quando houver metadados locais.
 
+### 14. Supabase Realtime como Gatilho de Pull - Em andamento
+
+- Criar Broadcast PostgreSQL privado por usuário em `public.customers`.
+- Assinar canal `user:<user-id>:customers` somente no processo main.
+- Usar Realtime apenas para solicitar o pull incremental existente.
+- Manter polling periódico como fallback.
+- Expor apenas status sanitizado em `sync:get-status`.
+- Cobrir canal, debounce, reconexão e fallback com testes mockados.
+
 ## Scripts Planejados
 
 Os scripts abaixo devem ser definidos quando o projeto for inicializado:

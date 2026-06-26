@@ -1,4 +1,9 @@
-import type { ConnectivityStatus, SyncDirection, SyncStatus } from '@shared/sync/sync.types';
+import type {
+  ConnectivityStatus,
+  RealtimeConnectionStatus,
+  SyncDirection,
+  SyncStatus
+} from '@shared/sync/sync.types';
 import type { SyncOutboxRepository } from './sync-outbox.repository';
 import type { SyncConflictRepository } from './sync-conflict.repository';
 
@@ -16,6 +21,7 @@ export class SyncStatusService {
     this.status = {
       enabled,
       pullEnabled: options.pullEnabled ?? false,
+      realtimeStatus: enabled ? 'STOPPED' : 'DISABLED',
       connectivity: enabled ? 'OFFLINE' : 'DISABLED',
       running: false,
       direction: 'IDLE',
@@ -23,6 +29,8 @@ export class SyncStatusService {
       lastCompletedAt: null,
       lastPushAt: null,
       lastPullAt: null,
+      lastRealtimeEventAt: null,
+      lastRealtimeConnectedAt: null,
       lastSuccessfulAt: null,
       lastErrorCode: null
     };
@@ -39,6 +47,7 @@ export class SyncStatusService {
   setEnabled(enabled: boolean): void {
     this.status.enabled = enabled;
     this.status.connectivity = enabled ? this.status.connectivity : 'DISABLED';
+    this.status.realtimeStatus = enabled ? this.status.realtimeStatus : 'DISABLED';
   }
 
   setConnectivity(connectivity: ConnectivityStatus): void {
@@ -81,5 +90,17 @@ export class SyncStatusService {
 
   setPullEnabled(enabled: boolean): void {
     this.status.pullEnabled = enabled;
+  }
+
+  setRealtimeStatus(status: RealtimeConnectionStatus, now = new Date().toISOString()): void {
+    this.status.realtimeStatus = status;
+
+    if (status === 'SUBSCRIBED') {
+      this.status.lastRealtimeConnectedAt = now;
+    }
+  }
+
+  markRealtimeEvent(now = new Date().toISOString()): void {
+    this.status.lastRealtimeEventAt = now;
   }
 }

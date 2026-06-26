@@ -17,6 +17,9 @@ export interface SupabaseSyncConfig {
   batchSize: number;
   pullEnabled: boolean;
   pullBatchSize: number;
+  realtimeEnabled: boolean;
+  realtimePullDebounceMs: number;
+  realtimeReconnectMaxSeconds: number;
   requestTimeoutMs: number;
   hasForbiddenSecret: boolean;
 }
@@ -31,12 +34,17 @@ type MainSupabaseEnvKey =
   | 'MAIN_VITE_SYNC_BATCH_SIZE'
   | 'MAIN_VITE_SYNC_REQUEST_TIMEOUT_MS'
   | 'MAIN_VITE_SYNC_PULL_ENABLED'
-  | 'MAIN_VITE_SYNC_PULL_BATCH_SIZE';
+  | 'MAIN_VITE_SYNC_PULL_BATCH_SIZE'
+  | 'MAIN_VITE_REALTIME_ENABLED'
+  | 'MAIN_VITE_REALTIME_PULL_DEBOUNCE_MS'
+  | 'MAIN_VITE_REALTIME_RECONNECT_MAX_SECONDS';
 
 const defaultIntervalMinutes = 5;
 const defaultBatchSize = 50;
 const defaultPullBatchSize = 100;
 const defaultTimeoutMs = 10000;
+const defaultRealtimePullDebounceMs = 500;
+const defaultRealtimeReconnectMaxSeconds = 60;
 
 export function loadSupabaseSyncConfig(env: SupabaseEnv = getMainEnv()): SupabaseSyncConfig {
   const supabaseConfig = getSupabaseConfig(env);
@@ -59,6 +67,19 @@ export function loadSupabaseSyncConfig(env: SupabaseEnv = getMainEnv()): Supabas
       defaultPullBatchSize,
       1,
       500
+    ),
+    realtimeEnabled: parseBoolean(env.MAIN_VITE_REALTIME_ENABLED, true),
+    realtimePullDebounceMs: parseBoundedInteger(
+      env.MAIN_VITE_REALTIME_PULL_DEBOUNCE_MS,
+      defaultRealtimePullDebounceMs,
+      100,
+      5000
+    ),
+    realtimeReconnectMaxSeconds: parseBoundedInteger(
+      env.MAIN_VITE_REALTIME_RECONNECT_MAX_SECONDS,
+      defaultRealtimeReconnectMaxSeconds,
+      1,
+      60
     ),
     requestTimeoutMs: parseBoundedInteger(
       env.MAIN_VITE_SYNC_REQUEST_TIMEOUT_MS,

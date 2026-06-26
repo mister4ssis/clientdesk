@@ -370,11 +370,14 @@ export function createSyncTestInstance(
   const config: SupabaseSyncConfig = {
     enabled: true,
     pullEnabled: true,
+    realtimeEnabled: true,
     url: 'https://example.supabase.co',
     publishableKey: 'publishable-key',
     intervalMinutes: 5,
     batchSize: 50,
     pullBatchSize: options.pullBatchSize ?? 100,
+    realtimePullDebounceMs: 500,
+    realtimeReconnectMaxSeconds: 60,
     requestTimeoutMs: 10000,
     hasForbiddenSecret: false
   };

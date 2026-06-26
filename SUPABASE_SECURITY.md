@@ -40,6 +40,14 @@ Não há policy de DELETE. O sistema usa exclusão lógica.
 
 `sync_upsert_customer` é `SECURITY INVOKER`, usa `auth.uid()` para definir e filtrar `user_id`, revoga execução de `PUBLIC` e `anon`, e concede execução somente para `authenticated`.
 
+## Realtime
+
+Realtime usa Broadcast privado por tópico `user:<user-id>:customers`. O tópico é gerado no banco a partir de `customers.user_id` pela função `public.broadcast_customer_changes()`.
+
+A função de trigger usa `SECURITY DEFINER` com `search_path` fixo somente para chamar `realtime.broadcast_changes` a partir do trigger. Ela não recebe tópico do cliente e não aceita `user_id` arbitrário do renderer.
+
+A policy em `realtime.messages` concede `SELECT` apenas para `authenticated` no próprio tópico do usuário via `realtime.topic() = 'user:' || auth.uid()::text || ':customers'`. Não há policy para `anon` nem tópico global.
+
 ## Renderer
 
 O renderer não recebe URL, chaves, cliente Supabase, `fetch` genérico ou canais arbitrários. Toda sincronização passa por IPC específico e serviços no processo main.

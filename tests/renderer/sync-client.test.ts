@@ -70,6 +70,7 @@ describe('sync-client', () => {
 const syncStatus = {
   enabled: false,
   pullEnabled: false,
+  realtimeStatus: 'DISABLED' as const,
   connectivity: 'DISABLED' as const,
   running: false,
   direction: 'IDLE' as const,
@@ -80,6 +81,8 @@ const syncStatus = {
   lastSuccessfulAt: null,
   lastPushAt: null,
   lastPullAt: null,
+  lastRealtimeEventAt: null,
+  lastRealtimeConnectedAt: null,
   lastErrorCode: null
 };
 

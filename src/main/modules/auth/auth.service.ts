@@ -1,5 +1,5 @@
 import { net } from 'electron';
-import type { AuthChangeEvent } from '@supabase/supabase-js';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import type { AuthState, AuthUser, SignInInput } from '@shared/auth/auth.types';
 import { signInInputSchema } from '@shared/auth/auth.schemas';
 import { ApplicationError } from '../../errors/application-error';
@@ -16,6 +16,7 @@ interface AuthServiceDependencies {
   isNetworkOnline?: () => boolean;
   onAuthenticated?: (user: AuthUser, mode: 'online' | 'offline') => void | Promise<void>;
   onSignedOut?: () => void | Promise<void>;
+  onSessionTokenChanged?: (accessToken: string | null) => void | Promise<void>;
 }
 
 export class AuthService {
@@ -27,6 +28,7 @@ export class AuthService {
   private readonly isNetworkOnline: () => boolean;
   private readonly onAuthenticated?: AuthServiceDependencies['onAuthenticated'];
   private readonly onSignedOut?: AuthServiceDependencies['onSignedOut'];
+  private readonly onSessionTokenChanged?: AuthServiceDependencies['onSessionTokenChanged'];
 
   constructor(dependencies: AuthServiceDependencies) {
     this.supabaseClient = dependencies.supabaseClient;
@@ -35,6 +37,7 @@ export class AuthService {
     this.isNetworkOnline = dependencies.isNetworkOnline ?? (() => net.isOnline());
     this.onAuthenticated = dependencies.onAuthenticated;
     this.onSignedOut = dependencies.onSignedOut;
+    this.onSessionTokenChanged = dependencies.onSessionTokenChanged;
   }
 
   async initialize(): Promise<AuthState> {
@@ -54,6 +57,7 @@ export class AuthService {
       if (!error && data.user) {
         const user = mapSupabaseUser(data.user);
         this.localProfileRepository.saveProfile(user);
+        await this.emitCurrentSessionToken();
         await this.applyAuthenticatedUser(user, 'online');
 
         return this.state;
@@ -90,6 +94,7 @@ export class AuthService {
 
     const user = await this.getVerifiedUser();
     this.localProfileRepository.saveProfile(user);
+    await this.emitCurrentSessionToken();
     await this.applyAuthenticatedUser(user, 'online');
 
     return this.state;
@@ -109,6 +114,7 @@ export class AuthService {
     this.sessionStorage.clear();
     this.localProfileRepository.clearProfile();
     this.state = createAuthState('UNAUTHENTICATED', null);
+    await this.emitSessionToken(null);
 
     if (previousUser) {
       await this.onSignedOut?.();
@@ -128,11 +134,13 @@ export class AuthService {
 
     if (error) {
       this.state = createAuthState('SESSION_EXPIRED', this.state.user);
+      await this.emitSessionToken(null);
       return this.state;
     }
 
     const user = await this.getVerifiedUser();
     this.localProfileRepository.saveProfile(user);
+    await this.emitCurrentSessionToken();
     await this.applyAuthenticatedUser(user, 'online');
 
     return this.state;
@@ -160,9 +168,9 @@ export class AuthService {
       return;
     }
 
-    const { data } = this.supabaseClient.auth.onAuthStateChange((event) => {
+    const { data } = this.supabaseClient.auth.onAuthStateChange((event, session) => {
       setTimeout(() => {
-        void this.handleAuthChange(event);
+        void this.handleAuthChange(event, session);
       }, 0);
     });
 
@@ -174,9 +182,10 @@ export class AuthService {
     this.unsubscribeAuthListener = null;
   }
 
-  private async handleAuthChange(event: AuthChangeEvent): Promise<void> {
+  private async handleAuthChange(event: AuthChangeEvent, session: Session | null): Promise<void> {
     if (event === 'SIGNED_OUT') {
       this.state = createAuthState('UNAUTHENTICATED', null);
+      await this.emitSessionToken(null);
       await this.onSignedOut?.();
       return;
     }
@@ -188,11 +197,13 @@ export class AuthService {
       event === 'USER_UPDATED'
     ) {
       try {
+        await this.emitSessionToken(session?.access_token ?? null);
         const user = await this.getVerifiedUser();
         this.localProfileRepository.saveProfile(user);
         await this.applyAuthenticatedUser(user, 'online');
       } catch {
         this.state = createAuthState('SESSION_EXPIRED', this.state.user);
+        await this.emitSessionToken(null);
       }
     }
   }
@@ -205,12 +216,14 @@ export class AuthService {
         id: profile.userId,
         email: profile.email
       };
+      await this.emitSessionToken(null);
       await this.applyAuthenticatedUser(user, 'offline');
 
       return this.state;
     }
 
     this.state = createAuthState('UNAUTHENTICATED', null);
+    await this.emitSessionToken(null);
 
     return this.state;
   }
@@ -224,6 +237,24 @@ export class AuthService {
       user
     );
     await this.onAuthenticated?.(user, mode);
+  }
+
+  private async emitCurrentSessionToken(): Promise<void> {
+    if (!this.supabaseClient) {
+      await this.emitSessionToken(null);
+      return;
+    }
+
+    try {
+      const { data } = await this.supabaseClient.auth.getSession();
+      await this.emitSessionToken(data.session?.access_token ?? null);
+    } catch {
+      await this.emitSessionToken(null);
+    }
+  }
+
+  private async emitSessionToken(accessToken: string | null): Promise<void> {
+    await this.onSessionTokenChanged?.(accessToken);
   }
 }
 

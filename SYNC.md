@@ -19,6 +19,7 @@ A sincronização pode ser solicitada:
 - na inicialização do app;
 - após cadastro, edição, ativação ou inativação;
 - no intervalo configurado por `MAIN_VITE_SYNC_INTERVAL_MINUTES`;
+- por evento Supabase Realtime Broadcast em canal privado do usuário;
 - pelo botão "Sincronizar agora" na página de configurações.
 
 Falhas remotas não impedem o sucesso local. A UI deve informar que a alteração está salva localmente e ficará pendente.
@@ -47,6 +48,14 @@ O ciclo executa push antes de pull. O recebimento usa cursor composto em `sync_c
 
 `SYNC_PULL_ENABLED=false` é o padrão porque o repositório ainda não possui fluxo de autenticação do usuário final. Habilite apenas quando a tabela remota estiver protegida por RLS por `user_id = auth.uid()`.
 
+## Realtime
+
+Supabase Realtime é usado apenas como gatilho para reduzir latência do pull incremental. O payload do evento não é aplicado diretamente no SQLite e não é registrado em logs.
+
+O canal é privado por usuário no formato `user:<user-id>:customers`, criado apenas no processo main e removido em logout, troca de usuário, expiração de sessão ou encerramento. O polling periódico permanece ativo como fallback e mecanismo de recuperação.
+
+Consulte `REALTIME_SYNC.md`.
+
 ## Retry e Backoff
 
 Falhas incrementam `attempts`, mantêm o item na fila e definem `next_attempt_at` com atraso progressivo: 1, 2, 5, 15 e 30 minutos, com pequeno jitter.
@@ -64,7 +73,7 @@ Conflitos são registrados em `sync_conflicts` quando há alteração local pend
 
 ## Limitações
 
-Não há Realtime, Broadcast, merge automático ou sincronização de exclusão física. O pull permanece desabilitado por padrão até existir autenticação e RLS seguros.
+Não há merge automático campo a campo, Supabase Presence, Postgres Changes no cliente ou sincronização de exclusão física. O Realtime não substitui o polling periódico.
 
 ## Validação Multi-Instância
 

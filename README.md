@@ -159,9 +159,12 @@ A sincronização é offline-first: o cliente é salvo no SQLite, a alteração 
 
 Por segurança, `SYNC_PULL_ENABLED=false` é o padrão até existir sessão autenticada e RLS validado no Supabase.
 
+Supabase Realtime pode ser usado como gatilho para iniciar o pull incremental rapidamente. O polling periódico continua ativo como fallback, e o payload Realtime nunca é aplicado diretamente no SQLite.
+
 Com `MAIN_VITE_SYNC_ENABLED=false`, o app opera normalmente sem internet. Consulte:
 
 - `SYNC.md`: arquitetura, outbox, retry e limitações.
+- `REALTIME_SYNC.md`: Broadcast privado, lifecycle do canal, debounce e fallback por polling.
 - `AUTH.md`: login, sessão segura, estados e logout.
 - `LOCAL_USER_PROFILES.md`: isolamento local por usuário e modo offline.
 - `BIDIRECTIONAL_SYNC.md`: cursor, pull incremental, versionamento e exclusão lógica.
@@ -183,6 +186,7 @@ Com `MAIN_VITE_SYNC_ENABLED=false`, o app opera normalmente sem internet. Consul
 - `TESTING.md`: estratégia e comandos de teste.
 - `MULTI_INSTANCE_TESTING.md`: execução e isolamento de testes de sincronização.
 - `SYNC_VALIDATION_REPORT.md`: resultado da validação multi-instância.
+- `REALTIME_SYNC.md`: Realtime como gatilho de sincronização.
 
 ## Limitações Conhecidas
 

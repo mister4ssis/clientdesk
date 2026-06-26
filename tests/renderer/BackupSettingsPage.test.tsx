@@ -48,6 +48,7 @@ beforeEach(() => {
   syncClientMock.getSyncStatus.mockResolvedValue({
     enabled: false,
     pullEnabled: false,
+    realtimeStatus: 'DISABLED',
     connectivity: 'DISABLED',
     running: false,
     direction: 'IDLE',
@@ -57,6 +58,8 @@ beforeEach(() => {
     lastCompletedAt: null,
     lastPushAt: null,
     lastPullAt: null,
+    lastRealtimeEventAt: null,
+    lastRealtimeConnectedAt: null,
     lastSuccessfulAt: null,
     lastErrorCode: null
   });

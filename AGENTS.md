@@ -415,6 +415,11 @@ Uma tarefa está pronta apenas quando:
 - Não criar dependências novas sem justificar.
 - Não alterar contratos públicos sem registrar impacto.
 - Não fazer commit, push ou publicação sem solicitação explícita.
+- Supabase Realtime é apenas gatilho para o pull incremental; nunca aplicar payload Realtime diretamente no SQLite.
+- Nunca remover o polling periódico sem decisão arquitetural documentada.
+- Todo canal Realtime deve ser privado, por usuário autenticado, e encerrado no logout.
+- Nunca expor canal Realtime, tópico, token, socket ou cliente Supabase ao renderer.
+- Testes padrão de sincronização e Realtime devem funcionar sem internet.
 - Ao terminar, informar:
   - arquivos criados;
   - arquivos modificados;

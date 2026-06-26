@@ -19,6 +19,8 @@ import { BackgroundSyncService } from './modules/sync/background-sync.service';
 import { CustomerConflictService } from './modules/sync/customer-conflict.service';
 import { CustomerPullService } from './modules/sync/customer-pull.service';
 import { CustomerSyncService } from './modules/sync/customer-sync.service';
+import { RealtimeChannelManager } from './modules/sync/realtime/realtime-channel-manager';
+import { RealtimeSyncTriggerService } from './modules/sync/realtime/realtime-sync-trigger.service';
 import { SyncConflictRepository } from './modules/sync/sync-conflict.repository';
 import { SyncCursorRepository } from './modules/sync/sync-cursor.repository';
 import { SyncOutboxRepository } from './modules/sync/sync-outbox.repository';
@@ -31,6 +33,9 @@ import type { SyncStatus } from '@shared/sync/sync.types';
 
 let syncScheduler: SyncScheduler | null = null;
 let authService: AuthService | null = null;
+let realtimeChannelManager: RealtimeChannelManager | null = null;
+let realtimeSyncTriggerService: RealtimeSyncTriggerService | null = null;
+let currentRealtimeAccessToken: string | null = null;
 
 async function bootstrap(): Promise<void> {
   await app.whenReady();
@@ -55,6 +60,10 @@ async function bootstrap(): Promise<void> {
     },
     onSignedOut: () => {
       closeUserSession();
+    },
+    onSessionTokenChanged: (accessToken) => {
+      currentRealtimeAccessToken = accessToken;
+      void realtimeChannelManager?.updateAuth(accessToken);
     }
   });
 
@@ -78,6 +87,10 @@ async function bootstrap(): Promise<void> {
   }
 
   function closeUserSession(): void {
+    realtimeSyncTriggerService?.stop();
+    realtimeSyncTriggerService = null;
+    void realtimeChannelManager?.shutdown();
+    realtimeChannelManager = null;
     syncScheduler?.stop();
     syncScheduler = null;
     closeDatabase();
@@ -136,6 +149,23 @@ async function bootstrap(): Promise<void> {
         }
       }
     );
+    realtimeSyncTriggerService?.stop();
+    realtimeSyncTriggerService = new RealtimeSyncTriggerService({
+      debounceMs: syncConfig.realtimePullDebounceMs,
+      requestSync: {
+        requestSync: (options) => backgroundSyncService.requestSync(options)
+      },
+      syncStatusService
+    });
+    void realtimeChannelManager?.shutdown();
+    realtimeChannelManager = new RealtimeChannelManager(supabaseClient, {
+      enabled: syncConfig.enabled && syncConfig.realtimeEnabled && startScheduler,
+      reconnectMaxSeconds: syncConfig.realtimeReconnectMaxSeconds,
+      syncStatusService,
+      onDatabaseChange: (payload) => {
+        realtimeSyncTriggerService?.handleDatabaseChange(payload);
+      }
+    });
     const customerConflictService = new CustomerConflictService(
       currentDatabase,
       customerRepository,
@@ -172,6 +202,12 @@ async function bootstrap(): Promise<void> {
 
     if (startScheduler) {
       syncScheduler.start();
+      if (syncConfig.enabled && syncConfig.realtimeEnabled) {
+        realtimeSyncTriggerService.start();
+        void realtimeChannelManager.start(user.id, currentRealtimeAccessToken);
+      }
+    } else {
+      syncStatusService.setRealtimeStatus(syncConfig.realtimeEnabled ? 'OFFLINE' : 'DISABLED');
     }
   }
 
@@ -187,6 +223,8 @@ async function bootstrap(): Promise<void> {
 }
 
 app.on('before-quit', () => {
+  realtimeSyncTriggerService?.stop();
+  void realtimeChannelManager?.shutdown();
   syncScheduler?.stop();
   closeDatabase();
 });
@@ -247,10 +285,13 @@ function createLockedSyncService() {
       direction: 'IDLE',
       pendingCount: 0,
       conflictCount: 0,
+      realtimeStatus: 'DISABLED',
       lastStartedAt: null,
       lastCompletedAt: null,
       lastPushAt: null,
       lastPullAt: null,
+      lastRealtimeEventAt: null,
+      lastRealtimeConnectedAt: null,
       lastSuccessfulAt: null,
       lastErrorCode: ErrorCode.AuthNotAuthenticated
     }),

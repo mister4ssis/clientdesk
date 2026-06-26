@@ -13,6 +13,9 @@ MAIN_VITE_SYNC_BATCH_SIZE=50
 MAIN_VITE_SYNC_REQUEST_TIMEOUT_MS=10000
 MAIN_VITE_SYNC_PULL_ENABLED=false
 MAIN_VITE_SYNC_PULL_BATCH_SIZE=100
+MAIN_VITE_REALTIME_ENABLED=true
+MAIN_VITE_REALTIME_PULL_DEBOUNCE_MS=500
+MAIN_VITE_REALTIME_RECONNECT_MAX_SECONDS=60
 ```
 
 Essas variáveis são carregadas apenas no processo main pelo electron-vite. Não use variáveis `RENDERER_VITE_*` para Supabase e não use `service_role` em aplicativo desktop.
@@ -25,6 +28,7 @@ As migrations remotas ficam em `supabase/migrations/`:
 - `202606230001_bidirectional_customer_sync.sql`: adiciona `user_id`, `version`, `deleted_at`, trigger de versionamento, policies RLS por usuário autenticado e RPC `sync_upsert_customer`.
 - `202606230002_auth_rls_customer_owner.sql`: reforça RLS por usuário, ajusta unicidade de `tax_id` para `(user_id, tax_id)` e recria a RPC como `SECURITY INVOKER`.
 - `202606260001_finalize_customer_owner_constraints.sql`: valida `user_id`, aplica `NOT NULL` quando seguro e reforça índices, policies e permissões da RPC.
+- `202606260002_customer_realtime_broadcast.sql`: cria Broadcast Realtime privado por usuário para mudanças em `public.customers` e policy em `realtime.messages`.
 
 ## Aplicação
 
@@ -56,6 +60,7 @@ Após aplicar, valide o schema remoto:
 
 ```bash
 npx supabase db query --linked --file supabase/validation/validate-clientdesk-remote-schema.sql
+npx supabase db query --linked --file supabase/validation/validate-clientdesk-realtime.sql
 ```
 
 Todos os registros retornados devem possuir `passed = true`.
@@ -69,6 +74,8 @@ Todos os registros retornados devem possuir `passed = true`.
 Com `MAIN_VITE_SYNC_ENABLED=false`, o app funciona normalmente offline. A autenticação ainda pode usar Supabase se `MAIN_VITE_SUPABASE_URL` e `MAIN_VITE_SUPABASE_PUBLISHABLE_KEY` estiverem configuradas. Com `MAIN_VITE_SYNC_ENABLED=true`, o processo main usa o mesmo cliente Supabase para sincronização, sem persistir sessão em APIs do navegador.
 
 O push usa a RPC `sync_upsert_customer` com controle otimista por `version`. O pull incremental só deve ser habilitado com `MAIN_VITE_SYNC_PULL_ENABLED=true` quando existir sessão autenticada e RLS validado.
+
+Realtime pode ser habilitado com `MAIN_VITE_REALTIME_ENABLED=true`. Ele não substitui o polling e não aplica payload diretamente; apenas solicita o ciclo incremental existente.
 
 ## Controle de Acesso
 

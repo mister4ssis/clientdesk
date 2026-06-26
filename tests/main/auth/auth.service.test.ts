@@ -12,9 +12,11 @@ describe('AuthService', () => {
   it('logs in with normalized email and verifies the remote user', async () => {
     const supabaseClient = createSupabaseClientMock();
     const onAuthenticated = vi.fn();
+    const onSessionTokenChanged = vi.fn();
     const service = createService({
       supabaseClient,
-      onAuthenticated
+      onAuthenticated,
+      onSessionTokenChanged
     });
 
     await expect(
@@ -39,6 +41,8 @@ describe('AuthService', () => {
       { id: userId, email: 'user@example.com' },
       'online'
     );
+    expect(onSessionTokenChanged).toHaveBeenCalledWith('session-token');
+    expect(service.getState()).not.toHaveProperty('access_token');
   });
 
   it('returns a sanitized error for invalid credentials', async () => {
@@ -116,6 +120,7 @@ interface CreateServiceOptions {
   signInError?: { message: string };
   isNetworkOnline?: () => boolean;
   onAuthenticated?: ReturnType<typeof vi.fn>;
+  onSessionTokenChanged?: ReturnType<typeof vi.fn>;
 }
 
 function createService(options: CreateServiceOptions = {}): AuthService {
@@ -133,7 +138,8 @@ function createServiceWithProfile(options: CreateServiceOptions = {}) {
     sessionStorage,
     localProfileRepository: profileRepository,
     isNetworkOnline: options.isNetworkOnline ?? (() => true),
-    onAuthenticated: options.onAuthenticated
+    onAuthenticated: options.onAuthenticated,
+    onSessionTokenChanged: options.onSessionTokenChanged
   });
 
   return {
@@ -155,6 +161,14 @@ function createSupabaseClientMock(
         user: {
           id: userId,
           email: 'user@example.com'
+        }
+      },
+      error: null
+    })),
+    getSession: vi.fn(async () => ({
+      data: {
+        session: {
+          access_token: 'session-token'
         }
       },
       error: null

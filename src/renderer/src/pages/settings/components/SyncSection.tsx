@@ -69,6 +69,10 @@ export function SyncSection({ onViewConflicts }: SyncSectionProps) {
             <dd>{formatSyncStatus(status)}</dd>
           </div>
           <div>
+            <dt>Atualizações em tempo real</dt>
+            <dd>{formatRealtimeStatus(status)}</dd>
+          </div>
+          <div>
             <dt>Pendentes</dt>
             <dd>{status.pendingCount}</dd>
           </div>
@@ -87,6 +91,10 @@ export function SyncSection({ onViewConflicts }: SyncSectionProps) {
           <div>
             <dt>Último recebimento</dt>
             <dd>{formatOptionalDateTime(status.lastPullAt)}</dd>
+          </div>
+          <div>
+            <dt>Último evento em tempo real</dt>
+            <dd>{formatOptionalDateTime(status.lastRealtimeEventAt)}</dd>
           </div>
         </dl>
       ) : null}
@@ -170,6 +178,28 @@ function formatSyncStatus(status: SyncStatus): string {
       return 'Sincronização desabilitada';
     default:
       return 'Offline';
+  }
+}
+
+function formatRealtimeStatus(status: SyncStatus): string {
+  if (!status.enabled || status.realtimeStatus === 'DISABLED') {
+    return 'Atualizações em tempo real desabilitadas. Polling de segurança ativo.';
+  }
+
+  switch (status.realtimeStatus) {
+    case 'SUBSCRIBED':
+      return 'Atualizações em tempo real ativas. Polling de segurança ativo.';
+    case 'CONNECTING':
+    case 'RECONNECTING':
+      return 'Conectando às atualizações em tempo real. Polling de segurança ativo.';
+    case 'CHANNEL_ERROR':
+    case 'TIMED_OUT':
+    case 'AUTH_ERROR':
+      return 'Atualizações em tempo real temporariamente indisponíveis. A sincronização periódica continua ativa.';
+    case 'OFFLINE':
+      return 'Sem conexão. As alterações serão sincronizadas posteriormente.';
+    case 'STOPPED':
+      return 'Atualizações em tempo real pausadas. Polling de segurança ativo.';
   }
 }
 

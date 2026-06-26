@@ -99,6 +99,7 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - Auth não expõe access token, refresh token, JWT, sessão Supabase completa, URL ou chave.
 - Backup e restauração não retornam caminhos internos ao renderer.
 - Sync não expõe URL, chaves, cliente Supabase ou fila completa ao renderer.
+- Realtime não expõe canal, tópico, payload, socket ou token; o renderer recebe apenas `realtimeStatus`, `lastRealtimeEventAt` e `lastRealtimeConnectedAt` dentro de `SyncStatus`.
 - Sync expõe somente resumo/detalhe de conflito necessários para resolução manual.
 - Remover handler anterior antes de registrar novo handler para evitar duplicidade em desenvolvimento e testes.
 

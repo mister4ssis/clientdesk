@@ -25,6 +25,14 @@ export class BackgroundSyncService {
     return this.syncStatusService.getStatus();
   }
 
+  async requestSync(options: {
+    reason: 'MANUAL' | 'SCHEDULER' | 'LOCAL_CHANGE' | 'REALTIME_EVENT';
+  }): Promise<SyncRunResult> {
+    void options;
+
+    return this.runNow();
+  }
+
   async runNow(): Promise<SyncRunResult> {
     const syncRunId = randomUUID();
     const runStartedAt = Date.now();

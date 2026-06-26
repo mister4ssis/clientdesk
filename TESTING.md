@@ -28,6 +28,8 @@ npm rebuild better-sqlite3
 - `tests/main/customers`: repository, service e integração com SQLite temporário.
 - `tests/main/ipc`: handlers IPC, validação e sanitização de erros.
 - `tests/integration/sync`: sincronização bidirecional entre duas instalações SQLite independentes com Supabase mockado.
+- `tests/main/sync/realtime`: canal Realtime, debounce, reconexão e proteção contra payload direto.
+- `tests/integration/realtime`: Realtime como gatilho de pull, lifecycle de autenticação e polling como fallback com Supabase mockado.
 - `tests/preload`: API exposta pelo `contextBridge`.
 - `tests/renderer`: listagem, filtros, cadastro, edição, detalhes, hooks, formatadores e client.
 - `tests/smoke`: arquivos essenciais e scripts de validação/empacotamento.
@@ -54,6 +56,18 @@ Os cenários em `tests/integration/sync` cobrem duas instalações lógicas do a
 Esses testes usam Supabase mockado e funcionam sem internet. Consulte `MULTI_INSTANCE_TESTING.md` e `SYNC_VALIDATION_REPORT.md`.
 
 Testes reais contra Supabase devem ser opcionais e protegidos por `RUN_SUPABASE_INTEGRATION_TESTS=true`, além de variáveis `SUPABASE_TEST_*`. Nunca use produção.
+
+## Testes Realtime
+
+Os testes Realtime padrão usam mocks e validam que:
+
+- eventos Broadcast solicitam o mesmo ciclo incremental usado por polling/manual;
+- vários eventos são consolidados por debounce;
+- payloads Realtime não são aplicados diretamente no SQLite;
+- falhas de canal não desativam polling;
+- logout, troca de usuário e refresh removem ou atualizam o canal correto.
+
+Testes reais devem ser protegidos por `RUN_SUPABASE_REALTIME_TESTS=true` e usar ambiente Supabase exclusivo de teste.
 
 ## Testes Manuais Recomendados
 

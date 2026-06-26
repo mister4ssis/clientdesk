@@ -126,6 +126,9 @@ function createService(
       batchSize: 50,
       pullEnabled: false,
       pullBatchSize: 100,
+      realtimeEnabled: true,
+      realtimePullDebounceMs: 500,
+      realtimeReconnectMaxSeconds: 60,
       requestTimeoutMs: 10000,
       hasForbiddenSecret: false,
       ...configOverrides

@@ -24,7 +24,10 @@ describe('loadSupabaseSyncConfig', () => {
       MAIN_VITE_SYNC_ENABLED: 'true',
       MAIN_VITE_SYNC_INTERVAL_MINUTES: '2',
       MAIN_VITE_SYNC_BATCH_SIZE: '25',
-      MAIN_VITE_SYNC_REQUEST_TIMEOUT_MS: '5000'
+      MAIN_VITE_SYNC_REQUEST_TIMEOUT_MS: '5000',
+      MAIN_VITE_REALTIME_ENABLED: 'true',
+      MAIN_VITE_REALTIME_PULL_DEBOUNCE_MS: '250',
+      MAIN_VITE_REALTIME_RECONNECT_MAX_SECONDS: '30'
     });
 
     expect(config).toMatchObject({
@@ -33,7 +36,10 @@ describe('loadSupabaseSyncConfig', () => {
       publishableKey: 'publishable-key',
       intervalMinutes: 2,
       batchSize: 25,
-      requestTimeoutMs: 5000
+      requestTimeoutMs: 5000,
+      realtimeEnabled: true,
+      realtimePullDebounceMs: 250,
+      realtimeReconnectMaxSeconds: 30
     });
   });
 

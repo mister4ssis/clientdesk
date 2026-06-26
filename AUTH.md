@@ -48,6 +48,12 @@ Em `OFFLINE_AUTHENTICATED`, o usuário pode usar dados locais e gerar outbox, ma
 
 Logout para o scheduler, fecha o banco atual, limpa sessão/perfil locais e volta para login. O banco local, backups e dados remotos não são apagados.
 
+## Realtime
+
+Quando o estado fica `AUTHENTICATED`, o processo main pode criar o canal Realtime privado do usuário para receber gatilhos de pull. Após `TOKEN_REFRESHED`, o token do Realtime é atualizado somente em memória no processo main.
+
+Em `SIGNED_OUT`, troca de usuário ou `SESSION_EXPIRED`, o canal é removido e a sincronização remota fica pausada. Tokens nunca são enviados ao renderer.
+
 ## Limitações
 
 - Sem cadastro público.

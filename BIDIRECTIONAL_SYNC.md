@@ -55,7 +55,8 @@ Se houver alteração local pendente e `remote.version > customers.remote_versio
 
 ## Limitações
 
-- Sem Supabase Realtime, Broadcast ou Postgres Changes.
+- Supabase Realtime Broadcast é apenas gatilho de pull; o payload não é fonte de dados.
+- Sem Presence, Postgres Changes no cliente ou colaboração em tempo real.
 - Sem merge campo a campo.
 - Sem múltiplas organizações.
 - Pull remoto fica bloqueado por padrão até Auth/RLS seguro estar configurado.

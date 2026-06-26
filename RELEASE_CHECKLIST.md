@@ -107,6 +107,11 @@
 - [ ] fila pendente preservada offline
 - [ ] duas instalações com a mesma conta convergem
 - [ ] conflito real entre duas instalações resolvido
+- [ ] Realtime conectado em canal privado do usuário
+- [ ] evento Realtime dispara pull incremental
+- [ ] polling recupera alteração quando Realtime está indisponível
+- [ ] logout remove canal Realtime
+- [ ] troca de usuário não reaproveita canal anterior
 
 ## Segurança
 
@@ -122,6 +127,8 @@
 - [ ] policies restringem `customers.user_id = auth.uid()`
 - [ ] RPC `sync_upsert_customer` testada sem `service_role`
 - [ ] anon não acessa `customers`
+- [ ] policy de `realtime.messages` restringe tópico por `auth.uid()`
+- [ ] renderer não recebe tópico, payload, socket ou token Realtime
 - [ ] backup de outro usuário rejeitado
 - [ ] assinatura digital avaliada
 

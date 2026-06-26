@@ -327,3 +327,9 @@ Erros técnicos são registrados de forma sanitizada. A UI recebe mensagens amig
 - IPC com canais explícitos.
 - Validação no main, mesmo havendo validação no formulário.
 - Prepared statements para todas as consultas SQL.
+
+## Realtime
+
+Supabase Realtime é usado somente como gatilho de pull incremental. O trigger PostgreSQL publica Broadcast privado no tópico `user:<user-id>:customers`; o processo main assina o canal com a sessão autenticada e solicita `BackgroundSyncService.requestSync({ reason: 'REALTIME_EVENT' })`.
+
+O payload Realtime nunca é aplicado diretamente no SQLite. O polling periódico e a sincronização manual continuam usando o mesmo ciclo como fallback e recuperação.
