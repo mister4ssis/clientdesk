@@ -38,7 +38,7 @@ Sincronização Supabase é opcional e desabilitada por padrão:
 cp .env.example .env
 ```
 
-Preencha apenas `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` quando houver Auth/RLS seguro. Não use chaves `service_role` no aplicativo desktop.
+Preencha apenas `MAIN_VITE_SUPABASE_URL` e `MAIN_VITE_SUPABASE_PUBLISHABLE_KEY` quando houver Auth/RLS seguro. Essas variáveis são destinadas ao processo main; não use variáveis `RENDERER_VITE_*` nem chaves `service_role` no aplicativo desktop.
 
 Empacotamento local:
 
@@ -60,6 +60,18 @@ Os artefatos de empacotamento são salvos em `release/`, que não deve ser commi
 - `src/shared`: tipos, DTOs, schemas Zod e contratos IPC.
 
 O renderer não acessa Electron, `ipcRenderer`, SQLite, `fs`, `path` ou SQL. Toda persistência passa por IPC explícito, service e repository no processo principal.
+
+## Autenticação
+
+O ClientDesk usa Supabase Auth com e-mail e senha. A sessão é armazenada no processo main com `safeStorage`; tokens nunca são enviados ao renderer.
+
+Cada usuário possui um banco local separado em:
+
+```text
+app.getPath('userData')/users/<user-id>/clientdesk.sqlite
+```
+
+Um usuário previamente autenticado pode usar o app offline com seus dados locais. O primeiro acesso exige conexão.
 
 ## Banco de Dados
 
@@ -145,9 +157,11 @@ A sincronização é offline-first: o cliente é salvo no SQLite, a alteração 
 
 Por segurança, `SYNC_PULL_ENABLED=false` é o padrão até existir sessão autenticada e RLS validado no Supabase.
 
-Com `SYNC_ENABLED=false`, o app opera normalmente sem internet. Consulte:
+Com `MAIN_VITE_SYNC_ENABLED=false`, o app opera normalmente sem internet. Consulte:
 
 - `SYNC.md`: arquitetura, outbox, retry e limitações.
+- `AUTH.md`: login, sessão segura, estados e logout.
+- `LOCAL_USER_PROFILES.md`: isolamento local por usuário e modo offline.
 - `BIDIRECTIONAL_SYNC.md`: cursor, pull incremental, versionamento e exclusão lógica.
 - `CONFLICT_RESOLUTION.md`: detecção e resolução manual de conflitos.
 - `SUPABASE.md`: variáveis, tabela remota e migration.
@@ -167,7 +181,7 @@ Com `SYNC_ENABLED=false`, o app opera normalmente sem internet. Consulte:
 ## Limitações Conhecidas
 
 - Ainda não há backup automático.
-- O pull Supabase -> SQLite fica desabilitado por padrão até Auth/RLS seguro.
+- A autenticação não inclui cadastro público, recuperação de senha, MFA ou OAuth.
 - Não há merge automático campo a campo em conflitos.
 - Ainda não há importação/exportação.
 - Ainda não há teste E2E automatizado na janela Electron.

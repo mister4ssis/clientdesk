@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { getDatabasePath } from './database-path';
+import { getDatabasePath, getUserDatabasePath } from './database-path';
 
 export type DatabaseConnection = Database.Database;
 
@@ -8,6 +8,7 @@ interface OpenDatabaseOptions {
 }
 
 let connection: DatabaseConnection | null = null;
+let currentUserId: string | null = null;
 
 export function openDatabase(options: OpenDatabaseOptions = {}): DatabaseConnection {
   if (connection?.open) {
@@ -15,7 +16,23 @@ export function openDatabase(options: OpenDatabaseOptions = {}): DatabaseConnect
   }
 
   const databasePath = options.databasePath ?? getDatabasePath();
+  currentUserId = null;
   connection = new Database(databasePath);
+  configureDatabase(connection);
+
+  return connection;
+}
+
+export function openDatabaseForUser(userId: string, userDataPath?: string): DatabaseConnection {
+  if (connection?.open && currentUserId === userId) {
+    return connection;
+  }
+
+  closeDatabase();
+
+  const databasePath = getUserDatabasePath(userId, userDataPath);
+  connection = new Database(databasePath);
+  currentUserId = userId;
   configureDatabase(connection);
 
   return connection;
@@ -35,6 +52,11 @@ export function closeDatabase(): void {
   }
 
   connection = null;
+  currentUserId = null;
+}
+
+export function getCurrentUserId(): string | null {
+  return currentUserId;
 }
 
 export function configureDatabase(database: DatabaseConnection): void {

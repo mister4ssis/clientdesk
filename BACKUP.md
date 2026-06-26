@@ -45,6 +45,7 @@ Um backup só é aceito quando:
 - colunas essenciais de `customers` existem;
 - o arquivo não é o banco ativo;
 - a versão das migrations não é futura.
+- quando houver usuário autenticado, `app_metadata.owner_user_id` corresponde ao usuário atual.
 
 ## Compatibilidade de Migrations
 
@@ -52,11 +53,13 @@ Backups antigos podem ser restaurados e atualizados pelas migrations atuais. Bac
 
 ## Localização
 
-Banco ativo:
+Banco ativo por usuário:
 
 ```text
-app.getPath('userData')/data/clientdesk.sqlite
+app.getPath('userData')/users/<user-id>/clientdesk.sqlite
 ```
+
+O caminho legado `app.getPath('userData')/data/clientdesk.sqlite` não é associado automaticamente a nenhuma conta.
 
 Backups automáticos antes de restauração:
 

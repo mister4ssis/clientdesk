@@ -173,6 +173,12 @@ Qualquer exceção deve ser documentada em `docs/DECISIONS.md`.
 - Não chamar Supabase dentro de transações SQLite.
 - Não expor Supabase, URL ou chaves ao renderer.
 - Não utilizar `service_role` ou secret key no aplicativo desktop.
+- Nunca expor access token, refresh token, JWT ou sessão Supabase completa ao renderer.
+- Nunca salvar senha.
+- Nunca criar cliente Supabase no renderer.
+- Nunca executar sincronização remota sem usuário autenticado.
+- Nunca abrir banco local de outro usuário.
+- Toda consulta remota deve respeitar o proprietário do registro.
 - Pull remoto só pode ser habilitado com Auth/RLS seguro e escopo por usuário ou organização.
 - Alterações remotas aplicadas localmente não podem criar novo item na outbox.
 - Conflitos devem ser registrados e resolvidos explicitamente, sem sobrescrever alterações concorrentes em silêncio.

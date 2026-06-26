@@ -18,10 +18,16 @@ A sincronização pode ser solicitada:
 
 - na inicialização do app;
 - após cadastro, edição, ativação ou inativação;
-- no intervalo configurado por `SYNC_INTERVAL_MINUTES`;
+- no intervalo configurado por `MAIN_VITE_SYNC_INTERVAL_MINUTES`;
 - pelo botão "Sincronizar agora" na página de configurações.
 
 Falhas remotas não impedem o sucesso local. A UI deve informar que a alteração está salva localmente e ficará pendente.
+
+## Autenticação
+
+O ciclo remoto só executa em `AUTHENTICATED`. Em `OFFLINE_AUTHENTICATED` ou `SESSION_EXPIRED`, o app mantém outbox/cursor/conflitos locais, mas não chama Supabase.
+
+Antes de sincronizar, o serviço confirma que o usuário autenticado corresponde ao banco aberto.
 
 ## Pull Remoto
 

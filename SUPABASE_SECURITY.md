@@ -2,7 +2,7 @@
 
 ## Chaves
 
-O aplicativo desktop pode usar somente `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` ou, por compatibilidade, `SUPABASE_ANON_KEY`.
+O aplicativo desktop pode usar somente `MAIN_VITE_SUPABASE_URL` e `MAIN_VITE_SUPABASE_PUBLISHABLE_KEY`, carregadas no processo main.
 
 Nunca use ou distribua:
 
@@ -10,19 +10,35 @@ Nunca use ou distribua:
 - `SUPABASE_SECRET_KEY`;
 - certificados, tokens administrativos ou credenciais privadas.
 
-Se uma chave secreta for detectada no ambiente, o app emite apenas aviso sanitizado e ignora o valor.
+Chaves secretas não devem ser lidas nem distribuídas pelo aplicativo.
 
 ## RLS e Auth
 
 A migration remota habilita RLS, mas não cria policy pública permissiva. Não desabilite RLS e não crie policy `USING (true)` para resolver sincronização.
 
-Como não há fluxo de autenticação de usuário final implementado no app, `SYNC_ENABLED=false` e `SYNC_PULL_ENABLED=false` permanecem como padrão. A infraestrutura local, migrations remotas, RLS por `user_id = auth.uid()` e RPC versionada estão prontas, mas a sincronização remota não deve ser tratada como pronta para produção até existir sessão autenticada segura.
+`MAIN_VITE_SYNC_ENABLED=false` e `MAIN_VITE_SYNC_PULL_ENABLED=false` permanecem como padrão. A infraestrutura local, migrations remotas, RLS por `user_id = auth.uid()` e RPC versionada estão prontas, mas a sincronização remota não deve ser tratada como pronta para produção até existir sessão autenticada segura.
 
 O pull remoto é bloqueado por segurança quando não há sessão. Não contorne isso criando policy pública, desabilitando RLS ou usando `service_role`.
 
 ## Propriedade dos Registros
 
 A estratégia adotada para o remoto é `customers.user_id UUID NOT NULL REFERENCES auth.users(id)`. O valor é derivado de `auth.uid()` na RPC/policies e não deve ser aceito livremente do renderer ou de payloads locais.
+
+`tax_id` é único por usuário via índice parcial `UNIQUE (user_id, tax_id) WHERE tax_id IS NOT NULL`. O mesmo CPF/CNPJ pode existir para usuários diferentes.
+
+## Policies
+
+Somente a role `authenticated` recebe acesso:
+
+- SELECT: `(select auth.uid()) = user_id`
+- INSERT: `WITH CHECK ((select auth.uid()) = user_id)`
+- UPDATE: `USING` e `WITH CHECK` com o mesmo usuário
+
+Não há policy de DELETE. O sistema usa exclusão lógica.
+
+## RPC
+
+`sync_upsert_customer` é `SECURITY INVOKER`, usa `auth.uid()` para definir e filtrar `user_id`, revoga execução de `PUBLIC` e `anon`, e concede execução somente para `authenticated`.
 
 ## Renderer
 

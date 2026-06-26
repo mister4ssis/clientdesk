@@ -269,7 +269,12 @@ describe('customer IPC handlers', () => {
     });
     expect(serialized).not.toContain('SQLITE');
     expect(serialized).not.toContain('/private/path');
-    expect(consoleError).toHaveBeenCalledWith('IPC operation failed.', { name: 'Error' });
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalledWith('IPC operation failed.', {
+      channel: IPC_CHANNELS.customers.list,
+      name: 'ApplicationError',
+      code: ErrorCode.DatabaseError
+    });
 
     consoleError.mockRestore();
   });
@@ -293,7 +298,12 @@ describe('customer IPC handlers', () => {
     });
     expect(serialized).not.toContain('stack');
     expect(serialized).not.toContain('unexpected stack details');
-    expect(consoleError).toHaveBeenCalledWith('IPC operation failed.', { name: 'Error' });
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(consoleError).toHaveBeenCalledWith('IPC operation failed.', {
+      channel: IPC_CHANNELS.customers.list,
+      name: 'Error',
+      code: ErrorCode.InternalError
+    });
 
     consoleError.mockRestore();
   });

@@ -23,7 +23,7 @@ describe('validateBackupFile', () => {
 
     expect(validateBackupFile(filePath)).toMatchObject({
       valid: true,
-      version: 3
+      version: 4
     });
   });
 

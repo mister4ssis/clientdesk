@@ -91,6 +91,72 @@ a {
   min-width: 0;
 }
 
+.app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.app-topbar div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-topbar span {
+  color: #526070;
+  font-size: 0.9rem;
+}
+
+.offline-session-notice {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  border: 1px solid #f0c36a;
+  border-radius: 8px;
+  color: #5d4200;
+  background: #fff7db;
+}
+
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  display: flex;
+  width: min(100%, 420px);
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px;
+  border: 1px solid #d9e0ea;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 20px 60px rgb(23 32 51 / 10%);
+}
+
+.login-card h1,
+.login-card p {
+  margin: 0;
+}
+
+.login-card p {
+  color: #526070;
+}
+
+.login-card__brand {
+  margin-bottom: 8px;
+  color: #24324a;
+  font-weight: 800;
+}
+
 .customers-page {
   display: flex;
   flex-direction: column;

@@ -18,6 +18,7 @@ export class ApplicationError extends Error {
     this.name = 'ApplicationError';
     this.details = options.details;
     this.cause = options.cause;
+    Object.setPrototypeOf(this, new.target.prototype);
   }
 
   get publicMessage(): string {

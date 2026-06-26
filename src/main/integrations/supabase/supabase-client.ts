@@ -5,8 +5,15 @@ import { isSupabaseConfigured } from './supabase-config';
 
 export type ClientDeskSupabaseClient = SupabaseClient<Database>;
 
+export interface SupabaseAuthStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
+
 export function createClientDeskSupabaseClient(
-  config: SupabaseSyncConfig
+  config: SupabaseSyncConfig,
+  storage?: SupabaseAuthStorage
 ): ClientDeskSupabaseClient | null {
   if (!isSupabaseConfigured(config) || !config.url || !config.publishableKey) {
     return null;
@@ -14,9 +21,10 @@ export function createClientDeskSupabaseClient(
 
   return createClient<Database>(config.url, config.publishableKey, {
     auth: {
-      autoRefreshToken: false,
+      autoRefreshToken: true,
       detectSessionInUrl: false,
-      persistSession: false
+      persistSession: true,
+      storage
     }
   });
 }

@@ -10,6 +10,13 @@ export function createClientDeskApi(ipcRenderer: IpcRendererInvoke): ClientDeskA
     app: {
       getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.app.getVersion)
     },
+    auth: {
+      getState: () => ipcRenderer.invoke(IPC_CHANNELS.auth.getState),
+      signIn: (email, password) =>
+        ipcRenderer.invoke(IPC_CHANNELS.auth.signIn, { email, password }),
+      signOut: () => ipcRenderer.invoke(IPC_CHANNELS.auth.signOut),
+      refreshSession: () => ipcRenderer.invoke(IPC_CHANNELS.auth.refreshSession)
+    },
     customers: {
       create: (input) => ipcRenderer.invoke(IPC_CHANNELS.customers.create, input),
       list: (filters = {}) => ipcRenderer.invoke(IPC_CHANNELS.customers.list, filters),

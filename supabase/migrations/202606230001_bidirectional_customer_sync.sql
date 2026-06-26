@@ -7,9 +7,6 @@ ALTER TABLE public.customers
 ALTER TABLE public.customers
     ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 
-ALTER TABLE public.customers
-    ALTER COLUMN user_id SET NOT NULL;
-
 CREATE INDEX IF NOT EXISTS idx_remote_customers_user_updated
     ON public.customers(user_id, updated_at, id);
 

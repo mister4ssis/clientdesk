@@ -113,6 +113,10 @@ window.clientDesk.backup.restore()
 window.clientDesk.backup.validate()
 window.clientDesk.sync.getStatus()
 window.clientDesk.sync.runNow()
+window.clientDesk.auth.getState()
+window.clientDesk.auth.signIn(email, password)
+window.clientDesk.auth.signOut()
+window.clientDesk.auth.refreshSession()
 ```
 
 Cada método chama um canal específico com `ipcRenderer.invoke`. Não há API genérica de invoke, `send`, acesso a arquivos, shell, banco ou módulos Node.js.
@@ -121,6 +125,7 @@ Cada método chama um canal específico com `ipcRenderer.invoke`. Não há API g
 
 O renderer conterá a UI React:
 
+- Tela de login com e-mail e senha.
 - Menu lateral com item `Clientes`.
 - Página de listagem com pesquisa e filtro `ativos`, `inativos` e `todos`.
 - Formulário de cadastro/edição com React Hook Form.
@@ -201,6 +206,14 @@ O SQLite local é a fonte primária. Alterações em clientes são gravadas loca
 O pull remoto usa `CustomerPullService`, cursor incremental em `sync_cursors` e aplicação local por `applyRemoteCustomer()`, sem gerar nova outbox. Conflitos são registrados em `sync_conflicts` e resolvidos por `CustomerConflictService`.
 
 Como não há fluxo de autenticação do usuário final no app, `SYNC_PULL_ENABLED=false` fica como padrão. O renderer só acessa status, execução manual e resolução de conflitos por `window.clientDesk.sync`; URL, chaves, cliente Supabase e RPC genérico nunca são expostos.
+
+## Autenticação
+
+`AuthService` roda no processo main e usa Supabase Auth com storage seguro próprio. O renderer recebe apenas `AuthState`.
+
+Após autenticação, o app abre `app.getPath('userData')/users/<user-id>/clientdesk.sqlite`, executa migrations e registra os services de clientes/backup/sync para aquele usuário. Logout para scheduler, fecha o banco e substitui handlers por respostas autenticadas bloqueadas.
+
+Em `OFFLINE_AUTHENTICATED`, o banco local é aberto para uso, mas a sincronização remota não executa.
 
 ## Canais IPC
 

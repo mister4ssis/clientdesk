@@ -159,6 +159,17 @@ Bloqueio mantido: `SYNC_PULL_ENABLED=false` é o padrão até existir autentica�
 
 Próximo passo: implementar fluxo de autenticação Supabase seguro ou validar a implantação Auth/RLS antes de habilitar pull remoto em produção.
 
+### 13. Autenticação Supabase e Bancos por Usuário - Em andamento
+
+- Login com e-mail e senha via Supabase Auth.
+- Storage seguro da sessão no processo main com `safeStorage`.
+- `AuthState` público sem tokens.
+- Banco SQLite isolado em `users/<user-id>/clientdesk.sqlite`.
+- Modo offline para usuário previamente autenticado.
+- Sincronização remota pausada sem sessão válida.
+- RLS remota por `user_id = auth.uid()`.
+- Backup validado por proprietário quando houver metadados locais.
+
 ## Scripts Planejados
 
 Os scripts abaixo devem ser definidos quando o projeto for inicializado:

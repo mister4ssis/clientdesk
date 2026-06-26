@@ -16,7 +16,8 @@ export class BackgroundSyncService {
     private readonly syncOutboxRepository: SyncOutboxRepository,
     private readonly customerSyncService: CustomerSyncService,
     private readonly syncStatusService: SyncStatusService,
-    private readonly customerPullService?: CustomerPullService
+    private readonly customerPullService?: CustomerPullService,
+    private readonly options: { canSynchronize?: () => boolean } = {}
   ) {}
 
   getStatus() {
@@ -48,6 +49,16 @@ export class BackgroundSyncService {
     this.syncStatusService.markStarted();
 
     try {
+      if (this.options.canSynchronize && !this.options.canSynchronize()) {
+        this.syncStatusService.setConnectivity('AUTH_ERROR');
+        this.syncStatusService.markCompleted(false, ErrorCode.SyncAuthError);
+
+        return {
+          started: false,
+          status: this.syncStatusService.getStatus()
+        };
+      }
+
       const connectivity = await this.connectivityService.check();
       this.syncStatusService.setConnectivity(connectivity);
 

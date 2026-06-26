@@ -49,6 +49,10 @@ describe('preload clientDesk API', () => {
     const api = createClientDeskApi({ invoke: electronMock.invoke });
 
     await api.app.getVersion();
+    await api.auth.getState();
+    await api.auth.signIn('user@example.com', 'secret');
+    await api.auth.signOut();
+    await api.auth.refreshSession();
     await api.customers.create({ personType: 'FISICA', legalName: 'Maria Silva' });
     await api.customers.list({ search: 'maria', active: true });
     await api.customers.getById('customer-id');
@@ -65,40 +69,47 @@ describe('preload clientDesk API', () => {
     await api.sync.resolveUseRemote('conflict-id');
 
     expect(electronMock.invoke).toHaveBeenNthCalledWith(1, IPC_CHANNELS.app.getVersion);
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(2, IPC_CHANNELS.customers.create, {
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(2, IPC_CHANNELS.auth.getState);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(3, IPC_CHANNELS.auth.signIn, {
+      email: 'user@example.com',
+      password: 'secret'
+    });
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(4, IPC_CHANNELS.auth.signOut);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(5, IPC_CHANNELS.auth.refreshSession);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(6, IPC_CHANNELS.customers.create, {
       personType: 'FISICA',
       legalName: 'Maria Silva'
     });
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(3, IPC_CHANNELS.customers.list, {
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(7, IPC_CHANNELS.customers.list, {
       search: 'maria',
       active: true
     });
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(4, IPC_CHANNELS.customers.getById, {
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(8, IPC_CHANNELS.customers.getById, {
       id: 'customer-id'
     });
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(5, IPC_CHANNELS.customers.update, {
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(9, IPC_CHANNELS.customers.update, {
       id: 'customer-id',
       data: {
         legalName: 'Maria Souza'
       }
     });
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(6, IPC_CHANNELS.customers.setActive, {
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(10, IPC_CHANNELS.customers.setActive, {
       id: 'customer-id',
       active: false
     });
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(7, IPC_CHANNELS.backup.create);
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(8, IPC_CHANNELS.backup.restore);
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(9, IPC_CHANNELS.backup.validate);
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(10, IPC_CHANNELS.sync.getStatus);
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(11, IPC_CHANNELS.sync.runNow);
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(12, IPC_CHANNELS.sync.listConflicts);
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(13, IPC_CHANNELS.sync.getConflict, {
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(11, IPC_CHANNELS.backup.create);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(12, IPC_CHANNELS.backup.restore);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(13, IPC_CHANNELS.backup.validate);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(14, IPC_CHANNELS.sync.getStatus);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(15, IPC_CHANNELS.sync.runNow);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(16, IPC_CHANNELS.sync.listConflicts);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(17, IPC_CHANNELS.sync.getConflict, {
       id: 'conflict-id'
     });
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(14, IPC_CHANNELS.sync.resolveKeepLocal, {
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(18, IPC_CHANNELS.sync.resolveKeepLocal, {
       id: 'conflict-id'
     });
-    expect(electronMock.invoke).toHaveBeenNthCalledWith(15, IPC_CHANNELS.sync.resolveUseRemote, {
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(19, IPC_CHANNELS.sync.resolveUseRemote, {
       id: 'conflict-id'
     });
   });

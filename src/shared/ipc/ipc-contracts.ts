@@ -10,6 +10,7 @@ import type {
   BackupValidationResult,
   RestoreResult
 } from '../backup/backup.types';
+import type { AuthState, SignInInput, SignOutResult } from '../auth/auth.types';
 import type {
   SyncConflictDetails,
   SyncConflictSummary,
@@ -40,6 +41,22 @@ export interface IpcContracts {
   'app:get-version': {
     input: void;
     output: IpcResult<string>;
+  };
+  'auth:get-state': {
+    input: void;
+    output: IpcResult<AuthState>;
+  };
+  'auth:sign-in': {
+    input: SignInInput;
+    output: IpcResult<AuthState>;
+  };
+  'auth:sign-out': {
+    input: void;
+    output: IpcResult<SignOutResult>;
+  };
+  'auth:refresh-session': {
+    input: void;
+    output: IpcResult<AuthState>;
   };
   'customers:create': {
     input: CreateCustomerInput;
@@ -102,6 +119,12 @@ export interface IpcContracts {
 export interface ClientDeskApi {
   app: {
     getVersion(): Promise<IpcResult<string>>;
+  };
+  auth: {
+    getState(): Promise<IpcResult<AuthState>>;
+    signIn(email: string, password: string): Promise<IpcResult<AuthState>>;
+    signOut(): Promise<IpcResult<SignOutResult>>;
+    refreshSession(): Promise<IpcResult<AuthState>>;
   };
   customers: {
     create(input: CreateCustomerInput): Promise<IpcResult<CustomerDto>>;

@@ -1,7 +1,9 @@
-import { BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell } from 'electron';
 import { join } from 'node:path';
 
 export function createMainWindow(): BrowserWindow {
+  const preloadPath = join(__dirname, '../preload/index.js');
+  const rendererHtmlPath = join(__dirname, '../renderer/index.html');
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -9,7 +11,7 @@ export function createMainWindow(): BrowserWindow {
     minHeight: 640,
     show: false,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true
@@ -25,10 +27,10 @@ export function createMainWindow(): BrowserWindow {
     return { action: 'deny' };
   });
 
-  if (process.env.ELECTRON_RENDERER_URL) {
+  if (!app.isPackaged && process.env.ELECTRON_RENDERER_URL) {
     void mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
-    void mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
+    void mainWindow.loadFile(rendererHtmlPath);
   }
 
   return mainWindow;

@@ -14,6 +14,8 @@ O envio local sempre ocorre antes do recebimento remoto. Uma falha no pull não 
 
 `SYNC_PULL_ENABLED=false` é o padrão. O pull só deve ser habilitado quando houver sessão Supabase autenticada e policies RLS restringindo `customers.user_id = auth.uid()`.
 
+Mesmo com `SYNC_PULL_ENABLED=true`, o ciclo remoto só executa quando `AuthState.status = AUTHENTICATED` e o banco SQLite aberto pertence ao mesmo `user.id`.
+
 Variáveis:
 
 ```text

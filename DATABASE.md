@@ -2,7 +2,17 @@
 
 ## Localização do Arquivo
 
-O banco SQLite é aberto somente pelo processo principal do Electron. O caminho é resolvido por `getDatabasePath()` em `src/main/database/database-path.ts`:
+O banco SQLite é aberto somente pelo processo principal do Electron.
+
+Para contas autenticadas, o caminho é isolado por usuário:
+
+```ts
+path.join(app.getPath('userData'), 'users', userId, 'clientdesk.sqlite')
+```
+
+`userId` deve ser UUID válido. O renderer nunca informa caminhos.
+
+O caminho legado, usado antes da autenticação por usuário, continua resolvido por `getDatabasePath()`:
 
 ```ts
 path.join(app.getPath('userData'), 'data', 'clientdesk.sqlite')
@@ -10,7 +20,7 @@ path.join(app.getPath('userData'), 'data', 'clientdesk.sqlite')
 
 Em desenvolvimento e produção, o arquivo fica dentro da pasta `userData` do Electron, nunca em `src`, `dist`, `resources`, na raiz do projeto ou ao lado do executável. Em testes, o caminho pode ser injetado ou substituído por banco em memória.
 
-No aplicativo empacotado, `resources` contém apenas assets e migrations. O arquivo `clientdesk.sqlite` continua sendo criado em `app.getPath('userData')/data` na primeira execução.
+No aplicativo empacotado, `resources` contém apenas assets e migrations. Novos bancos ficam em `app.getPath('userData')/users/<user-id>`.
 
 ## Conexão
 
@@ -19,6 +29,8 @@ A conexão é centralizada em `src/main/database/database.ts`:
 - `openDatabase()`: abre uma única conexão e aplica pragmas.
 - `getDatabase()`: retorna a conexão aberta.
 - `closeDatabase()`: fecha a conexão e limpa a referência interna.
+- `openDatabaseForUser(userId)`: fecha qualquer conexão anterior e abre somente o banco daquele usuário.
+- `getCurrentUserId()`: retorna o usuário dono da conexão atual.
 
 Pragmas configurados ao abrir:
 
@@ -121,6 +133,8 @@ A migration `003-add-bidirectional-sync.sql` adiciona suporte ao pull remoto:
 
 Clientes com `deleted_at` preenchido não aparecem na listagem normal. Isso representa exclusão lógica remota e não executa DELETE físico.
 
+A migration `004-add-local-app-metadata.sql` cria `app_metadata`. O app grava `owner_user_id`, `owner_email`, `app_version` e `metadata_updated_at` para validar backups e evitar mistura de contas.
+
 ## Migrations
 
 O controle de migrations usa:
@@ -156,7 +170,7 @@ O `main` segue esta ordem:
 
 A conexão é fechada no evento `before-quit`.
 
-Durante restauração de backup, a conexão também é fechada temporariamente, o arquivo é substituído, o banco é reaberto e as migrations são executadas antes de o aplicativo voltar a usar a conexão.
+Durante restauração de backup, a conexão também é fechada temporariamente, o arquivo do usuário atual é substituído, o banco é reaberto e as migrations são executadas antes de o aplicativo voltar a usar a conexão.
 
 ## Backups
 

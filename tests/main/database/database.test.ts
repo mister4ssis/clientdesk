@@ -7,9 +7,11 @@ import {
   configureDatabase,
   getDatabase,
   openDatabase,
+  getCurrentUserId,
+  openDatabaseForUser,
   type DatabaseConnection
 } from '@main/database/database';
-import { getDatabasePath } from '@main/database/database-path';
+import { getDatabasePath, getUserDatabasePath } from '@main/database/database-path';
 import { runMigrations } from '@main/database/migration-runner';
 import { createTempDirectory, removeTempDirectory } from '../../helpers/temp-directory';
 
@@ -56,6 +58,30 @@ describe('database infrastructure', () => {
     expect(() => getDatabase()).toThrow('Database connection has not been opened.');
   });
 
+  it('opens isolated database files per authenticated user', () => {
+    const userDataPath = createTrackedTempDirectory('clientdesk-user-data-');
+    const userA = '00000000-0000-4000-8000-000000000001';
+    const userB = '00000000-0000-4000-8000-000000000002';
+    const userAPath = getUserDatabasePath(userA, userDataPath);
+    const userBPath = getUserDatabasePath(userB, userDataPath);
+
+    const databaseA = openDatabaseForUser(userA, userDataPath);
+    expect(getCurrentUserId()).toBe(userA);
+    expect(databaseA.open).toBe(true);
+
+    const databaseB = openDatabaseForUser(userB, userDataPath);
+    expect(getCurrentUserId()).toBe(userB);
+    expect(databaseA.open).toBe(false);
+    expect(databaseB.open).toBe(true);
+    expect(userAPath).not.toBe(userBPath);
+  });
+
+  it('rejects invalid user ids for database paths', () => {
+    const userDataPath = createTrackedTempDirectory('clientdesk-user-data-');
+
+    expect(() => getUserDatabasePath('../bad-user', userDataPath)).toThrow('Invalid user id');
+  });
+
   it('creates schema_migrations and applies customer and sync migrations once', () => {
     const database = createMemoryDatabase();
     const migrationsDirectory = path.resolve('src/main/database/migrations');
@@ -70,6 +96,7 @@ describe('database infrastructure', () => {
     expect(tableExists(database, 'sync_outbox')).toBe(true);
     expect(tableExists(database, 'sync_cursors')).toBe(true);
     expect(tableExists(database, 'sync_conflicts')).toBe(true);
+    expect(tableExists(database, 'app_metadata')).toBe(true);
     expect(customerColumns(database)).toEqual(
       expect.arrayContaining([
         'representative',
@@ -96,6 +123,7 @@ describe('database infrastructure', () => {
     expect(migrationCount(database, 1)).toBe(1);
     expect(migrationCount(database, 2)).toBe(1);
     expect(migrationCount(database, 3)).toBe(1);
+    expect(migrationCount(database, 4)).toBe(1);
     expect(migrationExecutedAt(database, 1)).toBe('2026-06-21T00:00:00.000Z');
 
     runMigrations(database, {
@@ -106,6 +134,7 @@ describe('database infrastructure', () => {
     expect(migrationCount(database, 1)).toBe(1);
     expect(migrationCount(database, 2)).toBe(1);
     expect(migrationCount(database, 3)).toBe(1);
+    expect(migrationCount(database, 4)).toBe(1);
     expect(migrationExecutedAt(database, 1)).toBe('2026-06-21T00:00:00.000Z');
 
     database.close();

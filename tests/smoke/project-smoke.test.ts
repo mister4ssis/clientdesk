@@ -43,6 +43,23 @@ describe('project smoke checks', () => {
     expect(packageJson.devDependencies.electron).toBeTruthy();
     expect(packageJson.devDependencies['electron-builder']).toBeTruthy();
   });
+
+  it('loads renderer HTML instead of compiled JavaScript assets in production', () => {
+    const mainWindowSource = readFileSync(
+      path.resolve('src/main/windows/main-window.ts'),
+      'utf8'
+    );
+    const rendererHtml = readFileSync(path.resolve('src/renderer/index.html'), 'utf8');
+
+    expect(mainWindowSource).toContain("join(__dirname, '../preload/index.js')");
+    expect(mainWindowSource).toContain("join(__dirname, '../renderer/index.html')");
+    expect(mainWindowSource).toContain('mainWindow.loadFile(rendererHtmlPath)');
+    expect(mainWindowSource).not.toContain('loadFile(join(__dirname,');
+    expect(mainWindowSource).not.toContain('../renderer/assets');
+    expect(rendererHtml).toContain('<meta charset="UTF-8" />');
+    expect(rendererHtml).toContain('<div id="root"></div>');
+    expect(rendererHtml).toContain('<script type="module" src="/src/main.tsx"></script>');
+  });
 });
 
 interface PackageJson {

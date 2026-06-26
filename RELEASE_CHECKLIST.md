@@ -7,6 +7,10 @@
 - [ ] testes aprovados
 - [ ] build aprovado
 - [ ] migrations validadas
+- [ ] login Supabase validado
+- [ ] sessão persistida com `safeStorage`
+- [ ] tokens ausentes no renderer
+- [ ] banco por usuário validado
 - [ ] segurança revisada
 - [ ] banco salvo em `userData`
 - [ ] backup criado e validado
@@ -38,6 +42,9 @@
 - [ ] persistência após reinício
 - [ ] cliente inexistente
 - [ ] falha de banco simulada ou controlada
+- [ ] logout fecha banco e limpa sessão
+- [ ] modo offline com usuário conhecido
+- [ ] primeiro acesso offline rejeitado
 
 ## Empacotamento Futuro
 
@@ -109,6 +116,8 @@
 - [ ] Supabase RLS/Auth revisados antes de habilitar sync
 - [ ] policies restringem `customers.user_id = auth.uid()`
 - [ ] RPC `sync_upsert_customer` testada sem `service_role`
+- [ ] anon não acessa `customers`
+- [ ] backup de outro usuário rejeitado
 - [ ] assinatura digital avaliada
 
 ## Assinatura

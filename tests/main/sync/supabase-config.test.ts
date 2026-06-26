@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { loadSupabaseSyncConfig } from '@main/integrations/supabase/supabase-config';
+import {
+  getSupabaseConfig,
+  getSupabaseConfigDiagnostic,
+  loadSupabaseSyncConfig
+} from '@main/integrations/supabase/supabase-config';
 
 describe('loadSupabaseSyncConfig', () => {
   it('defaults sync to disabled and safe limits', () => {
@@ -15,12 +19,12 @@ describe('loadSupabaseSyncConfig', () => {
 
   it('accepts publishable key and bounded sync settings', () => {
     const config = loadSupabaseSyncConfig({
-      SUPABASE_URL: 'https://example.supabase.co',
-      SUPABASE_PUBLISHABLE_KEY: 'publishable-key',
-      SYNC_ENABLED: 'true',
-      SYNC_INTERVAL_MINUTES: '2',
-      SYNC_BATCH_SIZE: '25',
-      SYNC_REQUEST_TIMEOUT_MS: '5000'
+      MAIN_VITE_SUPABASE_URL: ' https://example.supabase.co ',
+      MAIN_VITE_SUPABASE_PUBLISHABLE_KEY: ' publishable-key ',
+      MAIN_VITE_SYNC_ENABLED: 'true',
+      MAIN_VITE_SYNC_INTERVAL_MINUTES: '2',
+      MAIN_VITE_SYNC_BATCH_SIZE: '25',
+      MAIN_VITE_SYNC_REQUEST_TIMEOUT_MS: '5000'
     });
 
     expect(config).toMatchObject({
@@ -33,19 +37,57 @@ describe('loadSupabaseSyncConfig', () => {
     });
   });
 
-  it('detects forbidden secret keys without exposing values', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-
+  it('returns Supabase auth config even when sync is disabled', () => {
     const config = loadSupabaseSyncConfig({
-      SUPABASE_SERVICE_ROLE_KEY: 'secret-value'
+      MAIN_VITE_SUPABASE_URL: 'https://example.supabase.co',
+      MAIN_VITE_SUPABASE_PUBLISHABLE_KEY: 'publishable-key',
+      MAIN_VITE_SYNC_ENABLED: 'false'
     });
 
-    expect(config.hasForbiddenSecret).toBe(true);
-    expect(warnSpy).toHaveBeenCalledWith(
-      'Supabase secret key configuration was detected and will not be used.'
-    );
-    expect(JSON.stringify(warnSpy.mock.calls)).not.toContain('secret-value');
+    expect(config.enabled).toBe(false);
+    expect(config.url).toBe('https://example.supabase.co');
+    expect(config.publishableKey).toBe('publishable-key');
+  });
 
-    warnSpy.mockRestore();
+  it('returns null when Supabase URL or publishable key is incomplete', () => {
+    expect(
+      getSupabaseConfig({
+        MAIN_VITE_SUPABASE_URL: 'https://example.supabase.co'
+      })
+    ).toBeNull();
+    expect(
+      getSupabaseConfig({
+        MAIN_VITE_SUPABASE_URL: 'not-a-url',
+        MAIN_VITE_SUPABASE_PUBLISHABLE_KEY: 'publishable-key'
+      })
+    ).toBeNull();
+  });
+
+  it('logs only sanitized Supabase configuration diagnostics', () => {
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => undefined);
+
+    const diagnostic = getSupabaseConfigDiagnostic({
+      MAIN_VITE_SUPABASE_URL: 'https://example.supabase.co',
+      MAIN_VITE_SUPABASE_PUBLISHABLE_KEY: 'publishable-key'
+    });
+
+    loadSupabaseSyncConfig({
+      MAIN_VITE_SUPABASE_URL: 'https://example.supabase.co',
+      MAIN_VITE_SUPABASE_PUBLISHABLE_KEY: 'publishable-key'
+    });
+
+    expect(diagnostic).toEqual({
+      configured: true,
+      hasUrl: true,
+      hasPublishableKey: true
+    });
+    expect(infoSpy).toHaveBeenCalledWith(
+      'Supabase main configuration.',
+      diagnostic
+    );
+    expect(JSON.stringify(infoSpy.mock.calls)).not.toContain('https://example.supabase.co');
+    expect(JSON.stringify(infoSpy.mock.calls)).not.toContain('publishable-key');
+
+    infoSpy.mockRestore();
   });
 });

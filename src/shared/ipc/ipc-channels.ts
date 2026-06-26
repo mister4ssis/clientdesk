@@ -2,6 +2,12 @@ export const IPC_CHANNELS = {
   app: {
     getVersion: 'app:get-version'
   },
+  auth: {
+    getState: 'auth:get-state',
+    signIn: 'auth:sign-in',
+    signOut: 'auth:sign-out',
+    refreshSession: 'auth:refresh-session'
+  },
   customers: {
     create: 'customers:create',
     list: 'customers:list',

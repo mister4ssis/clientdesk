@@ -44,6 +44,7 @@ interface BackupServiceDependencies {
   getUserDataPath: () => string;
   now?: () => Date;
   validateFile?: typeof validateBackupFile;
+  getCurrentOwnerUserId?: () => string | null;
   onDatabaseRestored?: (database: DatabaseConnection) => void;
 }
 
@@ -59,6 +60,7 @@ export class BackupService {
   private readonly getUserDataPath: () => string;
   private readonly now: () => Date;
   private readonly validateFile: typeof validateBackupFile;
+  private readonly getCurrentOwnerUserId: () => string | null;
   private readonly onDatabaseRestored?: (database: DatabaseConnection) => void;
 
   constructor(dependencies: BackupServiceDependencies) {
@@ -71,6 +73,7 @@ export class BackupService {
     this.getUserDataPath = dependencies.getUserDataPath;
     this.now = dependencies.now ?? (() => new Date());
     this.validateFile = dependencies.validateFile ?? validateBackupFile;
+    this.getCurrentOwnerUserId = dependencies.getCurrentOwnerUserId ?? (() => null);
     this.onDatabaseRestored = dependencies.onDatabaseRestored;
   }
 
@@ -91,7 +94,8 @@ export class BackupService {
         await database.backup(selectedPath);
 
         const validation = this.validateFile(selectedPath, {
-          activeDatabasePath: this.getCurrentDatabasePath()
+          activeDatabasePath: this.getCurrentDatabasePath(),
+          expectedOwnerUserId: this.getCurrentOwnerUserId() ?? undefined
         });
 
         if (!validation.valid) {
@@ -130,7 +134,8 @@ export class BackupService {
       }
 
       return this.validateFile(selectedPath, {
-        activeDatabasePath: this.getCurrentDatabasePath()
+        activeDatabasePath: this.getCurrentDatabasePath(),
+        expectedOwnerUserId: this.getCurrentOwnerUserId() ?? undefined
       });
     });
   }
@@ -144,7 +149,8 @@ export class BackupService {
       }
 
       const validation = this.validateFile(selectedPath, {
-        activeDatabasePath: this.getCurrentDatabasePath()
+        activeDatabasePath: this.getCurrentDatabasePath(),
+        expectedOwnerUserId: this.getCurrentOwnerUserId() ?? undefined
       });
 
       if (!validation.valid) {

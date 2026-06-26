@@ -5,6 +5,7 @@ import type { BackupValidationResult } from '@shared/backup/backup.types';
 interface BackupValidationOptions {
   activeDatabasePath?: string;
   allowActiveDatabase?: boolean;
+  expectedOwnerUserId?: string;
   supportedVersion?: number;
 }
 
@@ -21,7 +22,11 @@ interface MigrationRow {
   executed_at: string;
 }
 
-const currentSupportedMigrationVersion = 3;
+interface MetadataRow {
+  value: string;
+}
+
+const currentSupportedMigrationVersion = 4;
 const requiredCustomerColumns = [
   'id',
   'person_type',
@@ -79,6 +84,13 @@ export function validateBackupFile(
       return invalid('Colunas essenciais de clientes ausentes.');
     }
 
+    if (
+      options.expectedOwnerUserId &&
+      getMetadataValue(database, 'owner_user_id') !== options.expectedOwnerUserId
+    ) {
+      return invalid('Backup pertence a outro usuário.');
+    }
+
     const migrationInfo = getMigrationInfo(database);
 
     if (migrationInfo.version > supportedVersion) {
@@ -100,6 +112,18 @@ export function validateBackupFile(
   } finally {
     database?.close();
   }
+}
+
+function getMetadataValue(database: Database.Database, key: string): string | null {
+  if (!tableExists(database, 'app_metadata')) {
+    return null;
+  }
+
+  const row = database
+    .prepare('SELECT value FROM app_metadata WHERE key = ?')
+    .get(key) as MetadataRow | undefined;
+
+  return row?.value ?? null;
 }
 
 function invalid(reason: string): BackupValidationResult {

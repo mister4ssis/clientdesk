@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactElement } from 'react';
 import { AppLayout } from '@renderer/layouts/AppLayout';
+import { AuthGuard } from '@renderer/components/auth/AuthGuard';
 import { ErrorState } from '@renderer/components/feedback/ErrorState';
 import { CustomerCreatePage } from '@renderer/pages/customers/CustomerCreatePage';
 import { CustomerDetailsPage } from '@renderer/pages/customers/CustomerDetailsPage';
@@ -36,7 +37,14 @@ export function App(): ReactElement {
   }
 
   return (
-    <AppLayout activeItem={getActiveMenuItem(route)} onNavigate={navigate}>
+    <AuthGuard>
+      {({ authState, logout }) => (
+    <AppLayout
+      activeItem={getActiveMenuItem(route)}
+      authState={authState}
+      onNavigate={navigate}
+      onSignOut={() => void logout()}
+    >
       {route.name === 'customers' ? (
         <CustomerListPage
           initialFeedbackMessage={flashMessage}
@@ -87,6 +95,8 @@ export function App(): ReactElement {
         <ErrorState message="Página não encontrada." onRetry={() => navigate('/customers')} />
       ) : null}
     </AppLayout>
+      )}
+    </AuthGuard>
   );
 }
 

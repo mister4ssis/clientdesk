@@ -36,6 +36,10 @@ Não retornar `Error`, stack trace, SQL bruto, caminhos locais ou dados pessoais
 | Canal | Entrada | Saída |
 | --- | --- | --- |
 | `app:get-version` | `void` | `IpcResult<string>` |
+| `auth:get-state` | `void` | `IpcResult<AuthState>` |
+| `auth:sign-in` | `{ email: string; password: string }` | `IpcResult<AuthState>` |
+| `auth:sign-out` | `void` | `IpcResult<{ success: true }>` |
+| `auth:refresh-session` | `void` | `IpcResult<AuthState>` |
 | `customers:create` | `CreateCustomerInput` | `IpcResult<Customer>` |
 | `customers:list` | `CustomerSearchFilters` | `IpcResult<CustomerListResult>` |
 | `customers:get-by-id` | `{ id: string }` | `IpcResult<Customer>` |
@@ -60,6 +64,12 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - `CUSTOMER_TAX_ID_ALREADY_EXISTS`: CPF/CNPJ duplicado.
 - `DATABASE_ERROR`: falha ao acessar dados.
 - `INTERNAL_ERROR`: erro inesperado.
+- `AUTH_INVALID_CREDENTIALS`: login inválido com mensagem genérica.
+- `AUTH_OFFLINE_UNAVAILABLE`: primeiro acesso offline indisponível.
+- `AUTH_SESSION_EXPIRED`: sessão expirada.
+- `AUTH_STORAGE_UNAVAILABLE`: armazenamento seguro indisponível.
+- `AUTH_NOT_AUTHENTICATED`: operação exige autenticação.
+- `AUTH_CONFIGURATION_ERROR`: Supabase Auth ausente ou inválido.
 - `BACKUP_CREATE_FAILED`: falha ao criar backup.
 - `BACKUP_RESTORE_FAILED`: falha ao restaurar backup.
 - `BACKUP_INVALID_FILE`: arquivo selecionado não é backup válido.
@@ -86,6 +96,7 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - Validar payloads no `main`, mesmo que o renderer valide antes.
 - O preload expõe somente `window.clientDesk`.
 - Não expor `ipcRenderer`, invoke genérico, canais arbitrários ou APIs de arquivo/shell/banco.
+- Auth não expõe access token, refresh token, JWT, sessão Supabase completa, URL ou chave.
 - Backup e restauração não retornam caminhos internos ao renderer.
 - Sync não expõe URL, chaves, cliente Supabase ou fila completa ao renderer.
 - Sync expõe somente resumo/detalhe de conflito necessários para resolução manual.

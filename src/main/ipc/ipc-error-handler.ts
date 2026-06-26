@@ -1,7 +1,31 @@
 import { ApplicationError } from '../errors/application-error';
 import { ErrorCode } from '../errors/error-codes';
+import { createIpcSuccess } from '@shared/ipc/ipc-result';
 import type { IpcFailure, IpcResult } from '@shared/ipc/ipc-result';
+import type { IpcMainInvokeEvent } from 'electron';
 import { ZodError } from 'zod';
+
+type IpcOperation<TData> = (
+  event: IpcMainInvokeEvent,
+  ...args: unknown[]
+) => TData | Promise<TData>;
+
+export function createIpcHandler<TData>(
+  channel: string,
+  handler: IpcOperation<TData>
+): (event: IpcMainInvokeEvent, ...args: unknown[]) => Promise<IpcResult<TData>> {
+  return async (event, ...args) => {
+    logIpcStart(channel);
+
+    try {
+      return createIpcSuccess<TData>(await handler(event, ...args));
+    } catch (error) {
+      logIpcError(channel, error);
+
+      return toIpcFailure(error);
+    }
+  };
+}
 
 export function toIpcFailure(error: unknown): IpcResult<never> {
   if (error instanceof ApplicationError) {
@@ -21,8 +45,6 @@ export function toIpcFailure(error: unknown): IpcResult<never> {
       }
     };
   }
-
-  logSanitizedError(error);
 
   return {
     success: false,
@@ -56,19 +78,42 @@ function toPublicApplicationError(error: ApplicationError): IpcFailure['error'] 
         message: 'Já existe um cliente com este CPF ou CNPJ.'
       };
     case ErrorCode.DatabaseError:
-      logSanitizedError(error.cause ?? error);
       return {
         code: error.code,
         message: 'Não foi possível acessar os dados dos clientes.'
       };
+    case ErrorCode.AuthInvalidCredentials:
+      return {
+        code: error.code,
+        message: 'E-mail ou senha inválidos.'
+      };
+    case ErrorCode.AuthOfflineUnavailable:
+      return {
+        code: error.code,
+        message: 'Não foi possível entrar sem conexão. Conecte-se à internet para realizar o primeiro acesso neste computador.'
+      };
+    case ErrorCode.AuthSessionExpired:
+      return {
+        code: error.code,
+        message: 'Sua sessão expirou. Entre novamente para continuar sincronizando.'
+      };
+    case ErrorCode.AuthNotAuthenticated:
+      return {
+        code: error.code,
+        message: 'É necessário entrar para continuar.'
+      };
+    case ErrorCode.AuthConfigurationError:
+    case ErrorCode.AuthStorageUnavailable:
+      return {
+        code: error.code,
+        message: 'Não foi possível inicializar a autenticação.'
+      };
     case ErrorCode.BackupCreateFailed:
-      logSanitizedError(error.cause ?? error);
       return {
         code: error.code,
         message: 'Não foi possível criar o backup.'
       };
     case ErrorCode.BackupRestoreFailed:
-      logSanitizedError(error.cause ?? error);
       return {
         code: error.code,
         message: 'Não foi possível restaurar o backup.'
@@ -141,7 +186,6 @@ function toPublicApplicationError(error: ApplicationError): IpcFailure['error'] 
         message: 'A sincronização remota para este computador está desabilitada.'
       };
     default:
-      logSanitizedError(error.cause ?? error);
       return {
         code: ErrorCode.InternalError,
         message: 'Ocorreu um erro inesperado.'
@@ -149,8 +193,107 @@ function toPublicApplicationError(error: ApplicationError): IpcFailure['error'] 
   }
 }
 
-function logSanitizedError(error: unknown): void {
-  const name = error instanceof Error ? error.name : 'UnknownError';
+export function logIpcError(channel: string, error: unknown): void {
+  const diagnostic = createErrorDiagnostic(error);
 
-  console.error('IPC operation failed.', { name });
+  if (isDevelopmentRuntime()) {
+    console.error('IPC operation failed.', {
+      channel,
+      ...diagnostic
+    });
+    return;
+  }
+
+  console.error('IPC operation failed.', {
+    channel,
+    name: diagnostic.name,
+    code: diagnostic.code
+  });
+}
+
+function logIpcStart(channel: string): void {
+  if (!isDevelopmentRuntime()) {
+    return;
+  }
+
+  console.debug('IPC operation started.', { channel });
+}
+
+function createErrorDiagnostic(error: unknown): {
+  name: string;
+  code: string;
+  message?: string;
+  cause?: unknown;
+  stack?: string;
+} {
+  if (error instanceof ApplicationError) {
+    return {
+      name: error.name,
+      code: error.code,
+      message: sanitizeDiagnosticText(error.message),
+      cause: summarizeCause(error.cause),
+      stack: sanitizeDiagnosticText(error.stack)
+    };
+  }
+
+  if (error instanceof ZodError) {
+    return {
+      name: error.name,
+      code: ErrorCode.ValidationError,
+      message: 'Os dados informados são inválidos.',
+      cause: sanitizeDiagnosticText(error.message),
+      stack: sanitizeDiagnosticText(error.stack)
+    };
+  }
+
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      code: ErrorCode.InternalError,
+      message: sanitizeDiagnosticText(error.message),
+      cause: summarizeCause(error.cause),
+      stack: sanitizeDiagnosticText(error.stack)
+    };
+  }
+
+  return {
+    name: 'UnknownError',
+    code: ErrorCode.InternalError,
+    message: sanitizeDiagnosticText(String(error))
+  };
+}
+
+function summarizeCause(cause: unknown): unknown {
+  if (!cause) {
+    return undefined;
+  }
+
+  if (cause instanceof Error) {
+    return {
+      name: cause.name,
+      message: sanitizeDiagnosticText(cause.message),
+      stack: sanitizeDiagnosticText(cause.stack)
+    };
+  }
+
+  return sanitizeDiagnosticText(String(cause));
+}
+
+function sanitizeDiagnosticText(value: string | undefined): string | undefined {
+  if (!value) {
+    return value;
+  }
+
+  const secretPattern =
+    /(access[_-]?token|refresh[_-]?token|supabase[_-]?service[_-]?role[_-]?key|supabase[_-]?publishable[_-]?key|supabase[_-]?anon[_-]?key)\s*[:=]\s*["']?[\w.-]+/gi;
+
+  return value
+    .replace(secretPattern, '$1=[REDACTED]')
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, '[REDACTED_EMAIL]')
+    .replace(/\b\d{11,14}\b/g, '[REDACTED_DOCUMENT]')
+    .replace(/\b\d{10,11}\b/g, '[REDACTED_PHONE]');
+}
+
+function isDevelopmentRuntime(): boolean {
+  return process.env.NODE_ENV === 'development' || Boolean(process.env.ELECTRON_RENDERER_URL);
 }
