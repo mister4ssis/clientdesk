@@ -49,6 +49,12 @@ export function createClientDeskApi(ipcRenderer: IpcRendererInvoke): ClientDeskA
       listSyncRuns: (filters = {}) =>
         ipcRenderer.invoke(IPC_CHANNELS.diagnostics.listSyncRuns, filters),
       export: () => ipcRenderer.invoke(IPC_CHANNELS.diagnostics.export)
+    },
+    update: {
+      getState: () => ipcRenderer.invoke(IPC_CHANNELS.update.getState),
+      check: () => ipcRenderer.invoke(IPC_CHANNELS.update.check),
+      download: () => ipcRenderer.invoke(IPC_CHANNELS.update.download),
+      install: () => ipcRenderer.invoke(IPC_CHANNELS.update.install)
     }
   } satisfies ClientDeskApi;
 }

@@ -27,6 +27,7 @@ import type {
   SyncRunLogDto,
   SyncRunLogFiltersDto
 } from '../diagnostics/diagnostics.types';
+import type { UpdateOperationResult, UpdateState } from '../update/update.types';
 import type { IpcResult } from './ipc-result';
 
 export interface CustomerSetActiveInput {
@@ -145,6 +146,22 @@ export interface IpcContracts {
     input: void;
     output: IpcResult<DiagnosticsExportResultDto>;
   };
+  'update:get-state': {
+    input: void;
+    output: IpcResult<UpdateState>;
+  };
+  'update:check': {
+    input: void;
+    output: IpcResult<UpdateOperationResult>;
+  };
+  'update:download': {
+    input: void;
+    output: IpcResult<UpdateOperationResult>;
+  };
+  'update:install': {
+    input: void;
+    output: IpcResult<UpdateOperationResult>;
+  };
 }
 
 export interface ClientDeskApi {
@@ -187,5 +204,11 @@ export interface ClientDeskApi {
     getSummary(): Promise<IpcResult<DiagnosticsSummaryDto>>;
     listSyncRuns(filters?: SyncRunLogFiltersDto): Promise<IpcResult<SyncRunLogDto[]>>;
     export(): Promise<IpcResult<DiagnosticsExportResultDto>>;
+  };
+  update: {
+    getState(): Promise<IpcResult<UpdateState>>;
+    check(): Promise<IpcResult<UpdateOperationResult>>;
+    download(): Promise<IpcResult<UpdateOperationResult>>;
+    install(): Promise<IpcResult<UpdateOperationResult>>;
   };
 }

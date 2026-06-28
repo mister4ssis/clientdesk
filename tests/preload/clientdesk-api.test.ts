@@ -71,6 +71,10 @@ describe('preload clientDesk API', () => {
     await api.diagnostics.getSummary();
     await api.diagnostics.listSyncRuns({ limit: 5 });
     await api.diagnostics.export();
+    await api.update.getState();
+    await api.update.check();
+    await api.update.download();
+    await api.update.install();
 
     expect(electronMock.invoke).toHaveBeenNthCalledWith(1, IPC_CHANNELS.app.getVersion);
     expect(electronMock.invoke).toHaveBeenNthCalledWith(2, IPC_CHANNELS.auth.getState);
@@ -135,5 +139,9 @@ describe('preload clientDesk API', () => {
       }
     );
     expect(electronMock.invoke).toHaveBeenNthCalledWith(23, IPC_CHANNELS.diagnostics.export);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(24, IPC_CHANNELS.update.getState);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(25, IPC_CHANNELS.update.check);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(26, IPC_CHANNELS.update.download);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(27, IPC_CHANNELS.update.install);
   });
 });

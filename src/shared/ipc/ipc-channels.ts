@@ -35,5 +35,11 @@ export const IPC_CHANNELS = {
     getSummary: 'diagnostics:get-summary',
     listSyncRuns: 'diagnostics:list-sync-runs',
     export: 'diagnostics:export'
+  },
+  update: {
+    getState: 'update:get-state',
+    check: 'update:check',
+    download: 'update:download',
+    install: 'update:install'
   }
 } as const;

@@ -14,6 +14,7 @@ import type {
 import { BackupSection } from './components/BackupSection';
 import { RestoreSection } from './components/RestoreSection';
 import { SyncSection } from './components/SyncSection';
+import { UpdateSection } from './components/UpdateSection';
 
 interface BackupSettingsPageProps {
   onRestoreCompleted: () => void;
@@ -113,6 +114,8 @@ export function BackupSettingsPage({
       />
 
       <SyncSection onViewConflicts={onViewSyncConflicts} onViewDiagnostics={onViewDiagnostics} />
+
+      <UpdateSection />
     </section>
   );
 }

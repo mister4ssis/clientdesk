@@ -14,6 +14,10 @@ const syncClientMock = vi.hoisted(() => ({
   runSyncNow: vi.fn()
 }));
 
+const updateClientMock = vi.hoisted(() => ({
+  getUpdateState: vi.fn()
+}));
+
 vi.mock('@renderer/services/backup-client', async () => {
   const actual = await vi.importActual<typeof import('@renderer/services/backup-client')>(
     '@renderer/services/backup-client'
@@ -39,12 +43,24 @@ vi.mock('@renderer/services/sync-client', async () => {
   };
 });
 
+vi.mock('@renderer/services/update-client', async () => {
+  const actual = await vi.importActual<typeof import('@renderer/services/update-client')>(
+    '@renderer/services/update-client'
+  );
+
+  return {
+    ...actual,
+    getUpdateState: updateClientMock.getUpdateState
+  };
+});
+
 beforeEach(() => {
   backupClientMock.createBackup.mockReset();
   backupClientMock.restoreBackup.mockReset();
   backupClientMock.validateBackup.mockReset();
   syncClientMock.getSyncStatus.mockReset();
   syncClientMock.runSyncNow.mockReset();
+  updateClientMock.getUpdateState.mockReset();
   syncClientMock.getSyncStatus.mockResolvedValue({
     enabled: false,
     pullEnabled: false,
@@ -62,6 +78,14 @@ beforeEach(() => {
     lastRealtimeConnectedAt: null,
     lastSuccessfulAt: null,
     lastErrorCode: null
+  });
+  updateClientMock.getUpdateState.mockResolvedValue({
+    status: 'DISABLED',
+    currentVersion: '0.1.0',
+    availableVersion: null,
+    downloadPercent: null,
+    lastCheckedAt: null,
+    errorCode: null
   });
 });
 
@@ -211,15 +235,18 @@ describe('BackupSettingsPage', () => {
 
 function renderPage({
   onRestoreCompleted = vi.fn(),
-  onViewSyncConflicts = vi.fn()
+  onViewSyncConflicts = vi.fn(),
+  onViewDiagnostics = vi.fn()
 }: {
   onRestoreCompleted?: () => void;
   onViewSyncConflicts?: () => void;
+  onViewDiagnostics?: () => void;
 } = {}) {
   return render(
     <BackupSettingsPage
       onRestoreCompleted={onRestoreCompleted}
       onViewSyncConflicts={onViewSyncConflicts}
+      onViewDiagnostics={onViewDiagnostics}
     />
   );
 }

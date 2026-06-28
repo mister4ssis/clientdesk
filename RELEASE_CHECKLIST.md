@@ -26,6 +26,10 @@
 - [ ] persistência validada
 - [ ] erros sanitizados
 - [ ] logs revisados
+- [ ] `npm run release:check` aprovado para tag de release
+- [ ] tag `vX.Y.Z` corresponde a `package.json`
+- [ ] workflow Windows gerou artifacts sem dados locais
+- [ ] updater validado com `MAIN_VITE_UPDATE_ENABLED=false` por padrão
 
 ## Testes Funcionais
 
@@ -136,6 +140,9 @@
 - [ ] logs e diagnóstico não contêm CPF/CNPJ, e-mail completo, telefone, representante ou endereço
 - [ ] auditoria registra somente nomes de campos alterados
 - [ ] assinatura digital avaliada
+- [ ] metadados de atualização gerados
+- [ ] update não instala durante backup, restauração, sync, migration ou conflito
+- [ ] atualização preserva banco, sessão, backups, outbox e cursor
 
 ## Assinatura
 
@@ -143,6 +150,20 @@
 - [ ] aviso de editor desconhecido do Windows documentado
 - [ ] certificado de assinatura planejado antes de distribuição pública
 - [ ] nenhum certificado ou segredo commitado
+- [ ] secrets `WINDOWS_CSC_LINK` e `WINDOWS_CSC_KEY_PASSWORD` configurados somente na CI quando houver certificado real
+- [ ] assinatura validada com publisher esperado
+
+## Atualização Automática
+
+- [ ] `MAIN_VITE_UPDATE_ENABLED=false` no padrão distribuível até assinatura e provider serem validados
+- [ ] `electron-updater` não é importado no renderer
+- [ ] IPCs `update:*` retornam `IpcResult`
+- [ ] renderer não recebe URL, token, provider, caminho do instalador ou stack trace
+- [ ] canal stable validado
+- [ ] canal beta validado quando prerelease for usada
+- [ ] downgrade automático bloqueado
+- [ ] instalação exige confirmação do usuário
+- [ ] migrations locais aplicadas com banco preservado após update
 
 ## Comandos de Validação
 
@@ -152,6 +173,9 @@ npm run typecheck
 npm test
 npm run build
 npm run package:dir
+npm run verify:package
+npm run package:win
+npm run release:check
 ```
 
 Use `npm run package:win` para gerar o pacote Windows quando o ambiente estiver preparado.

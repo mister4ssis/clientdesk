@@ -194,6 +194,19 @@ Qualquer exceção deve ser documentada em `docs/DECISIONS.md`.
 - Arquivos exportados não podem conter banco SQLite, sessão, backups, tokens, chaves ou dados dos clientes.
 - Migrations aplicadas nunca devem ser alteradas; criar nova migration para evoluções.
 
+### Release e atualização automática
+
+- Publicação de release deve depender de tag `vX.Y.Z`, `vX.Y.Z-beta.N` ou `vX.Y.Z-rc.N`.
+- A versão da tag deve corresponder exatamente à versão de `package.json`.
+- Workflows de build podem gerar artifacts, mas não devem publicar release fora do fluxo de tag.
+- Nunca commitAR certificado, PFX, senha, token, chave de assinatura ou credencial de publicação.
+- Não usar certificado fictício para simular assinatura digital.
+- `electron-updater` deve existir somente no processo main.
+- O renderer não pode receber URL privada, token, caminho do instalador, provider ou objeto `autoUpdater`.
+- Atualizações não podem ser instaladas durante backup, restauração, migration, sincronização crítica, resolução de conflito ou gravação local em andamento.
+- Atualização não pode apagar banco SQLite, sessão, backups, outbox ou dados do usuário.
+- Migrations locais devem ser validadas na próxima abertura; migrations Supabase não são aplicadas pelo desktop.
+
 ---
 
 ## 7. Regras de domínio do cliente

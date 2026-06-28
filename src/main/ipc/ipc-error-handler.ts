@@ -185,6 +185,32 @@ function toPublicApplicationError(error: ApplicationError): IpcFailure['error'] 
         code: error.code,
         message: 'A sincronização remota para este computador está desabilitada.'
       };
+    case ErrorCode.UpdateDisabled:
+      return {
+        code: error.code,
+        message: 'As atualizações automáticas estão desabilitadas.'
+      };
+    case ErrorCode.UpdateInstallBlocked:
+      return {
+        code: error.code,
+        message: 'Conclua a operação atual antes de instalar a atualização.'
+      };
+    case ErrorCode.UpdateNotAvailable:
+      return {
+        code: error.code,
+        message: 'Você está usando a versão mais recente.'
+      };
+    case ErrorCode.UpdateNotDownloaded:
+      return {
+        code: error.code,
+        message: 'A atualização ainda não foi baixada.'
+      };
+    case ErrorCode.UpdateCheckFailed:
+    case ErrorCode.UpdateDownloadFailed:
+      return {
+        code: error.code,
+        message: 'Não foi possível verificar ou baixar a atualização.'
+      };
     default:
       return {
         code: ErrorCode.InternalError,

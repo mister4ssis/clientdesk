@@ -341,3 +341,11 @@ Alterações de clientes gravam auditoria local sanitizada em `customer_audit_lo
 Ciclos de sincronização gravam `sync_run_log` com motivo, status, contadores, duração e código de erro. Esse log é observacional: falha ao gravá-lo não pode derrubar sincronização nem desfazer alterações.
 
 A rota `/settings/diagnostics` e a exportação de diagnóstico usam dados agregados e sanitizados. O renderer não recebe banco, paths internos, tokens, chaves, payloads, outbox completa ou snapshots de conflito.
+
+## Release e Atualizações
+
+O pipeline Windows gera artifacts em CI e publica releases somente por tag validada. A assinatura digital é configurada por secrets da pipeline; o repositório não contém certificado, senha ou chave.
+
+`electron-updater` roda somente no processo main, em `src/main/modules/update`. O preload expõe apenas métodos específicos em `window.clientDesk.update`, e o renderer recebe somente `UpdateState` sanitizado.
+
+Antes de instalar uma atualização, `UpdateLifecycleService` verifica operações críticas. Instalação é bloqueada durante backup, restauração, migration, sincronização ou resolução de conflito. O banco SQLite permanece em `userData`, é fechado antes do `quitAndInstall()` e migrations locais são validadas na próxima abertura.

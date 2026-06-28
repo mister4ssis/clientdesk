@@ -15,6 +15,9 @@ interface ImportMetaEnv {
   readonly MAIN_VITE_AUDIT_RETENTION_DAYS?: string;
   readonly MAIN_VITE_SYNC_LOG_RETENTION_DAYS?: string;
   readonly MAIN_VITE_SYNC_LOG_MAX_ROWS?: string;
+  readonly MAIN_VITE_UPDATE_ENABLED?: string;
+  readonly MAIN_VITE_UPDATE_CHANNEL?: string;
+  readonly MAIN_VITE_UPDATE_CHECK_DELAY_SECONDS?: string;
 }
 
 interface ImportMeta {

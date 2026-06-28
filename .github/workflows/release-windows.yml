@@ -1,23 +1,15 @@
-name: Build Windows
+name: Release Windows
 
 on:
-  workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-      - master
-      - develop
   push:
-    branches:
-      - main
-      - master
-      - develop
+    tags:
+      - "v*"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  build:
+  release:
     runs-on: windows-latest
 
     steps:
@@ -32,6 +24,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate release tag
+        run: npm run release:check -- ${{ github.ref_name }}
 
       - name: Lint
         run: npm run lint
@@ -51,12 +46,26 @@ jobs:
       - name: Verify package directory
         run: npm run verify:package
 
+      - name: Report signing mode
+        env:
+          HAS_WINDOWS_CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK != '' }}
+          HAS_WINDOWS_CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD != '' }}
+        shell: pwsh
+        run: |
+          if ($env:HAS_WINDOWS_CSC_LINK -eq "true" -and $env:HAS_WINDOWS_CSC_KEY_PASSWORD -eq "true") {
+            Write-Output "Windows signing secrets are configured."
+          } else {
+            Write-Warning "Windows signing secrets are not configured. Build will be unsigned and intended only for homologation."
+          }
+
       - name: Build Windows installer
         env:
+          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
         run: npm run package:win
 
-      - name: Verify Windows artifacts
+      - name: Verify release artifacts
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -77,16 +86,25 @@ jobs:
             $_.Extension -in ".exe", ".yml", ".blockmap"
           } | Get-FileHash -Algorithm SHA256
           $hashes | Format-Table -AutoSize | Out-File -FilePath release\artifact-checksums.txt
-          "Windows artifact verification passed." | Out-File -FilePath release\verification-report.txt
+          "Release artifact verification passed." | Out-File -FilePath release\verification-report.txt
 
-      - name: Upload Windows artifacts
+      - name: Upload verification artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: clientdesk-windows
+          name: clientdesk-windows-release-verification
           path: |
-            release/*.exe
-            release/*.yml
-            release/*.blockmap
             release/artifact-checksums.txt
             release/verification-report.txt
           if-no-files-found: error
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          gh release view "${{ github.ref_name }}" *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --notes "ClientDesk ${{ github.ref_name }}" --verify-tag
+          }
+          gh release upload "${{ github.ref_name }}" release/*.exe release/*.yml release/*.blockmap release/artifact-checksums.txt release/verification-report.txt --clobber

@@ -31,6 +31,10 @@ export class BackgroundSyncService {
     return this.syncStatusService.getStatus();
   }
 
+  isRunning(): boolean {
+    return this.running;
+  }
+
   async requestSync(options: {
     reason: 'MANUAL' | 'SCHEDULER' | 'LOCAL_CHANGE' | 'REALTIME_EVENT';
   }): Promise<SyncRunResult> {

@@ -25,6 +25,7 @@ for (const filePath of requiredBuildFiles) {
 const packageJson = readJson(path.join(projectRoot, 'package.json'));
 assertEqual(packageJson.main, 'out/main/index.js', 'package.json main must point to out/main/index.js');
 assertDependency(packageJson, 'better-sqlite3', 'dependencies');
+assertDependency(packageJson, 'electron-updater', 'dependencies');
 assertDependency(packageJson, 'electron', 'devDependencies');
 assertDependency(packageJson, 'electron-builder', 'devDependencies');
 

@@ -7,6 +7,7 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
+npm run release:check
 ```
 
 Use `npm run test:watch` durante desenvolvimento.
@@ -29,11 +30,14 @@ npm rebuild better-sqlite3
 - `tests/main/ipc`: handlers IPC, validação e sanitização de erros.
 - `tests/main/audit`: auditoria de clientes, paginação, retenção e IPC.
 - `tests/main/diagnostics`: resumo sanitizado, IPC e histórico de ciclos.
+- `tests/main/update`: estado, download manual, bloqueio de instalação e IPC do updater.
 - `tests/integration/sync`: sincronização bidirecional entre duas instalações SQLite independentes com Supabase mockado.
 - `tests/main/sync/realtime`: canal Realtime, debounce, reconexão e proteção contra payload direto.
 - `tests/integration/realtime`: Realtime como gatilho de pull, lifecycle de autenticação e polling como fallback com Supabase mockado.
 - `tests/preload`: API exposta pelo `contextBridge`.
 - `tests/renderer`: listagem, filtros, cadastro, edição, detalhes, hooks, formatadores e client.
+- `tests/renderer/update-client.test.ts`: client do renderer para IPC de atualização.
+- `tests/scripts/verify-release-version.test.ts`: validação de tag e versão de release.
 - `tests/renderer/DiagnosticsPage.test.tsx`: tela de diagnóstico, exportação e sincronização manual.
 - `tests/smoke`: arquivos essenciais e scripts de validação/empacotamento.
 
@@ -84,3 +88,4 @@ Testes reais devem ser protegidos por `RUN_SUPABASE_REALTIME_TESTS=true` e usar 
 8. Acessar uma URL de cliente inexistente e confirmar mensagem amigável.
 9. Abrir o histórico do cliente e confirmar que só nomes de campos alterados aparecem.
 10. Abrir `/settings/diagnostics`, exportar diagnóstico e confirmar ausência de credenciais e dados pessoais.
+11. Em ambiente Windows/homologação, gerar `package:win`, instalar versão anterior, baixar atualização, reiniciar e confirmar preservação de banco, sessão, outbox e migrations.

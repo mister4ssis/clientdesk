@@ -11,6 +11,8 @@ import type { SyncConflictRepository } from './sync-conflict.repository';
 import type { SyncOutboxRepository } from './sync-outbox.repository';
 
 export class CustomerConflictService {
+  private operationInProgress = false;
+
   constructor(
     private readonly database: DatabaseConnection,
     private readonly customerRepository: CustomerRepository,
@@ -33,7 +35,19 @@ export class CustomerConflictService {
     return conflict;
   }
 
+  isOperationInProgress(): boolean {
+    return this.operationInProgress;
+  }
+
   async resolveKeepLocal(id: string): Promise<SyncConflictDetails> {
+    return this.runExclusive(async () => this.resolveKeepLocalUnsafe(id));
+  }
+
+  resolveUseRemote(id: string): SyncConflictDetails {
+    return this.runExclusiveSync(() => this.resolveUseRemoteUnsafe(id));
+  }
+
+  private async resolveKeepLocalUnsafe(id: string): Promise<SyncConflictDetails> {
     const conflict = this.getConflict(id);
     const customer = this.customerRepository.findById(conflict.entityId);
 
@@ -79,7 +93,7 @@ export class CustomerConflictService {
     };
   }
 
-  resolveUseRemote(id: string): SyncConflictDetails {
+  private resolveUseRemoteUnsafe(id: string): SyncConflictDetails {
     const conflict = this.getConflict(id);
     const resolvedAt = new Date().toISOString();
     const transaction = this.database.transaction(() => {
@@ -102,6 +116,34 @@ export class CustomerConflictService {
       ...conflict,
       status: 'RESOLVED_REMOTE'
     };
+  }
+
+  private async runExclusive<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.operationInProgress) {
+      throw new ApplicationError(ErrorCode.SyncOperationInProgress, 'Resolução em andamento.');
+    }
+
+    this.operationInProgress = true;
+
+    try {
+      return await operation();
+    } finally {
+      this.operationInProgress = false;
+    }
+  }
+
+  private runExclusiveSync<T>(operation: () => T): T {
+    if (this.operationInProgress) {
+      throw new ApplicationError(ErrorCode.SyncOperationInProgress, 'Resolução em andamento.');
+    }
+
+    this.operationInProgress = true;
+
+    try {
+      return operation();
+    } finally {
+      this.operationInProgress = false;
+    }
   }
 }
 
