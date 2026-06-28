@@ -179,6 +179,16 @@ Próximo passo: implementar fluxo de autenticação Supabase seguro ou validar a
 - Expor apenas status sanitizado em `sync:get-status`.
 - Cobrir canal, debounce, reconexão e fallback com testes mockados.
 
+### 15. Auditoria e Diagnóstico - Em andamento
+
+- Criar migration local `005` com `customer_audit_log` e `sync_run_log`.
+- Registrar auditoria sanitizada em cadastro, edição, ativação, inativação, pull remoto e resolução de conflito.
+- Registrar ciclos de sincronização com motivo, status, contadores, duração e erro sanitizado.
+- Expor IPC específico para histórico do cliente e diagnóstico.
+- Criar tela de histórico no detalhe do cliente e tela `/settings/diagnostics`.
+- Exportar diagnóstico JSON sanitizado sem banco, sessão, tokens, chaves, clientes ou dados pessoais.
+- Aplicar retenção configurável para auditoria e logs técnicos.
+
 ## Scripts Planejados
 
 Os scripts abaixo devem ser definidos quando o projeto for inicializado:

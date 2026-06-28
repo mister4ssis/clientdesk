@@ -7,6 +7,7 @@ import { CustomerDetailsPage } from '@renderer/pages/customers/CustomerDetailsPa
 import { CustomerEditPage } from '@renderer/pages/customers/CustomerEditPage';
 import { CustomerListPage } from '@renderer/pages/customers/CustomerListPage';
 import { BackupSettingsPage } from '@renderer/pages/settings/BackupSettingsPage';
+import { DiagnosticsPage } from '@renderer/pages/settings/DiagnosticsPage';
 import { SyncConflictsPage } from '@renderer/pages/settings/SyncConflictsPage';
 
 export function App(): ReactElement {
@@ -84,11 +85,16 @@ export function App(): ReactElement {
         <BackupSettingsPage
           onRestoreCompleted={() => navigate('/customers', 'Backup restaurado com sucesso.')}
           onViewSyncConflicts={() => navigate('/settings/sync/conflicts')}
+          onViewDiagnostics={() => navigate('/settings/diagnostics')}
         />
       ) : null}
 
       {route.name === 'sync-conflicts' ? (
         <SyncConflictsPage onBack={() => navigate('/settings/backup')} />
+      ) : null}
+
+      {route.name === 'diagnostics' ? (
+        <DiagnosticsPage onBack={() => navigate('/settings/backup')} />
       ) : null}
 
       {route.name === 'not-found' ? (
@@ -107,6 +113,7 @@ type AppRoute =
   | { name: 'customer-edit'; customerId: string }
   | { name: 'backup-settings' }
   | { name: 'sync-conflicts' }
+  | { name: 'diagnostics' }
   | { name: 'not-found' };
 
 function parseRoute(pathname: string): AppRoute {
@@ -126,6 +133,10 @@ function parseRoute(pathname: string): AppRoute {
     return { name: 'sync-conflicts' };
   }
 
+  if (pathname === '/settings/diagnostics') {
+    return { name: 'diagnostics' };
+  }
+
   const editMatch = /^\/customers\/([^/]+)\/edit$/.exec(pathname);
 
   if (editMatch) {
@@ -142,7 +153,7 @@ function parseRoute(pathname: string): AppRoute {
 }
 
 function getActiveMenuItem(route: AppRoute): 'customers' | 'settings' {
-  return route.name === 'backup-settings' || route.name === 'sync-conflicts'
+  return route.name === 'backup-settings' || route.name === 'sync-conflicts' || route.name === 'diagnostics'
     ? 'settings'
     : 'customers';
 }

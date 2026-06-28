@@ -20,6 +20,9 @@ export interface SupabaseSyncConfig {
   realtimeEnabled: boolean;
   realtimePullDebounceMs: number;
   realtimeReconnectMaxSeconds: number;
+  auditRetentionDays: number;
+  syncLogRetentionDays: number;
+  syncLogMaxRows: number;
   requestTimeoutMs: number;
   hasForbiddenSecret: boolean;
 }
@@ -37,7 +40,10 @@ type MainSupabaseEnvKey =
   | 'MAIN_VITE_SYNC_PULL_BATCH_SIZE'
   | 'MAIN_VITE_REALTIME_ENABLED'
   | 'MAIN_VITE_REALTIME_PULL_DEBOUNCE_MS'
-  | 'MAIN_VITE_REALTIME_RECONNECT_MAX_SECONDS';
+  | 'MAIN_VITE_REALTIME_RECONNECT_MAX_SECONDS'
+  | 'MAIN_VITE_AUDIT_RETENTION_DAYS'
+  | 'MAIN_VITE_SYNC_LOG_RETENTION_DAYS'
+  | 'MAIN_VITE_SYNC_LOG_MAX_ROWS';
 
 const defaultIntervalMinutes = 5;
 const defaultBatchSize = 50;
@@ -45,6 +51,9 @@ const defaultPullBatchSize = 100;
 const defaultTimeoutMs = 10000;
 const defaultRealtimePullDebounceMs = 500;
 const defaultRealtimeReconnectMaxSeconds = 60;
+const defaultAuditRetentionDays = 365;
+const defaultSyncLogRetentionDays = 30;
+const defaultSyncLogMaxRows = 1000;
 
 export function loadSupabaseSyncConfig(env: SupabaseEnv = getMainEnv()): SupabaseSyncConfig {
   const supabaseConfig = getSupabaseConfig(env);
@@ -80,6 +89,24 @@ export function loadSupabaseSyncConfig(env: SupabaseEnv = getMainEnv()): Supabas
       defaultRealtimeReconnectMaxSeconds,
       1,
       60
+    ),
+    auditRetentionDays: parseBoundedInteger(
+      env.MAIN_VITE_AUDIT_RETENTION_DAYS,
+      defaultAuditRetentionDays,
+      30,
+      3650
+    ),
+    syncLogRetentionDays: parseBoundedInteger(
+      env.MAIN_VITE_SYNC_LOG_RETENTION_DAYS,
+      defaultSyncLogRetentionDays,
+      7,
+      365
+    ),
+    syncLogMaxRows: parseBoundedInteger(
+      env.MAIN_VITE_SYNC_LOG_MAX_ROWS,
+      defaultSyncLogMaxRows,
+      100,
+      10000
     ),
     requestTimeoutMs: parseBoundedInteger(
       env.MAIN_VITE_SYNC_REQUEST_TIMEOUT_MS,

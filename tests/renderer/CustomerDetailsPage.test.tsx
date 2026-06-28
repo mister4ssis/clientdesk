@@ -8,6 +8,9 @@ const customerClientMock = vi.hoisted(() => ({
   getCustomerById: vi.fn(),
   setCustomerActive: vi.fn()
 }));
+const auditClientMock = vi.hoisted(() => ({
+  listCustomerHistory: vi.fn()
+}));
 
 vi.mock('@renderer/services/customer-client', async () => {
   const actual = await vi.importActual<typeof import('@renderer/services/customer-client')>(
@@ -21,9 +24,22 @@ vi.mock('@renderer/services/customer-client', async () => {
   };
 });
 
+vi.mock('@renderer/services/audit-client', async () => {
+  const actual = await vi.importActual<typeof import('@renderer/services/audit-client')>(
+    '@renderer/services/audit-client'
+  );
+
+  return {
+    ...actual,
+    listCustomerHistory: auditClientMock.listCustomerHistory
+  };
+});
+
 beforeEach(() => {
   customerClientMock.getCustomerById.mockReset();
   customerClientMock.setCustomerActive.mockReset();
+  auditClientMock.listCustomerHistory.mockReset();
+  auditClientMock.listCustomerHistory.mockResolvedValue({ items: [], total: 0 });
 });
 
 describe('CustomerDetailsPage', () => {
@@ -48,6 +64,32 @@ describe('CustomerDetailsPage', () => {
     expect(screen.getByText('10/01/1990')).toBeInTheDocument();
     expect(screen.getAllByText(/21\/06\/2026/).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Ativo').length).toBeGreaterThan(0);
+  });
+
+  it('shows sanitized customer history', async () => {
+    customerClientMock.getCustomerById.mockResolvedValue(activeCustomer);
+    auditClientMock.listCustomerHistory.mockResolvedValue({
+      total: 1,
+      items: [
+        {
+          id: '11111111-1111-4111-8111-111111111111',
+          customerId: activeCustomer.id,
+          operation: 'UPDATED',
+          source: 'LOCAL_USER',
+          changedFields: ['legalName', 'phone'],
+          installationIdShort: '22222222-222',
+          localVersion: '2026-06-21T11:00:00.000Z',
+          remoteVersion: null,
+          createdAt: '2026-06-21T11:00:00.000Z'
+        }
+      ]
+    });
+
+    renderDetails();
+
+    expect(await screen.findByText('Cliente atualizado')).toBeInTheDocument();
+    expect(screen.getByText('Campos: Nome/Razão social, Telefone')).toBeInTheDocument();
+    expect(screen.queryByText('remoteVersion')).not.toBeInTheDocument();
   });
 
   it('shows company details and not informed values', async () => {

@@ -55,3 +55,5 @@ O renderer não recebe URL, chaves, cliente Supabase, `fetch` genérico ou canai
 ## Logs
 
 Logs de sincronização não devem conter CPF/CNPJ, e-mail, telefone, observações, chaves, URL com credenciais ou mensagens completas do banco remoto.
+
+Diagnósticos exportados são sanitizados e não incluem Supabase URL completa, publishable key, tokens, sessão, payloads Realtime, snapshots de conflito, clientes ou dados pessoais.

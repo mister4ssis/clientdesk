@@ -1,5 +1,7 @@
 import type { DatabaseConnection } from '../../database/database';
 import type { SyncOutboxRepository } from '../sync/sync-outbox.repository';
+import type { CustomerAuditRepository } from '../audit/customer-audit.repository';
+import type { CustomerAuditOperation, CustomerAuditSource } from '@shared/audit/audit.types';
 import type {
   Customer,
   CustomerListResult,
@@ -34,6 +36,13 @@ type CustomerUpdateInput = Partial<
 
 interface CustomerRepositoryOptions {
   syncOutboxRepository?: SyncOutboxRepository;
+  customerAuditRepository?: CustomerAuditRepository;
+  getAuditContext?: () => CustomerAuditContext;
+}
+
+interface CustomerAuditContext {
+  userId: string;
+  installationId: string;
 }
 
 interface CountRow {
@@ -142,6 +151,15 @@ export class CustomerRepository {
         });
 
       this.options.syncOutboxRepository?.enqueueCustomer(customer.id, customer.updatedAt);
+      this.recordAudit({
+        customerId: customer.id,
+        operation: 'CREATED',
+        source: 'LOCAL_USER',
+        changedFields: customerAuditableFields,
+        localVersion: customer.updatedAt,
+        remoteVersion: null,
+        createdAt: customer.updatedAt
+      });
 
       return customer;
     });
@@ -205,6 +223,7 @@ export class CustomerRepository {
     }
 
     const transaction = this.database.transaction(() => {
+      const currentCustomer = this.findById(id);
       const assignments = [
         ...entries.map(([column]) => `${column} = @${column}`),
         "sync_status = 'PENDING'",
@@ -228,6 +247,21 @@ export class CustomerRepository {
 
       if (result.changes > 0) {
         this.options.syncOutboxRepository?.enqueueCustomer(id, getUpdatedAt(input));
+        const changedFields = currentCustomer
+          ? getChangedFields(currentCustomer, input)
+          : getInputFieldNames(input);
+
+        if (changedFields.length > 0) {
+          this.recordAudit({
+            customerId: id,
+            operation: 'UPDATED',
+            source: 'LOCAL_USER',
+            changedFields,
+            localVersion: getUpdatedAt(input),
+            remoteVersion: null,
+            createdAt: getUpdatedAt(input)
+          });
+        }
       }
     });
 
@@ -258,6 +292,15 @@ export class CustomerRepository {
 
       if (result.changes > 0) {
         this.options.syncOutboxRepository?.enqueueCustomer(id, updatedAt);
+        this.recordAudit({
+          customerId: id,
+          operation: active ? 'ACTIVATED' : 'DEACTIVATED',
+          source: 'LOCAL_USER',
+          changedFields: ['active'],
+          localVersion: updatedAt,
+          remoteVersion: null,
+          createdAt: updatedAt
+        });
       }
     });
 
@@ -362,6 +405,13 @@ export class CustomerRepository {
 
   applyRemoteCustomer(customer: CustomerConflictSnapshot): Customer {
     const transaction = this.database.transaction(() => {
+      const currentCustomer = this.findById(customer.id);
+      const currentMetadata = this.getSyncMetadata(customer.id);
+      const auditOperation = getRemoteAuditOperation(customer, currentCustomer, currentMetadata);
+      const changedFields = currentCustomer
+        ? getRemoteChangedFields(currentCustomer, currentMetadata, customer)
+        : customerAuditableFields;
+
       this.database
         .prepare(
           `
@@ -456,6 +506,18 @@ export class CustomerRepository {
           active: customer.active ? 1 : 0,
           syncedAt: new Date().toISOString()
         });
+
+      if (auditOperation && changedFields.length > 0) {
+        this.recordAudit({
+          customerId: customer.id,
+          operation: auditOperation,
+          source: 'REMOTE_SYNC',
+          changedFields,
+          localVersion: customer.updatedAt,
+          remoteVersion: customer.remoteVersion,
+          createdAt: new Date().toISOString()
+        });
+      }
     });
 
     transaction();
@@ -468,7 +530,68 @@ export class CustomerRepository {
 
     return appliedCustomer;
   }
+
+  recordConflictResolutionAudit(input: {
+    customerId: string;
+    operation: 'CONFLICT_KEEP_LOCAL' | 'CONFLICT_USE_REMOTE';
+    changedFields: string[];
+    localVersion: string | null;
+    remoteVersion: number | null;
+    createdAt: string;
+  }): void {
+    this.recordAudit({
+      customerId: input.customerId,
+      operation: input.operation,
+      source: 'CONFLICT_RESOLUTION',
+      changedFields: input.changedFields,
+      localVersion: input.localVersion,
+      remoteVersion: input.remoteVersion,
+      createdAt: input.createdAt
+    });
+  }
+
+  private recordAudit(input: {
+    customerId: string;
+    operation: CustomerAuditOperation;
+    source: CustomerAuditSource;
+    changedFields: string[];
+    localVersion: string | null;
+    remoteVersion: number | null;
+    createdAt: string;
+  }): void {
+    const context = this.options.getAuditContext?.();
+
+    if (!this.options.customerAuditRepository || !context) {
+      return;
+    }
+
+    this.options.customerAuditRepository.record({
+      ...input,
+      userId: context.userId,
+      installationId: context.installationId
+    });
+  }
 }
+
+const customerAuditableFields: Array<keyof CustomerConflictSnapshot> = [
+  'personType',
+  'legalName',
+  'tradeName',
+  'representative',
+  'taxId',
+  'email',
+  'phone',
+  'birthDate',
+  'postalCode',
+  'street',
+  'addressNumber',
+  'addressComplement',
+  'neighborhood',
+  'city',
+  'state',
+  'notes',
+  'active'
+];
 
 function buildListQuery(filters: CustomerSearchFilters): ListQueryParts {
   const conditions: string[] = ['deleted_at IS NULL'];
@@ -565,4 +688,54 @@ function assignIfDefined(
   if (value !== undefined) {
     target[column] = value;
   }
+}
+
+function getChangedFields(currentCustomer: Customer, input: CustomerUpdateInput): string[] {
+  return getInputFieldNames(input).filter((field) => {
+    const currentValue = currentCustomer[field as keyof Customer];
+    const nextValue = input[field as keyof CustomerUpdateInput];
+
+    return currentValue !== nextValue;
+  });
+}
+
+function getInputFieldNames(input: CustomerUpdateInput): string[] {
+  return customerAuditableFields.filter((field) => input[field as keyof CustomerUpdateInput] !== undefined);
+}
+
+function getRemoteAuditOperation(
+  remoteCustomer: CustomerConflictSnapshot,
+  currentCustomer: Customer | null,
+  currentMetadata: CustomerSyncMetadata | null
+): CustomerAuditOperation | null {
+  if (remoteCustomer.deletedAt && remoteCustomer.deletedAt !== currentMetadata?.deletedAt) {
+    return 'REMOTE_DELETED';
+  }
+
+  if (!currentCustomer) {
+    return 'REMOTE_CREATED';
+  }
+
+  return getRemoteChangedFields(currentCustomer, currentMetadata, remoteCustomer).length > 0
+    ? 'REMOTE_UPDATED'
+    : null;
+}
+
+function getRemoteChangedFields(
+  currentCustomer: Customer,
+  currentMetadata: CustomerSyncMetadata | null,
+  remoteCustomer: CustomerConflictSnapshot
+): string[] {
+  const fields = customerAuditableFields.filter((field) => {
+    const currentValue = currentCustomer[field as keyof Customer];
+    const remoteValue = remoteCustomer[field];
+
+    return currentValue !== remoteValue;
+  });
+
+  if (remoteCustomer.deletedAt !== currentMetadata?.deletedAt) {
+    fields.push('deletedAt');
+  }
+
+  return fields;
 }

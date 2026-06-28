@@ -27,11 +27,14 @@ npm rebuild better-sqlite3
 - `tests/main/database`: abertura, pragmas, migrations, rollback e fechamento.
 - `tests/main/customers`: repository, service e integração com SQLite temporário.
 - `tests/main/ipc`: handlers IPC, validação e sanitização de erros.
+- `tests/main/audit`: auditoria de clientes, paginação, retenção e IPC.
+- `tests/main/diagnostics`: resumo sanitizado, IPC e histórico de ciclos.
 - `tests/integration/sync`: sincronização bidirecional entre duas instalações SQLite independentes com Supabase mockado.
 - `tests/main/sync/realtime`: canal Realtime, debounce, reconexão e proteção contra payload direto.
 - `tests/integration/realtime`: Realtime como gatilho de pull, lifecycle de autenticação e polling como fallback com Supabase mockado.
 - `tests/preload`: API exposta pelo `contextBridge`.
 - `tests/renderer`: listagem, filtros, cadastro, edição, detalhes, hooks, formatadores e client.
+- `tests/renderer/DiagnosticsPage.test.tsx`: tela de diagnóstico, exportação e sincronização manual.
 - `tests/smoke`: arquivos essenciais e scripts de validação/empacotamento.
 
 ## Banco nos Testes
@@ -79,3 +82,5 @@ Testes reais devem ser protegidos por `RUN_SUPABASE_REALTIME_TESTS=true` e usar 
 6. Abrir detalhes, editar, inativar e reativar.
 7. Reiniciar o app e confirmar persistência.
 8. Acessar uma URL de cliente inexistente e confirmar mensagem amigável.
+9. Abrir o histórico do cliente e confirmar que só nomes de campos alterados aparecem.
+10. Abrir `/settings/diagnostics`, exportar diagnóstico e confirmar ausência de credenciais e dados pessoais.

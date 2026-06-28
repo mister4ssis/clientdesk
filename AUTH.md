@@ -27,6 +27,8 @@ O cliente Supabase é criado com:
 
 `AuthState` público contém apenas status, usuário seguro e flags de uso local/sync.
 
+Em diagnósticos exportáveis, o e-mail é mascarado e tokens nunca são incluídos.
+
 ## Armazenamento Seguro
 
 `SecureSessionStorage` grava `app.getPath('userData')/auth/session.enc` usando `safeStorage`. A gravação é atômica com arquivo temporário e `rename`.

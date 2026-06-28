@@ -12,6 +12,9 @@ interface ImportMetaEnv {
   readonly MAIN_VITE_REALTIME_ENABLED?: string;
   readonly MAIN_VITE_REALTIME_PULL_DEBOUNCE_MS?: string;
   readonly MAIN_VITE_REALTIME_RECONNECT_MAX_SECONDS?: string;
+  readonly MAIN_VITE_AUDIT_RETENTION_DAYS?: string;
+  readonly MAIN_VITE_SYNC_LOG_RETENTION_DAYS?: string;
+  readonly MAIN_VITE_SYNC_LOG_MAX_ROWS?: string;
 }
 
 interface ImportMeta {

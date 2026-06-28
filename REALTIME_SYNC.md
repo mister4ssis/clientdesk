@@ -87,6 +87,8 @@ Uma alteração enviada pela própria instalação pode gerar evento Realtime pa
 
 Não retorna tópico, userId, payload ou token.
 
+Eventos que disparam sincronização por Realtime são registrados em `sync_run_log` com motivo `REALTIME_EVENT`. O payload recebido não é persistido nem exportado.
+
 ## Testes
 
 Os testes padrão usam mocks e não exigem internet:

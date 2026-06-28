@@ -185,6 +185,15 @@ Qualquer exceção deve ser documentada em `docs/DECISIONS.md`.
 - Testes padrão devem funcionar offline e com Supabase mockado.
 - Nenhuma migration aplicada pode ser alterada.
 
+### Auditoria, logs e diagnóstico
+
+- Nunca registrar dados pessoais em logs técnicos.
+- Auditoria de cliente registra nomes dos campos alterados, não valores.
+- Logs de ciclos de sincronização são observacionais; falha nesses logs não pode perder dados.
+- Exportação de diagnóstico deve ser sanitizada e acionada pelo usuário.
+- Arquivos exportados não podem conter banco SQLite, sessão, backups, tokens, chaves ou dados dos clientes.
+- Migrations aplicadas nunca devem ser alteradas; criar nova migration para evoluções.
+
 ---
 
 ## 7. Regras de domínio do cliente

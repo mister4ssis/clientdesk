@@ -49,7 +49,7 @@ Um backup só é aceito quando:
 
 ## Compatibilidade de Migrations
 
-Backups antigos podem ser restaurados e atualizados pelas migrations atuais. Backups com versão de migration maior que a suportada pelo aplicativo são rejeitados.
+Backups antigos podem ser restaurados e atualizados pelas migrations atuais. Backups com versão de migration maior que a suportada pelo aplicativo são rejeitados. A versão de schema suportada nesta etapa é `5`.
 
 ## Localização
 

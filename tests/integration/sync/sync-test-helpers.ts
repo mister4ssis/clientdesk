@@ -378,6 +378,9 @@ export function createSyncTestInstance(
     pullBatchSize: options.pullBatchSize ?? 100,
     realtimePullDebounceMs: 500,
     realtimeReconnectMaxSeconds: 60,
+    auditRetentionDays: 365,
+    syncLogRetentionDays: 30,
+    syncLogMaxRows: 1000,
     requestTimeoutMs: 10000,
     hasForbiddenSecret: false
   };

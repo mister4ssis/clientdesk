@@ -15,6 +15,7 @@ import {
 import { CustomerDetailsField } from './components/CustomerDetailsField';
 import { CustomerDetailsHeader } from './components/CustomerDetailsHeader';
 import { CustomerDetailsSection } from './components/CustomerDetailsSection';
+import { CustomerHistorySection } from './components/CustomerHistorySection';
 import { CustomerStatusBadge } from './components/CustomerStatusBadge';
 import { CustomerStatusDialog } from './components/CustomerStatusDialog';
 import { useCustomerById } from './hooks/useCustomerById';
@@ -101,6 +102,7 @@ export function CustomerDetailsPage({
           ) : null}
 
           <CustomerDetailsContent customer={customer} />
+          <CustomerHistorySection customerId={customer.id} />
 
           <CustomerStatusDialog
             customer={customer}

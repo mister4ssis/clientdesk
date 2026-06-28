@@ -26,7 +26,7 @@ interface MetadataRow {
   value: string;
 }
 
-const currentSupportedMigrationVersion = 4;
+const currentSupportedMigrationVersion = 5;
 const requiredCustomerColumns = [
   'id',
   'person_type',

@@ -107,6 +107,9 @@ Fluxos implementados:
 - criar e restaurar backup local em `/settings/backup`;
 - informar estado básico de sincronização e permitir "Sincronizar agora" em `/settings/backup`;
 - listar e resolver conflitos de sincronização em `/settings/sync/conflicts`;
+- visualizar histórico sanitizado no detalhe do cliente;
+- abrir diagnóstico de sincronização em `/settings/diagnostics`;
+- exportar pacote JSON de diagnóstico sanitizado;
 - cadastrar, listar, pesquisar e visualizar o campo Representante;
 - tratar cliente inexistente com mensagem amigável e retorno para a listagem;
 - exibir loading, atualização, erro e estados vazios.
@@ -122,6 +125,7 @@ Rotas disponíveis no renderer:
 /customers/:id/edit
 /settings/backup
 /settings/sync/conflicts
+/settings/diagnostics
 ```
 
 ## Detalhes do Cliente
@@ -134,6 +138,10 @@ aparecem como `Não informado`.
 Ao editar a partir dos detalhes, o usuário retorna para `/customers/:id` após
 salvar. A ativação e inativação usam confirmação, feedback de sucesso e mensagens
 de erro sem stack trace, SQL ou caminhos locais.
+
+A seção `Histórico` mostra ações, origem, nomes dos campos alterados, data e
+instalação abreviada. Ela não mostra valores antigos, valores novos, JSON bruto
+ou identificadores completos.
 
 ## Testes
 
@@ -187,6 +195,9 @@ Com `MAIN_VITE_SYNC_ENABLED=false`, o app opera normalmente sem internet. Consul
 - `MULTI_INSTANCE_TESTING.md`: execução e isolamento de testes de sincronização.
 - `SYNC_VALIDATION_REPORT.md`: resultado da validação multi-instância.
 - `REALTIME_SYNC.md`: Realtime como gatilho de sincronização.
+- `AUDIT.md`: auditoria local sanitizada de alterações de clientes.
+- `DIAGNOSTICS.md`: resumo e exportação segura de diagnóstico.
+- `LOGGING_AND_PRIVACY.md`: regras de logs e privacidade.
 
 ## Limitações Conhecidas
 

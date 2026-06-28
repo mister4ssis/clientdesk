@@ -112,6 +112,9 @@
 - [ ] polling recupera alteração quando Realtime está indisponível
 - [ ] logout remove canal Realtime
 - [ ] troca de usuário não reaproveita canal anterior
+- [ ] histórico do cliente registra cadastro, edição, status, pull e conflito
+- [ ] diagnóstico exibe estado de sync, Realtime, outbox, conflitos e últimos ciclos
+- [ ] exportação de diagnóstico não contém clientes, tokens, chaves, banco ou paths internos
 
 ## Segurança
 
@@ -130,6 +133,8 @@
 - [ ] policy de `realtime.messages` restringe tópico por `auth.uid()`
 - [ ] renderer não recebe tópico, payload, socket ou token Realtime
 - [ ] backup de outro usuário rejeitado
+- [ ] logs e diagnóstico não contêm CPF/CNPJ, e-mail completo, telefone, representante ou endereço
+- [ ] auditoria registra somente nomes de campos alterados
 - [ ] assinatura digital avaliada
 
 ## Assinatura

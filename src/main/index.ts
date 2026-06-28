@@ -12,9 +12,16 @@ import { registerIpcHandlers } from './ipc/register-ipc-handlers';
 import { AuthService } from './modules/auth/auth.service';
 import { LocalAuthProfileRepository } from './modules/auth/local-auth-profile.repository';
 import { SecureSessionStorage } from './modules/auth/secure-session-storage';
+import { CustomerAuditRepository } from './modules/audit/customer-audit.repository';
+import { CustomerAuditService } from './modules/audit/customer-audit.service';
 import { BackupService } from './modules/backup/backup.service';
 import { CustomerRepository } from './modules/customers/customer.repository';
 import { CustomerService } from './modules/customers/customer.service';
+import { DiagnosticsExportService } from './modules/diagnostics/diagnostics-export.service';
+import { DiagnosticsService } from './modules/diagnostics/diagnostics.service';
+import { RetentionService } from './modules/diagnostics/retention.service';
+import { SyncRunLogRepository } from './modules/diagnostics/sync-run-log.repository';
+import { InstallationService } from './modules/installation/installation.service';
 import { BackgroundSyncService } from './modules/sync/background-sync.service';
 import { CustomerConflictService } from './modules/sync/customer-conflict.service';
 import { CustomerPullService } from './modules/sync/customer-pull.service';
@@ -49,6 +56,7 @@ async function bootstrap(): Promise<void> {
     fileName: 'profile.enc'
   });
   const localProfileRepository = new LocalAuthProfileRepository(profileStorage);
+  const installationService = new InstallationService(app.getPath('userData'));
   const supabaseClient = createClientDeskSupabaseClient(syncConfig, sessionStorage);
 
   authService = new AuthService({
@@ -105,11 +113,26 @@ async function bootstrap(): Promise<void> {
     const syncOutboxRepository = new SyncOutboxRepository(currentDatabase);
     const syncCursorRepository = new SyncCursorRepository(currentDatabase);
     const syncConflictRepository = new SyncConflictRepository(currentDatabase);
+    const customerAuditRepository = new CustomerAuditRepository(currentDatabase);
+    const syncRunLogRepository = new SyncRunLogRepository(currentDatabase);
     syncOutboxRepository.bootstrapPendingCustomers();
+    new RetentionService(customerAuditRepository, syncRunLogRepository, {
+      auditRetentionDays: syncConfig.auditRetentionDays,
+      syncLogRetentionDays: syncConfig.syncLogRetentionDays,
+      syncLogMaxRows: syncConfig.syncLogMaxRows
+    }).run();
+
+    const auditContext = () => ({
+      userId: user.id,
+      installationId: installationService.getInstallationId()
+    });
 
     const customerRepository = new CustomerRepository(currentDatabase, {
-      syncOutboxRepository
+      syncOutboxRepository,
+      customerAuditRepository,
+      getAuditContext: auditContext
     });
+    const customerAuditService = new CustomerAuditService(customerAuditRepository, () => user.id);
     const syncStatusService = new SyncStatusService(syncConfig.enabled, syncOutboxRepository, {
       pullEnabled: syncConfig.pullEnabled,
       syncConflictRepository
@@ -146,7 +169,9 @@ async function bootstrap(): Promise<void> {
             authState.user?.id === user.id &&
             getCurrentUserId() === user.id
           );
-        }
+        },
+        syncRunLogRepository,
+        getRunContext: auditContext
       }
     );
     realtimeSyncTriggerService?.stop();
@@ -179,7 +204,7 @@ async function bootstrap(): Promise<void> {
       syncConfig.enabled
     );
     const customerService = new CustomerService(customerRepository, {
-      onCustomerChanged: () => syncScheduler?.requestRun()
+      onCustomerChanged: () => syncScheduler?.requestRun('LOCAL_CHANGE')
     });
     const backupService = new BackupService({
       getUserDataPath: () => app.getPath('userData'),
@@ -191,13 +216,28 @@ async function bootstrap(): Promise<void> {
         registerServices(restoredDatabase, user, startScheduler);
       }
     });
+    const diagnosticsService = new DiagnosticsService({
+      database: currentDatabase,
+      authService: authService as AuthService,
+      syncService: backgroundSyncService,
+      syncOutboxRepository,
+      syncConflictRepository,
+      syncCursorRepository,
+      syncRunLogRepository,
+      installationService,
+      getAppVersion: () => app.getVersion()
+    });
+    const diagnosticsExportService = new DiagnosticsExportService(diagnosticsService);
 
     registerIpcHandlers({
       authService: authService ?? undefined,
       customerService,
       backupService,
       syncService: backgroundSyncService,
-      customerConflictService
+      customerConflictService,
+      customerAuditService,
+      diagnosticsService,
+      diagnosticsExportService
     });
 
     if (startScheduler) {
@@ -217,7 +257,10 @@ async function bootstrap(): Promise<void> {
       customerService: createLockedCustomerService(),
       backupService: createLockedBackupService(),
       syncService: createLockedSyncService(),
-      customerConflictService: createLockedCustomerConflictService()
+      customerConflictService: createLockedCustomerConflictService(),
+      customerAuditService: createLockedCustomerAuditService(),
+      diagnosticsService: createLockedDiagnosticsService(),
+      diagnosticsExportService: createLockedDiagnosticsExportService()
     });
   }
 }
@@ -314,6 +357,33 @@ function createLockedCustomerConflictService() {
       throwNotAuthenticated();
     },
     resolveUseRemote: () => {
+      throwNotAuthenticated();
+    }
+  };
+}
+
+function createLockedCustomerAuditService() {
+  return {
+    listByCustomer: () => {
+      throwNotAuthenticated();
+    }
+  };
+}
+
+function createLockedDiagnosticsService() {
+  return {
+    getSummary: () => {
+      throwNotAuthenticated();
+    },
+    listSyncRuns: () => {
+      throwNotAuthenticated();
+    }
+  };
+}
+
+function createLockedDiagnosticsExportService() {
+  return {
+    export: async () => {
       throwNotAuthenticated();
     }
   };

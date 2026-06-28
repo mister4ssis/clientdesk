@@ -61,6 +61,14 @@ export class CustomerConflictService {
       );
       this.syncOutboxRepository.removeCustomer(customer.id);
       this.syncConflictRepository.markResolved(id, 'RESOLVED_LOCAL', resolvedAt);
+      this.customerRepository.recordConflictResolutionAudit({
+        customerId: customer.id,
+        operation: 'CONFLICT_KEEP_LOCAL',
+        changedFields: getConflictChangedFields(conflict),
+        localVersion: customer.updatedAt,
+        remoteVersion: pushResult.remoteVersion ?? conflict.remoteVersion,
+        createdAt: resolvedAt
+      });
     });
 
     transaction();
@@ -78,6 +86,14 @@ export class CustomerConflictService {
       this.customerRepository.applyRemoteCustomer(conflict.remoteData);
       this.syncOutboxRepository.removeCustomer(conflict.entityId);
       this.syncConflictRepository.markResolved(id, 'RESOLVED_REMOTE', resolvedAt);
+      this.customerRepository.recordConflictResolutionAudit({
+        customerId: conflict.entityId,
+        operation: 'CONFLICT_USE_REMOTE',
+        changedFields: getConflictChangedFields(conflict),
+        localVersion: conflict.remoteData.updatedAt,
+        remoteVersion: conflict.remoteVersion,
+        createdAt: resolvedAt
+      });
     });
 
     transaction();
@@ -87,4 +103,30 @@ export class CustomerConflictService {
       status: 'RESOLVED_REMOTE'
     };
   }
+}
+
+function getConflictChangedFields(conflict: SyncConflictDetails): string[] {
+  return [
+    'personType',
+    'legalName',
+    'tradeName',
+    'representative',
+    'taxId',
+    'email',
+    'phone',
+    'birthDate',
+    'postalCode',
+    'street',
+    'addressNumber',
+    'addressComplement',
+    'neighborhood',
+    'city',
+    'state',
+    'notes',
+    'active'
+  ].filter((field) => {
+    const key = field as keyof SyncConflictDetails['localData'];
+
+    return conflict.localData[key] !== conflict.remoteData[key];
+  });
 }

@@ -11,6 +11,15 @@ import {
   type BackupServiceContract
 } from '../modules/backup/backup.ipc';
 import {
+  registerCustomerAuditIpcHandlers,
+  type CustomerAuditServiceContract
+} from '../modules/audit/customer-audit.ipc';
+import {
+  registerDiagnosticsIpcHandlers,
+  type DiagnosticsExportServiceContract,
+  type DiagnosticsServiceContract
+} from '../modules/diagnostics/diagnostics.ipc';
+import {
   registerSyncIpcHandlers,
   type CustomerConflictServiceContract,
   type SyncServiceContract
@@ -24,6 +33,9 @@ export interface RegisterIpcHandlersDependencies {
   backupService?: BackupServiceContract;
   syncService?: SyncServiceContract;
   customerConflictService?: CustomerConflictServiceContract;
+  customerAuditService?: CustomerAuditServiceContract;
+  diagnosticsService?: DiagnosticsServiceContract;
+  diagnosticsExportService?: DiagnosticsExportServiceContract;
   ipcMain?: IpcMainLike;
   getAppVersion?: () => string;
 }
@@ -34,6 +46,9 @@ export function registerIpcHandlers({
   backupService,
   syncService,
   customerConflictService,
+  customerAuditService,
+  diagnosticsService,
+  diagnosticsExportService,
   ipcMain = electronIpcMain,
   getAppVersion = () => app.getVersion()
 }: RegisterIpcHandlersDependencies): void {
@@ -69,6 +84,21 @@ export function registerIpcHandlers({
       ipcMain,
       syncService,
       customerConflictService
+    });
+  }
+
+  if (customerAuditService) {
+    registerCustomerAuditIpcHandlers({
+      ipcMain,
+      customerAuditService
+    });
+  }
+
+  if (diagnosticsService && diagnosticsExportService) {
+    registerDiagnosticsIpcHandlers({
+      ipcMain,
+      diagnosticsService,
+      diagnosticsExportService
     });
   }
 }

@@ -54,6 +54,10 @@ Não retornar `Error`, stack trace, SQL bruto, caminhos locais ou dados pessoais
 | `sync:get-conflict` | `{ id: string }` | `IpcResult<SyncConflictDetails>` |
 | `sync:resolve-keep-local` | `{ id: string }` | `IpcResult<SyncConflictDetails>` |
 | `sync:resolve-use-remote` | `{ id: string }` | `IpcResult<SyncConflictDetails>` |
+| `audit:list-customer-history` | `{ customerId: string; filters?: CustomerAuditFilters }` | `IpcResult<CustomerAuditListResult>` |
+| `diagnostics:get-summary` | `void` | `IpcResult<DiagnosticsSummary>` |
+| `diagnostics:list-sync-runs` | `SyncRunLogFilters` | `IpcResult<SyncRunLog[]>` |
+| `diagnostics:export` | `void` | `IpcResult<DiagnosticsExportResult>` |
 
 Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 
@@ -101,6 +105,8 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - Sync não expõe URL, chaves, cliente Supabase ou fila completa ao renderer.
 - Realtime não expõe canal, tópico, payload, socket ou token; o renderer recebe apenas `realtimeStatus`, `lastRealtimeEventAt` e `lastRealtimeConnectedAt` dentro de `SyncStatus`.
 - Sync expõe somente resumo/detalhe de conflito necessários para resolução manual.
+- Auditoria expõe apenas nomes de campos alterados e metadados sanitizados.
+- Diagnóstico expõe apenas contadores, estados, versões, códigos e e-mail mascarado.
 - Remover handler anterior antes de registrar novo handler para evitar duplicidade em desenvolvimento e testes.
 
 ## Novo Canal
