@@ -2,6 +2,8 @@
 
 Aplicativo desktop local para cadastro e gerenciamento de clientes.
 
+Versão de homologação atual: `0.9.0-rc.1`.
+
 ## Requisitos
 
 - Node.js compatível com Electron 42 e TypeScript 5.
@@ -46,6 +48,8 @@ Empacotamento local:
 npm run package:dir
 npm run package:win
 npm run release:check
+npm run test:integration
+npm run test:package
 npm run verify:package
 ```
 
@@ -196,6 +200,10 @@ Com `MAIN_VITE_SYNC_ENABLED=false`, o app opera normalmente sem internet. Consul
 - `CODE_SIGNING.md`: preparação de assinatura Windows sem secrets no repositório.
 - `AUTO_UPDATE.md`: updater, IPC, bloqueios de instalação e preservação de dados.
 - `VERSIONING.md`: SemVer, tags e compatibilidade.
+- `RELEASE_CANDIDATE_TEST_PLAN.md`: matriz e cenários para homologar `0.9.0-rc.1`.
+- `RELEASE_CANDIDATE_REPORT.md`: relatório inicial da RC.
+- `KNOWN_ISSUES.md`: issues conhecidas e severidade.
+- `GO_LIVE_CHECKLIST.md`: checklist de aprovação para 1.0.0.
 - `RELEASE_CHECKLIST.md`: checklist para validação e empacotamento.
 - `TESTING.md`: estratégia e comandos de teste.
 - `MULTI_INSTANCE_TESTING.md`: execução e isolamento de testes de sincronização.

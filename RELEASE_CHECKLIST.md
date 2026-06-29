@@ -28,6 +28,8 @@
 - [ ] logs revisados
 - [ ] `npm run release:check` aprovado para tag de release
 - [ ] tag `vX.Y.Z` corresponde a `package.json`
+- [ ] para RC, tag `v0.9.0-rc.1` corresponde a `package.json`
+- [ ] workflow `release-candidate.yml` validado como prerelease
 - [ ] workflow Windows gerou artifacts sem dados locais
 - [ ] updater validado com `MAIN_VITE_UPDATE_ENABLED=false` por padrão
 
@@ -160,7 +162,8 @@
 - [ ] IPCs `update:*` retornam `IpcResult`
 - [ ] renderer não recebe URL, token, provider, caminho do instalador ou stack trace
 - [ ] canal stable validado
-- [ ] canal beta validado quando prerelease for usada
+- [ ] canal beta validado para `0.9.0-rc.1`
+- [ ] usuários stable não recebem `0.9.0-rc.1`
 - [ ] downgrade automático bloqueado
 - [ ] instalação exige confirmação do usuário
 - [ ] migrations locais aplicadas com banco preservado após update

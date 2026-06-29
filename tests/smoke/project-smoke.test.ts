@@ -26,6 +26,8 @@ describe('project smoke checks', () => {
       'lint',
       'typecheck',
       'test',
+      'test:integration',
+      'test:package',
       'test:watch',
       'package',
       'package:dir',

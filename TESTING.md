@@ -6,6 +6,8 @@
 npm run lint
 npm run typecheck
 npm test
+npm run test:integration
+npm run test:package
 npm run build
 npm run release:check
 ```
@@ -89,3 +91,7 @@ Testes reais devem ser protegidos por `RUN_SUPABASE_REALTIME_TESTS=true` e usar 
 9. Abrir o histórico do cliente e confirmar que só nomes de campos alterados aparecem.
 10. Abrir `/settings/diagnostics`, exportar diagnóstico e confirmar ausência de credenciais e dados pessoais.
 11. Em ambiente Windows/homologação, gerar `package:win`, instalar versão anterior, baixar atualização, reiniciar e confirmar preservação de banco, sessão, outbox e migrations.
+
+## Homologação de Release Candidate
+
+Para `0.9.0-rc.1`, use `RELEASE_CANDIDATE_TEST_PLAN.md` como roteiro principal. A homologação deve ocorrer em Windows limpo, ambiente com versão anterior, cenário offline e duas instalações independentes. A máquina de desenvolvimento não substitui essa validação.

@@ -85,7 +85,7 @@ npm run verify:package
 npm run package:win
 ```
 
-O workflow de build envia artifacts sem publicar release. O workflow de release publica somente quando uma tag `vX.Y.Z`, `vX.Y.Z-beta.N` ou `vX.Y.Z-rc.N` passa por `npm run release:check`.
+O workflow de build envia artifacts sem publicar release. O workflow de release estável publica somente tags sem prerelease. Release Candidates, como `v0.9.0-rc.1`, usam `.github/workflows/release-candidate.yml`, são marcadas como prerelease e não devem ser consideradas produção.
 
 ## Assinatura Digital
 

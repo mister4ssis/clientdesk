@@ -37,6 +37,8 @@ Esse workflow não publica releases.
 
 `release-windows.yml` roda somente em tags `v*`, valida a versão, executa os mesmos testes, gera o instalador NSIS x64, verifica os artifacts e publica na GitHub Release da tag.
 
+`release-candidate.yml` roda manualmente ou em tags `v*-rc.*`. Ele valida a versão, executa testes, gera o instalador Windows, verifica artifacts e publica a GitHub Release como `prerelease`. A RC `0.9.0-rc.1` deve usar a tag `v0.9.0-rc.1` somente após aprovação explícita da homologação.
+
 ## Artifacts
 
 Artifacts esperados:
@@ -53,4 +55,4 @@ Artifacts não podem conter `.env`, bancos SQLite, WAL/SHM, logs, backups, diagn
 
 A publicação usa GitHub Releases e o token efêmero da própria pipeline. Tokens de publicação não ficam no repositório nem no bundle.
 
-Releases estáveis usam tags sem prerelease. Versões `beta` e `rc` devem ser marcadas como prerelease no GitHub quando usadas para homologação.
+Releases estáveis usam tags sem prerelease e são tratadas pelo workflow estável. Versões `beta` e `rc` devem ser marcadas como prerelease no GitHub quando usadas para homologação. Usuários stable não devem receber `0.9.0-rc.1`; a validação de updater da RC usa canal `beta`.

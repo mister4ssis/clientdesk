@@ -18,6 +18,7 @@ Prereleases permitidos:
 
 - `0.6.0-beta.1`
 - `0.6.0-rc.1`
+- `0.9.0-rc.1`
 
 ## Tags
 
@@ -30,6 +31,22 @@ v0.6.0-rc.1
 ```
 
 `scripts/verify-release-version.mjs` valida formato e correspondência com `package.json`.
+
+## Release Candidate Atual
+
+A primeira Release Candidate de homologação é:
+
+```text
+0.9.0-rc.1
+```
+
+A tag esperada, após aprovação explícita, é:
+
+```text
+v0.9.0-rc.1
+```
+
+Não criar tag automaticamente durante a preparação da branch.
 
 ## Compatibilidade
 

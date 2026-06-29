@@ -27,11 +27,11 @@ Padrão seguro:
 
 ```env
 MAIN_VITE_UPDATE_ENABLED=false
-MAIN_VITE_UPDATE_CHANNEL=stable
+MAIN_VITE_UPDATE_CHANNEL=beta
 MAIN_VITE_UPDATE_CHECK_DELAY_SECONDS=30
 ```
 
-Habilite atualizações somente depois de validar assinatura, GitHub Releases e teste de atualização em homologação.
+Para a RC `0.9.0-rc.1`, o canal de homologação é `beta` e as atualizações continuam desabilitadas por padrão. Habilite atualizações somente depois de validar assinatura, GitHub Releases e teste de atualização em homologação. Builds stable devem usar canal `stable`.
 
 ## Fluxo
 

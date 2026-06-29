@@ -1,6 +1,6 @@
 {
   "name": "clientdesk",
-  "version": "0.1.0",
+  "version": "0.9.0-rc.1",
   "description": "ClientDesk desktop customer management app.",
   "main": "out/main/index.js",
   "private": true,
@@ -13,6 +13,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "npm rebuild better-sqlite3 && vitest run",
+    "test:integration": "npm rebuild better-sqlite3 && vitest run tests/integration",
+    "posttest:integration": "npm run rebuild:electron",
+    "test:package": "node scripts/verify-package.mjs",
     "test:watch": "vitest",
     "posttest": "npm run rebuild:electron",
     "postinstall": "electron-builder install-app-deps",
