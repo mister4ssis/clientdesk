@@ -55,5 +55,22 @@
 ## Decisão
 
 - [ ] GO aprovado
-- [ ] NO-GO registrado com motivos
+- [x] NO-GO registrado com motivos
 - [ ] Tag `v1.0.0` criada somente após aprovação
+
+## Status da Homologação Técnica Local - 2026-06-29
+
+- [x] lint local aprovado
+- [x] typecheck local aprovado
+- [x] testes automatizados locais aprovados
+- [x] testes de integração locais com mocks aprovados
+- [x] build local aprovado
+- [x] pacote descompactado local aprovado
+- [x] verificação local de pacote aprovada
+- [x] release check para `v0.9.0-rc.1` aprovado
+- [x] falha RC-004 reproduzida, corrigida e retestada
+- [ ] workflow `release-candidate` executado em `windows-latest`
+- [ ] instalador Windows validado em máquina limpa
+- [ ] assinatura Windows validada com certificado real
+- [ ] auto update beta validado com prerelease publicada
+- [ ] testes manuais funcionais executados com evidência

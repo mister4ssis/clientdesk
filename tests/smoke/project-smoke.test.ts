@@ -23,6 +23,7 @@ describe('project smoke checks', () => {
     const expectedScripts = [
       'dev',
       'build',
+      'ensure:electron',
       'lint',
       'typecheck',
       'test',

@@ -84,6 +84,18 @@ Validar a primeira Release Candidate de homologação do ClientDesk antes da ver
 | Realtime | Canal isolado por usuário | PENDING |  |
 | Logs | Sem CPF/CNPJ, senha, token ou dados pessoais | PENDING |  |
 
+## Evidências Locais de 2026-06-29
+
+| Checagem | Resultado | Evidência |
+| --- | --- | --- |
+| Suíte automatizada | PASS | `npm test`: 63 arquivos / 310 testes; `npm run test:integration`: 9 arquivos / 19 testes |
+| Build local | PASS | `npm run build` gerou `out/main/index.js`, `out/preload/index.js`, `out/renderer/index.html` e assets |
+| Pacote descompactado local | PASS | `npm run package:dir` gerou pacote macOS arm64 |
+| Verificação de pacote | PASS | `npm run verify:package` e `npm run test:package` aprovaram |
+| Arquivos sensíveis no pacote local | PASS_LOCAL | Busca local não encontrou `.env`, SQLite, WAL/SHM, logs, backups, PFX/PEM/KEY, tokens ou `SUPABASE_SERVICE_ROLE_KEY` |
+| Instalador Windows | PENDING | Requer `windows-latest` ou máquina Windows por causa de `better-sqlite3` |
+| Testes manuais de instalação e uso | PENDING | Requer Windows limpo e ambiente Supabase de teste |
+
 ## Critério de Aprovação
 
 A RC não pode avançar para produção com issue `BLOCKER` ou `CRITICAL` aberta.

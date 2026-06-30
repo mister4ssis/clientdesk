@@ -16,7 +16,9 @@ Use `npm run test:watch` durante desenvolvimento.
 
 ## Observação sobre better-sqlite3
 
-`better-sqlite3` é um módulo nativo. O script `npm test` executa `npm rebuild better-sqlite3` antes do Vitest para usar o ABI do Node e, no `posttest`, executa `npm run rebuild:electron` para restaurar o ABI usado pelo Electron.
+`better-sqlite3` é um módulo nativo. O script `npm test` executa `npm run ensure:electron` e `npm rebuild better-sqlite3` antes do Vitest para garantir que o binário do Electron esteja instalado de forma serial e que o módulo use o ABI do Node. No `posttest`, executa `npm run rebuild:electron` para restaurar o ABI usado pelo Electron.
+
+Sem `ensure:electron`, uma instalação limpa pode fazer múltiplos workers do Vitest importarem `electron` ao mesmo tempo e disputar o download do binário em `node_modules/electron/dist`.
 
 Evite rodar `npx vitest` diretamente após executar Electron ou após o `posttest`; se necessário, rode primeiro:
 

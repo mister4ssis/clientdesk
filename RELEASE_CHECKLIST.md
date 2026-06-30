@@ -182,3 +182,20 @@ npm run release:check
 ```
 
 Use `npm run package:win` para gerar o pacote Windows quando o ambiente estiver preparado.
+
+## Rodada Local RC 0.9.0-rc.1 - 2026-06-29
+
+- [x] `npm ci`
+- [x] `npm run lint`
+- [x] `npm run typecheck`
+- [x] `npm test`
+- [x] `npm run test:integration`
+- [x] `npm run build`
+- [x] `npm run package:dir`
+- [x] `npm run verify:package`
+- [x] `npm run test:package`
+- [x] `npm run release:check -- v0.9.0-rc.1`
+- [ ] `npm run package:win` em Windows ou CI Windows
+- [ ] instalação limpa em Windows 11
+- [ ] atualização real pelo canal beta
+- [ ] assinatura Windows real
