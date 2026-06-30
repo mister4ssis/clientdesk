@@ -22,7 +22,7 @@
     "postinstall": "electron-builder install-app-deps",
     "package": "npm run build && electron-builder",
     "package:dir": "npm run build && electron-builder --dir",
-    "package:win": "npm run build && electron-builder --win nsis --x64",
+    "package:win": "npm run build && electron-builder --win nsis --x64 --publish never",
     "publish:win": "npm run build && electron-builder --win nsis --x64 --publish always",
     "release:check": "node scripts/verify-release-version.mjs",
     "dist:win": "npm run build && electron-builder --win",
