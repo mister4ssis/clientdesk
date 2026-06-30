@@ -11,7 +11,12 @@ describe('verify-release-version script', () => {
   });
 
   it('accepts beta and rc tags when they match the package version argument contract', () => {
-    expect(() => execFileSync('node', [scriptPath], { stdio: 'pipe' })).not.toThrow();
+    expect(() =>
+      execFileSync('node', [scriptPath], {
+        env: { ...process.env, GITHUB_REF_NAME: '', RELEASE_TAG: '' },
+        stdio: 'pipe'
+      })
+    ).not.toThrow();
   });
 
   it('rejects invalid tags and version mismatches', () => {
