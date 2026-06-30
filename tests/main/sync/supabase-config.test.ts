@@ -84,7 +84,7 @@ describe('loadSupabaseSyncConfig', () => {
 
     expect(diagnostic).toEqual({
       configured: true,
-      hasUrl: true,
+      hasSupabaseUrl: true,
       hasPublishableKey: true
     });
     expect(infoSpy).toHaveBeenCalledWith(

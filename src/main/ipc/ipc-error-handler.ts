@@ -83,9 +83,21 @@ function toPublicApplicationError(error: ApplicationError): IpcFailure['error'] 
         message: 'Não foi possível acessar os dados dos clientes.'
       };
     case ErrorCode.AuthInvalidCredentials:
+    case ErrorCode.AuthSupabaseInvalidCredentials:
       return {
         code: error.code,
         message: 'E-mail ou senha inválidos.'
+      };
+    case ErrorCode.AuthEmailNotConfirmed:
+      return {
+        code: error.code,
+        message: 'Confirme seu e-mail antes de entrar.'
+      };
+    case ErrorCode.AuthNetworkError:
+    case ErrorCode.AuthFetchFailed:
+      return {
+        code: error.code,
+        message: 'Não foi possível conectar ao servidor. Verifique sua internet.'
       };
     case ErrorCode.AuthOfflineUnavailable:
       return {
@@ -103,6 +115,10 @@ function toPublicApplicationError(error: ApplicationError): IpcFailure['error'] 
         message: 'É necessário entrar para continuar.'
       };
     case ErrorCode.AuthConfigurationError:
+      return {
+        code: error.code,
+        message: 'Esta instalação não possui a configuração necessária para acessar o servidor.'
+      };
     case ErrorCode.AuthStorageUnavailable:
       return {
         code: error.code,

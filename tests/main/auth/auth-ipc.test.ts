@@ -58,6 +58,62 @@ describe('auth IPC handlers', () => {
       }
     });
   });
+
+  it('returns a serializable auth configuration error', async () => {
+    const ipcMain = createMockIpcMain();
+    const authService = {
+      getState: vi.fn(() => authState),
+      signInWithPassword: vi.fn(async () => {
+        throw new ApplicationError(ErrorCode.AuthConfigurationError, 'Supabase Auth não configurado.');
+      }),
+      signOut: vi.fn(async () => undefined),
+      refreshSession: vi.fn(async () => authState)
+    };
+
+    registerAuthIpcHandlers({ ipcMain, authService });
+
+    const result = await ipcMain.invoke(IPC_CHANNELS.auth.signIn, {
+      email: 'user@example.com',
+      password: 'secret'
+    });
+
+    expect(result).toEqual({
+      success: false,
+      error: {
+        code: 'AUTH_CONFIGURATION_ERROR',
+        message: 'Esta instalação não possui a configuração necessária para acessar o servidor.'
+      }
+    });
+    expect(JSON.stringify(result)).not.toContain('secret');
+    expect(JSON.stringify(result)).not.toContain('user@example.com');
+  });
+
+  it('preserves mapped Supabase Auth error codes', async () => {
+    const ipcMain = createMockIpcMain();
+    const authService = {
+      getState: vi.fn(() => authState),
+      signInWithPassword: vi.fn(async () => {
+        throw new ApplicationError(ErrorCode.AuthEmailNotConfirmed, 'raw auth message');
+      }),
+      signOut: vi.fn(async () => undefined),
+      refreshSession: vi.fn(async () => authState)
+    };
+
+    registerAuthIpcHandlers({ ipcMain, authService });
+
+    await expect(
+      ipcMain.invoke(IPC_CHANNELS.auth.signIn, {
+        email: 'user@example.com',
+        password: 'secret'
+      })
+    ).resolves.toMatchObject({
+      success: false,
+      error: {
+        code: 'email_not_confirmed',
+        message: 'Confirme seu e-mail antes de entrar.'
+      }
+    });
+  });
 });
 
 const authState = {

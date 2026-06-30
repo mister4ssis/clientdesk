@@ -6,9 +6,13 @@ import { runMigrations } from './database/migration-runner';
 import { ApplicationError } from './errors/application-error';
 import { ErrorCode } from './errors/error-codes';
 import { createClientDeskSupabaseClient } from './integrations/supabase/supabase-client';
-import { loadSupabaseSyncConfig } from './integrations/supabase/supabase-config';
+import {
+  getSupabaseConfigDiagnostic,
+  loadSupabaseSyncConfig
+} from './integrations/supabase/supabase-config';
 import { SupabaseConnectivityService } from './integrations/supabase/supabase-connectivity.service';
 import { registerIpcHandlers } from './ipc/register-ipc-handlers';
+import { AuthEventLogger } from './logging/auth-event-logger';
 import { AuthService } from './modules/auth/auth.service';
 import { LocalAuthProfileRepository } from './modules/auth/local-auth-profile.repository';
 import { SecureSessionStorage } from './modules/auth/secure-session-storage';
@@ -60,8 +64,15 @@ let migrationInProgress = false;
 async function bootstrap(): Promise<void> {
   await app.whenReady();
 
+  const supabaseConfigDiagnostic = getSupabaseConfigDiagnostic();
   const syncConfig = loadSupabaseSyncConfig();
   const updateConfig = loadUpdateConfig();
+  const authEventLogger = new AuthEventLogger(app.getPath('logs'), () => ({
+    hasSupabaseUrl: supabaseConfigDiagnostic.hasSupabaseUrl,
+    hasPublishableKey: supabaseConfigDiagnostic.hasPublishableKey,
+    platform: process.platform,
+    packaged: app.isPackaged
+  }));
   const sessionStorage = new SecureSessionStorage({
     userDataPath: app.getPath('userData')
   });
@@ -101,7 +112,8 @@ async function bootstrap(): Promise<void> {
     onSessionTokenChanged: (accessToken) => {
       currentRealtimeAccessToken = accessToken;
       void realtimeChannelManager?.updateAuth(accessToken);
-    }
+    },
+    authLogger: authEventLogger
   });
 
   registerLockedServices();

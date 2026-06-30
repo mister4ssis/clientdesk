@@ -98,7 +98,15 @@ export function LoginPage({ authState, error, isLoading, onLogin }: LoginPagePro
 function getAuthErrorMessage(code: string): string {
   switch (code) {
     case 'AUTH_INVALID_CREDENTIALS':
+    case 'invalid_credentials':
       return 'E-mail ou senha inválidos.';
+    case 'email_not_confirmed':
+      return 'Confirme seu e-mail antes de entrar.';
+    case 'network_error':
+    case 'fetch_failed':
+      return 'Não foi possível conectar ao servidor. Verifique sua internet.';
+    case 'AUTH_CONFIGURATION_ERROR':
+      return 'Esta instalação não possui a configuração necessária para acessar o servidor.';
     case 'AUTH_OFFLINE_UNAVAILABLE':
       return 'Não foi possível entrar sem conexão. Conecte-se à internet para realizar o primeiro acesso neste computador.';
     case 'AUTH_SESSION_EXPIRED':

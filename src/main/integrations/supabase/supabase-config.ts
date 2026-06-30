@@ -5,7 +5,7 @@ export interface SupabaseConfig {
 
 export interface SupabaseConfigDiagnostic {
   configured: boolean;
-  hasUrl: boolean;
+  hasSupabaseUrl: boolean;
   hasPublishableKey: boolean;
 }
 
@@ -142,7 +142,7 @@ export function getSupabaseConfigDiagnostic(
     configured: Boolean(
       url && publishableKey && isValidUrl(url) && isValidPublishableKey(publishableKey)
     ),
-    hasUrl: Boolean(url),
+    hasSupabaseUrl: Boolean(url),
     hasPublishableKey: Boolean(publishableKey)
   };
 }

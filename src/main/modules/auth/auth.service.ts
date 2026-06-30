@@ -5,6 +5,7 @@ import { signInInputSchema } from '@shared/auth/auth.schemas';
 import { ApplicationError } from '../../errors/application-error';
 import { ErrorCode } from '../../errors/error-codes';
 import type { ClientDeskSupabaseClient } from '../../integrations/supabase/supabase-client';
+import type { AuthEventLogger } from '../../logging/auth-event-logger';
 import { mapSupabaseUser } from './auth-session.mapper';
 import type { LocalAuthProfileRepository } from './local-auth-profile.repository';
 import type { SecureSessionStorage } from './secure-session-storage';
@@ -17,6 +18,7 @@ interface AuthServiceDependencies {
   onAuthenticated?: (user: AuthUser, mode: 'online' | 'offline') => void | Promise<void>;
   onSignedOut?: () => void | Promise<void>;
   onSessionTokenChanged?: (accessToken: string | null) => void | Promise<void>;
+  authLogger?: Pick<AuthEventLogger, 'log'>;
 }
 
 export class AuthService {
@@ -29,6 +31,7 @@ export class AuthService {
   private readonly onAuthenticated?: AuthServiceDependencies['onAuthenticated'];
   private readonly onSignedOut?: AuthServiceDependencies['onSignedOut'];
   private readonly onSessionTokenChanged?: AuthServiceDependencies['onSessionTokenChanged'];
+  private readonly authLogger?: Pick<AuthEventLogger, 'log'>;
 
   constructor(dependencies: AuthServiceDependencies) {
     this.supabaseClient = dependencies.supabaseClient;
@@ -38,6 +41,7 @@ export class AuthService {
     this.onAuthenticated = dependencies.onAuthenticated;
     this.onSignedOut = dependencies.onSignedOut;
     this.onSessionTokenChanged = dependencies.onSessionTokenChanged;
+    this.authLogger = dependencies.authLogger;
   }
 
   async initialize(): Promise<AuthState> {
@@ -73,29 +77,46 @@ export class AuthService {
     const credentials = signInInputSchema.parse(input);
 
     if (!this.supabaseClient) {
-      throw new ApplicationError(
+      const error = new ApplicationError(
         ErrorCode.AuthConfigurationError,
         'Supabase Auth não configurado.'
       );
+      this.logSignIn('failure', error.code, error.message);
+      throw error;
     }
 
     if (!this.isNetworkOnline()) {
-      throw new ApplicationError(
+      const error = new ApplicationError(
         ErrorCode.AuthOfflineUnavailable,
         'Primeiro acesso offline indisponível.'
       );
+      this.logSignIn('failure', error.code, error.message);
+      throw error;
     }
 
-    const { error } = await this.supabaseClient.auth.signInWithPassword(credentials);
+    let signInResult: Awaited<ReturnType<ClientDeskSupabaseClient['auth']['signInWithPassword']>>;
+
+    try {
+      signInResult = await this.supabaseClient.auth.signInWithPassword(credentials);
+    } catch (signInError) {
+      const mappedError = mapThrownAuthError(signInError);
+      this.logSignIn('failure', mappedError.code, mappedError.message);
+      throw mappedError;
+    }
+
+    const { error } = signInResult;
 
     if (error) {
-      throw new ApplicationError(ErrorCode.AuthInvalidCredentials, 'Credenciais inválidas.');
+      const mappedError = mapSupabaseAuthError(error);
+      this.logSignIn('failure', mappedError.code, mappedError.message);
+      throw mappedError;
     }
 
     const user = await this.getVerifiedUser();
     this.localProfileRepository.saveProfile(user);
     await this.emitCurrentSessionToken();
     await this.applyAuthenticatedUser(user, 'online');
+    this.logSignIn('success', 'AUTHENTICATED', 'Autenticação concluída.');
 
     return this.state;
   }
@@ -256,6 +277,15 @@ export class AuthService {
   private async emitSessionToken(accessToken: string | null): Promise<void> {
     await this.onSessionTokenChanged?.(accessToken);
   }
+
+  private logSignIn(status: 'success' | 'failure', code: string, message: string): void {
+    this.authLogger?.log({
+      event: 'AUTH_SIGN_IN',
+      code,
+      status,
+      message
+    });
+  }
 }
 
 function createAuthState(status: AuthState['status'], user: AuthUser | null): AuthState {
@@ -265,4 +295,71 @@ function createAuthState(status: AuthState['status'], user: AuthUser | null): Au
     canUseLocalData: status === 'AUTHENTICATED' || status === 'OFFLINE_AUTHENTICATED',
     canSynchronize: status === 'AUTHENTICATED'
   };
+}
+
+interface SupabaseAuthErrorLike {
+  code?: string;
+  status?: number;
+  message?: string;
+}
+
+function mapSupabaseAuthError(error: SupabaseAuthErrorLike): ApplicationError {
+  const code = normalizeAuthErrorCode(error.code);
+  const message = error.message?.toLowerCase() ?? '';
+
+  if (code === ErrorCode.AuthEmailNotConfirmed || message.includes('email not confirmed')) {
+    return new ApplicationError(ErrorCode.AuthEmailNotConfirmed, 'E-mail não confirmado.', {
+      cause: { code, status: error.status }
+    });
+  }
+
+  if (
+    code === ErrorCode.AuthSupabaseInvalidCredentials ||
+    message.includes('invalid login credentials') ||
+    error.status === 400
+  ) {
+    return new ApplicationError(ErrorCode.AuthSupabaseInvalidCredentials, 'Credenciais inválidas.', {
+      cause: { code, status: error.status }
+    });
+  }
+
+  if (code === ErrorCode.AuthFetchFailed || message.includes('fetch failed')) {
+    return new ApplicationError(ErrorCode.AuthFetchFailed, 'Falha de conexão.', {
+      cause: { code, status: error.status }
+    });
+  }
+
+  if (code === ErrorCode.AuthNetworkError || message.includes('network')) {
+    return new ApplicationError(ErrorCode.AuthNetworkError, 'Falha de rede.', {
+      cause: { code, status: error.status }
+    });
+  }
+
+  return new ApplicationError(ErrorCode.AuthInvalidCredentials, 'Falha na autenticação.', {
+    cause: { code, status: error.status }
+  });
+}
+
+function mapThrownAuthError(error: unknown): ApplicationError {
+  if (error instanceof ApplicationError) {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+
+    if (message.includes('fetch failed')) {
+      return new ApplicationError(ErrorCode.AuthFetchFailed, 'Falha de conexão.', { cause: error });
+    }
+
+    if (message.includes('network')) {
+      return new ApplicationError(ErrorCode.AuthNetworkError, 'Falha de rede.', { cause: error });
+    }
+  }
+
+  return new ApplicationError(ErrorCode.AuthNetworkError, 'Falha de rede.', { cause: error });
+}
+
+function normalizeAuthErrorCode(code: string | undefined): string | null {
+  return code?.trim().toLowerCase() || null;
 }
