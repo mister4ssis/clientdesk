@@ -199,3 +199,20 @@ Use `npm run package:win` para gerar o pacote Windows quando o ambiente estiver 
 - [ ] instalação limpa em Windows 11
 - [ ] atualização real pelo canal beta
 - [ ] assinatura Windows real
+
+## Gate Final RC 0.9.0-rc.1 - 2026-06-29
+
+- [x] relatórios da RC lidos
+- [x] issues abertas classificadas
+- [x] decisão determinada sem assumir aprovação
+- [x] `1.0.0` não preparada por falta de evidência obrigatória
+- [x] `0.9.0-rc.2` não preparada porque não há BLOCKER/CRITICAL aberto
+- [x] testes automatizados locais executados
+- [x] pacote local verificado
+- [x] rollback documentado
+- [ ] testes manuais obrigatórios completos
+- [ ] artifacts Windows validados
+- [ ] checksums Windows gerados
+- [ ] updater beta validado com prerelease
+
+Decisão do gate: `PENDENTE`.

@@ -55,7 +55,8 @@
 ## Decisão
 
 - [ ] GO aprovado
-- [x] NO-GO registrado com motivos
+- [ ] NO-GO registrado com motivos
+- [x] PENDENTE registrado com motivos
 - [ ] Tag `v1.0.0` criada somente após aprovação
 
 ## Status da Homologação Técnica Local - 2026-06-29
@@ -68,9 +69,28 @@
 - [x] pacote descompactado local aprovado
 - [x] verificação local de pacote aprovada
 - [x] release check para `v0.9.0-rc.1` aprovado
+- [x] gate final executado sem preparar `1.0.0`
 - [x] falha RC-004 reproduzida, corrigida e retestada
 - [ ] workflow `release-candidate` executado em `windows-latest`
 - [ ] instalador Windows validado em máquina limpa
 - [ ] assinatura Windows validada com certificado real
 - [ ] auto update beta validado com prerelease publicada
 - [ ] testes manuais funcionais executados com evidência
+
+## Itens Obrigatórios Pendentes Para GO
+
+- [ ] instalação limpa validada em Windows 11
+- [ ] atualização de versão anterior validada
+- [ ] migrations validadas em upgrade real
+- [ ] persistência de banco, sessão, outbox e conflitos validada em upgrade
+- [ ] autenticação real validada
+- [ ] isolamento real entre usuários validado
+- [ ] sincronização online real validada
+- [ ] sincronização offline real validada
+- [ ] conflitos reais validados nas duas resoluções
+- [ ] backup e restauração validados manualmente
+- [ ] instalador Windows gerado e validado
+- [ ] pipeline `release-candidate` validada
+- [ ] pacote Windows verificado sem credenciais
+- [ ] assinatura validada ou pendência aceita explicitamente
+- [ ] atualização beta real validada

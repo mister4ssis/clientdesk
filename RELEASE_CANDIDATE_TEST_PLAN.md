@@ -95,7 +95,22 @@ Validar a primeira Release Candidate de homologação do ClientDesk antes da ver
 | Arquivos sensíveis no pacote local | PASS_LOCAL | Busca local não encontrou `.env`, SQLite, WAL/SHM, logs, backups, PFX/PEM/KEY, tokens ou `SUPABASE_SERVICE_ROLE_KEY` |
 | Instalador Windows | PENDING | Requer `windows-latest` ou máquina Windows por causa de `better-sqlite3` |
 | Testes manuais de instalação e uso | PENDING | Requer Windows limpo e ambiente Supabase de teste |
+| Gate final de release | PENDENTE | Sem BLOCKER/CRITICAL, mas testes manuais obrigatórios e Windows/assinatura/updater continuam sem evidência |
 
 ## Critério de Aprovação
 
 A RC não pode avançar para produção com issue `BLOCKER` ou `CRITICAL` aberta.
+
+## Passos Exatos Pendentes Para Fechar o Gate
+
+1. Executar `.github/workflows/release-candidate.yml` em `windows-latest`.
+2. Gerar o instalador Windows da `0.9.0-rc.1`.
+3. Verificar artifacts Windows sem `.env`, bancos, logs, backups, certificados ou credenciais.
+4. Instalar em Windows 11 limpo sem Node.js/Git.
+5. Confirmar abertura do app, renderer, preload, migrations e login.
+6. Executar cadastro, edição, ativação, inativação, histórico, diagnóstico, backup e restauração.
+7. Validar atualização de versão anterior preservando banco, sessão compatível, outbox, conflitos e histórico.
+8. Validar sincronização online/offline e conflitos em ambiente Supabase de teste.
+9. Validar RLS e isolamento entre usuários em ambiente Supabase de teste.
+10. Validar assinatura Windows real ou registrar aceitação explícita de pendência.
+11. Publicar prerelease beta somente com autorização explícita e validar auto update.

@@ -10,7 +10,7 @@
 - Commit de homologação: pendente até conclusão do commit
 - Tag: não criada
 - Ambiente local: macOS arm64 (`Darwin arm64`)
-- Status preliminar: `NO-GO` para 1.0.0 até validação em Windows limpo, CI Windows, assinatura e updater real
+- Status do gate final: `PENDENTE` para 1.0.0 até validação em Windows limpo, CI Windows, assinatura e updater real
 
 ## Diagnóstico Inicial
 
@@ -120,6 +120,54 @@ Não há `BLOCKER` ou `CRITICAL` aberto na validação automatizada local.
 
 ## Recomendação
 
-`NO-GO` temporário para 1.0.0.
+`PENDENTE` para 1.0.0.
 
 Próxima etapa recomendada: executar o workflow `release-candidate` em `windows-latest`, validar o instalador em máquina Windows limpa e, se as pendências forem resolvidas sem BLOCKER/CRITICAL, manter `0.9.0-rc.1` como candidata de homologação. Se surgir falha impeditiva, preparar `0.9.0-rc.2`.
+
+## Gate Final de Release - 2026-06-29
+
+Decisão: `PENDENTE`.
+
+Resumo:
+
+- BLOCKER abertos: 0.
+- CRITICAL abertos: 0.
+- MAJOR abertos: 3 (`RC-001`, `RC-002`, `RC-003`).
+- MINOR abertos: 0.
+- Testes automatizados locais: PASS.
+- Testes manuais obrigatórios com evidência: PENDING.
+- Instalação limpa Windows: PENDING.
+- Atualização de versão anterior: PENDING.
+- Migrations em pacote local: PASS_LOCAL.
+- Assinatura: PENDING.
+- Sincronização com mocks: PASS.
+- Sincronização real/Supabase Auth/RLS em ambiente de teste: PENDING.
+- Backup e restauração manual: PENDING.
+- Segurança de pacote local: PASS_LOCAL.
+
+Comandos executados no gate:
+
+| Comando | Resultado | Duração aproximada |
+| --- | --- | ---: |
+| `git status --short` | PASS, limpo | <1s |
+| `git branch --show-current` | PASS, `release/0.9.0-rc.1` | <1s |
+| `git log -10 --oneline` | PASS | <1s |
+| `git tag --list --sort=-version:refname \| head -20` | PASS, sem tags listadas | <1s |
+| `npm ci` | PASS | 33s |
+| `npm run lint` | PASS | 2s |
+| `npm run typecheck` | PASS | 2s |
+| `npm test` | PASS, 63 arquivos / 310 testes | 34s |
+| `npm run test:integration` | PASS, 9 arquivos / 19 testes | 30s |
+| `npm run build` | PASS | 3s |
+| `npm run package:dir` | PASS, pacote macOS arm64 local | 6s |
+| `npm run verify:package` | PASS | <1s |
+| `npm run release:check -- v0.9.0-rc.1` | PASS | <1s |
+| `npm run release:check` | PASS, versão SemVer validada sem tag | <1s |
+
+`npm run package:win` não foi executado porque o gate rodou em `Darwin arm64`. O instalador Windows deve ser validado no workflow `release-candidate` em `windows-latest`.
+
+Decisão sobre versão:
+
+- `1.0.0` não foi preparada.
+- `0.9.0-rc.2` não foi preparada porque não há BLOCKER/CRITICAL nem correção funcional pendente que justifique nova RC.
+- A versão permanece `0.9.0-rc.1`.
