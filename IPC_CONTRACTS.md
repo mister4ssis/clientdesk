@@ -54,6 +54,14 @@ Não retornar `Error`, stack trace, SQL bruto, caminhos locais ou dados pessoais
 | `sync:get-conflict` | `{ id: string }` | `IpcResult<SyncConflictDetails>` |
 | `sync:resolve-keep-local` | `{ id: string }` | `IpcResult<SyncConflictDetails>` |
 | `sync:resolve-use-remote` | `{ id: string }` | `IpcResult<SyncConflictDetails>` |
+| `audit:list-customer-history` | `{ customerId: string; filters?: CustomerAuditFilters }` | `IpcResult<CustomerAuditListResult>` |
+| `diagnostics:get-summary` | `void` | `IpcResult<DiagnosticsSummary>` |
+| `diagnostics:list-sync-runs` | `SyncRunLogFilters` | `IpcResult<SyncRunLog[]>` |
+| `diagnostics:export` | `void` | `IpcResult<DiagnosticsExportResult>` |
+| `update:get-state` | `void` | `IpcResult<UpdateState>` |
+| `update:check` | `void` | `IpcResult<UpdateOperationResult>` |
+| `update:download` | `void` | `IpcResult<UpdateOperationResult>` |
+| `update:install` | `void` | `IpcResult<UpdateOperationResult>` |
 
 Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 
@@ -87,6 +95,12 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - `SYNC_CONFLICT`: alteração local e remota concorrentes.
 - `SYNC_CONFLICT_NOT_FOUND`: conflito inexistente ou já resolvido.
 - `SYNC_PULL_DISABLED`: recebimento remoto desabilitado por configuração.
+- `UPDATE_DISABLED`: atualização automática desabilitada.
+- `UPDATE_CHECK_FAILED`: falha sanitizada ao verificar atualização.
+- `UPDATE_DOWNLOAD_FAILED`: falha sanitizada ao baixar atualização.
+- `UPDATE_INSTALL_BLOCKED`: instalação bloqueada por operação crítica.
+- `UPDATE_NOT_AVAILABLE`: não há atualização disponível para baixar.
+- `UPDATE_NOT_DOWNLOADED`: instalação solicitada antes do download.
 
 `details` só deve ser preservado quando vier de validação Zod e for seguro para o renderer.
 
@@ -101,6 +115,9 @@ Todos os nomes ficam centralizados em `src/shared/ipc/ipc-channels.ts`.
 - Sync não expõe URL, chaves, cliente Supabase ou fila completa ao renderer.
 - Realtime não expõe canal, tópico, payload, socket ou token; o renderer recebe apenas `realtimeStatus`, `lastRealtimeEventAt` e `lastRealtimeConnectedAt` dentro de `SyncStatus`.
 - Sync expõe somente resumo/detalhe de conflito necessários para resolução manual.
+- Auditoria expõe apenas nomes de campos alterados e metadados sanitizados.
+- Diagnóstico expõe apenas contadores, estados, versões, códigos e e-mail mascarado.
+- Update não expõe `autoUpdater`, URL, token, provider, caminho de instalador, shell ou arquivo arbitrário.
 - Remover handler anterior antes de registrar novo handler para evitar duplicidade em desenvolvimento e testes.
 
 ## Novo Canal

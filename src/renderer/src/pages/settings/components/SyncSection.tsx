@@ -8,9 +8,10 @@ import {
 
 interface SyncSectionProps {
   onViewConflicts: () => void;
+  onViewDiagnostics: () => void;
 }
 
-export function SyncSection({ onViewConflicts }: SyncSectionProps) {
+export function SyncSection({ onViewConflicts, onViewDiagnostics }: SyncSectionProps) {
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
@@ -135,6 +136,14 @@ export function SyncSection({ onViewConflicts }: SyncSectionProps) {
           onClick={onViewConflicts}
         >
           Conflitos pendentes
+        </button>
+        <button
+          className="button button--secondary"
+          type="button"
+          disabled={isRunning}
+          onClick={onViewDiagnostics}
+        >
+          Diagnóstico
         </button>
       </div>
     </section>

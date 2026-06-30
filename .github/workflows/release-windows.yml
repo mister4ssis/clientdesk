@@ -1,0 +1,111 @@
+name: Release Windows
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    if: ${{ !contains(github.ref_name, '-') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate release tag
+        run: npm run release:check -- ${{ github.ref_name }}
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Package directory
+        run: npm run package:dir
+
+      - name: Verify package directory
+        run: npm run verify:package
+
+      - name: Report signing mode
+        env:
+          HAS_WINDOWS_CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK != '' }}
+          HAS_WINDOWS_CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD != '' }}
+        shell: pwsh
+        run: |
+          if ($env:HAS_WINDOWS_CSC_LINK -eq "true" -and $env:HAS_WINDOWS_CSC_KEY_PASSWORD -eq "true") {
+            Write-Output "Windows signing secrets are configured."
+          } else {
+            Write-Warning "Windows signing secrets are not configured. Build will be unsigned and intended only for homologation."
+          }
+
+      - name: Build Windows installer
+        env:
+          CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run package:win
+
+      - name: Verify release artifacts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = Get-ChildItem -Path release -Recurse -File
+          $forbidden = $files | Where-Object {
+            $_.Name -match '\.env$|\.sqlite$|\.sqlite-wal$|\.sqlite-shm$|\.db$|\.log$|\.pfx$|\.key$|\.pem$'
+          }
+          if ($forbidden) {
+            $forbidden | ForEach-Object { Write-Error "Forbidden artifact: $($_.FullName)" }
+            exit 1
+          }
+          $installer = $files | Where-Object { $_.Extension -eq ".exe" } | Select-Object -First 1
+          if (-not $installer) {
+            Write-Error "Windows installer was not generated."
+            exit 1
+          }
+          $hashes = $files | Where-Object {
+            $_.Extension -in ".exe", ".yml", ".blockmap"
+          } | Get-FileHash -Algorithm SHA256
+          $hashes | Format-Table -AutoSize | Out-File -FilePath release\artifact-checksums.txt
+          "Release artifact verification passed." | Out-File -FilePath release\verification-report.txt
+
+      - name: Upload verification artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: clientdesk-windows-release-verification
+          path: |
+            release/artifact-checksums.txt
+            release/verification-report.txt
+          if-no-files-found: error
+
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          gh release view "${{ github.ref_name }}" *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --notes "ClientDesk ${{ github.ref_name }}" --verify-tag
+          }
+          gh release upload "${{ github.ref_name }}" release/*.exe release/*.yml release/*.blockmap release/artifact-checksums.txt release/verification-report.txt --clobber

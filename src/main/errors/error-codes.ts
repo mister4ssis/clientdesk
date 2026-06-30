@@ -27,5 +27,11 @@ export enum ErrorCode {
   SyncConfigurationError = 'SYNC_CONFIGURATION_ERROR',
   SyncConflict = 'SYNC_CONFLICT',
   SyncConflictNotFound = 'SYNC_CONFLICT_NOT_FOUND',
-  SyncPullDisabled = 'SYNC_PULL_DISABLED'
+  SyncPullDisabled = 'SYNC_PULL_DISABLED',
+  UpdateDisabled = 'UPDATE_DISABLED',
+  UpdateCheckFailed = 'UPDATE_CHECK_FAILED',
+  UpdateDownloadFailed = 'UPDATE_DOWNLOAD_FAILED',
+  UpdateInstallBlocked = 'UPDATE_INSTALL_BLOCKED',
+  UpdateNotAvailable = 'UPDATE_NOT_AVAILABLE',
+  UpdateNotDownloaded = 'UPDATE_NOT_DOWNLOADED'
 }

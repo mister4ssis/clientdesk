@@ -179,6 +179,27 @@ Próximo passo: implementar fluxo de autenticação Supabase seguro ou validar a
 - Expor apenas status sanitizado em `sync:get-status`.
 - Cobrir canal, debounce, reconexão e fallback com testes mockados.
 
+### 15. Auditoria e Diagnóstico - Em andamento
+
+- Criar migration local `005` com `customer_audit_log` e `sync_run_log`.
+- Registrar auditoria sanitizada em cadastro, edição, ativação, inativação, pull remoto e resolução de conflito.
+- Registrar ciclos de sincronização com motivo, status, contadores, duração e erro sanitizado.
+- Expor IPC específico para histórico do cliente e diagnóstico.
+- Criar tela de histórico no detalhe do cliente e tela `/settings/diagnostics`.
+- Exportar diagnóstico JSON sanitizado sem banco, sessão, tokens, chaves, clientes ou dados pessoais.
+- Aplicar retenção configurável para auditoria e logs técnicos.
+
+### 16. Pipeline de Release e Atualização Automática - Em andamento
+
+- Validar releases por tag SemVer `vX.Y.Z`, `vX.Y.Z-beta.N` ou `vX.Y.Z-rc.N`.
+- Criar workflow Windows para artifacts e workflow separado para publicação por tag.
+- Preparar assinatura Windows por secrets reais da CI, sem certificado fictício no repositório.
+- Configurar GitHub Releases como provider de publicação do `electron-builder`.
+- Implementar `electron-updater` somente no processo main, desabilitado por padrão.
+- Expor IPC/preload específicos `update:*` e seção de atualização em Configurações.
+- Bloquear instalação durante backup, restauração, migration, sincronização e resolução de conflito.
+- Preservar banco local, sessão, outbox, backups e migrations durante atualização.
+
 ## Scripts Planejados
 
 Os scripts abaixo devem ser definidos quando o projeto for inicializado:

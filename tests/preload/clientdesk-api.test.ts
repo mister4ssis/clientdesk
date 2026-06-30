@@ -67,6 +67,14 @@ describe('preload clientDesk API', () => {
     await api.sync.getConflict('conflict-id');
     await api.sync.resolveKeepLocal('conflict-id');
     await api.sync.resolveUseRemote('conflict-id');
+    await api.audit.listCustomerHistory('customer-id', { limit: 10 });
+    await api.diagnostics.getSummary();
+    await api.diagnostics.listSyncRuns({ limit: 5 });
+    await api.diagnostics.export();
+    await api.update.getState();
+    await api.update.check();
+    await api.update.download();
+    await api.update.install();
 
     expect(electronMock.invoke).toHaveBeenNthCalledWith(1, IPC_CHANNELS.app.getVersion);
     expect(electronMock.invoke).toHaveBeenNthCalledWith(2, IPC_CHANNELS.auth.getState);
@@ -112,5 +120,28 @@ describe('preload clientDesk API', () => {
     expect(electronMock.invoke).toHaveBeenNthCalledWith(19, IPC_CHANNELS.sync.resolveUseRemote, {
       id: 'conflict-id'
     });
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(
+      20,
+      IPC_CHANNELS.audit.listCustomerHistory,
+      {
+        customerId: 'customer-id',
+        filters: {
+          limit: 10
+        }
+      }
+    );
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(21, IPC_CHANNELS.diagnostics.getSummary);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(
+      22,
+      IPC_CHANNELS.diagnostics.listSyncRuns,
+      {
+        limit: 5
+      }
+    );
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(23, IPC_CHANNELS.diagnostics.export);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(24, IPC_CHANNELS.update.getState);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(25, IPC_CHANNELS.update.check);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(26, IPC_CHANNELS.update.download);
+    expect(electronMock.invoke).toHaveBeenNthCalledWith(27, IPC_CHANNELS.update.install);
   });
 });

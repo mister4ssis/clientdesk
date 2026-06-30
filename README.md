@@ -2,6 +2,8 @@
 
 Aplicativo desktop local para cadastro e gerenciamento de clientes.
 
+Versão de homologação atual: `0.9.0-rc.1`.
+
 ## Requisitos
 
 - Node.js compatível com Electron 42 e TypeScript 5.
@@ -45,12 +47,15 @@ Empacotamento local:
 ```bash
 npm run package:dir
 npm run package:win
+npm run release:check
+npm run test:integration
+npm run test:package
 npm run verify:package
 ```
 
 `better-sqlite3` é reconstruído por scripts do projeto. Use `npm test` para rodar a suíte, pois ele recompila o módulo para o runtime do Node antes do Vitest e recompila para Electron ao final.
 
-Os artefatos de empacotamento são salvos em `release/`, que não deve ser commitado. Para detalhes de build, NSIS, módulo nativo e assinatura, consulte `PACKAGING.md`.
+Os artefatos de empacotamento são salvos em `release/`, que não deve ser commitado. Para detalhes de build, NSIS, módulo nativo, assinatura e updater, consulte `PACKAGING.md`, `RELEASE_PROCESS.md`, `CODE_SIGNING.md` e `AUTO_UPDATE.md`.
 
 ## Arquitetura
 
@@ -107,6 +112,10 @@ Fluxos implementados:
 - criar e restaurar backup local em `/settings/backup`;
 - informar estado básico de sincronização e permitir "Sincronizar agora" em `/settings/backup`;
 - listar e resolver conflitos de sincronização em `/settings/sync/conflicts`;
+- visualizar histórico sanitizado no detalhe do cliente;
+- abrir diagnóstico de sincronização em `/settings/diagnostics`;
+- exportar pacote JSON de diagnóstico sanitizado;
+- verificar, baixar e instalar atualizações pela área de Configurações quando o updater estiver habilitado;
 - cadastrar, listar, pesquisar e visualizar o campo Representante;
 - tratar cliente inexistente com mensagem amigável e retorno para a listagem;
 - exibir loading, atualização, erro e estados vazios.
@@ -122,6 +131,7 @@ Rotas disponíveis no renderer:
 /customers/:id/edit
 /settings/backup
 /settings/sync/conflicts
+/settings/diagnostics
 ```
 
 ## Detalhes do Cliente
@@ -134,6 +144,10 @@ aparecem como `Não informado`.
 Ao editar a partir dos detalhes, o usuário retorna para `/customers/:id` após
 salvar. A ativação e inativação usam confirmação, feedback de sucesso e mensagens
 de erro sem stack trace, SQL ou caminhos locais.
+
+A seção `Histórico` mostra ações, origem, nomes dos campos alterados, data e
+instalação abreviada. Ela não mostra valores antigos, valores novos, JSON bruto
+ou identificadores completos.
 
 ## Testes
 
@@ -182,11 +196,22 @@ Com `MAIN_VITE_SYNC_ENABLED=false`, o app opera normalmente sem internet. Consul
 - `SUPABASE.md`: configuração e migration remota.
 - `SUPABASE_SECURITY.md`: regras de segurança Supabase.
 - `PACKAGING.md`: configuração de pacote e instalador.
+- `RELEASE_PROCESS.md`: versionamento de release, workflows e artifacts.
+- `CODE_SIGNING.md`: preparação de assinatura Windows sem secrets no repositório.
+- `AUTO_UPDATE.md`: updater, IPC, bloqueios de instalação e preservação de dados.
+- `VERSIONING.md`: SemVer, tags e compatibilidade.
+- `RELEASE_CANDIDATE_TEST_PLAN.md`: matriz e cenários para homologar `0.9.0-rc.1`.
+- `RELEASE_CANDIDATE_REPORT.md`: relatório inicial da RC.
+- `KNOWN_ISSUES.md`: issues conhecidas e severidade.
+- `GO_LIVE_CHECKLIST.md`: checklist de aprovação para 1.0.0.
 - `RELEASE_CHECKLIST.md`: checklist para validação e empacotamento.
 - `TESTING.md`: estratégia e comandos de teste.
 - `MULTI_INSTANCE_TESTING.md`: execução e isolamento de testes de sincronização.
 - `SYNC_VALIDATION_REPORT.md`: resultado da validação multi-instância.
 - `REALTIME_SYNC.md`: Realtime como gatilho de sincronização.
+- `AUDIT.md`: auditoria local sanitizada de alterações de clientes.
+- `DIAGNOSTICS.md`: resumo e exportação segura de diagnóstico.
+- `LOGGING_AND_PRIVACY.md`: regras de logs e privacidade.
 
 ## Limitações Conhecidas
 
@@ -197,4 +222,5 @@ Com `MAIN_VITE_SYNC_ENABLED=false`, o app opera normalmente sem internet. Consul
 - Ainda não há teste E2E automatizado na janela Electron.
 - Validação matemática de dígitos de CPF/CNPJ não faz parte do MVP atual.
 - O instalador inicial não está assinado digitalmente.
+- Atualizações automáticas permanecem desabilitadas por padrão até assinatura e provider serem homologados.
 - O ícone definitivo ainda está pendente em `resources/icon.ico` e `resources/icon.png`.

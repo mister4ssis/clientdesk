@@ -6,14 +6,19 @@
 npm run lint
 npm run typecheck
 npm test
+npm run test:integration
+npm run test:package
 npm run build
+npm run release:check
 ```
 
 Use `npm run test:watch` durante desenvolvimento.
 
 ## Observação sobre better-sqlite3
 
-`better-sqlite3` é um módulo nativo. O script `npm test` executa `npm rebuild better-sqlite3` antes do Vitest para usar o ABI do Node e, no `posttest`, executa `npm run rebuild:electron` para restaurar o ABI usado pelo Electron.
+`better-sqlite3` é um módulo nativo. O script `npm test` executa `npm run ensure:electron` e `npm rebuild better-sqlite3` antes do Vitest para garantir que o binário do Electron esteja instalado de forma serial e que o módulo use o ABI do Node. No `posttest`, executa `npm run rebuild:electron` para restaurar o ABI usado pelo Electron.
+
+Sem `ensure:electron`, uma instalação limpa pode fazer múltiplos workers do Vitest importarem `electron` ao mesmo tempo e disputar o download do binário em `node_modules/electron/dist`.
 
 Evite rodar `npx vitest` diretamente após executar Electron ou após o `posttest`; se necessário, rode primeiro:
 
@@ -27,11 +32,17 @@ npm rebuild better-sqlite3
 - `tests/main/database`: abertura, pragmas, migrations, rollback e fechamento.
 - `tests/main/customers`: repository, service e integração com SQLite temporário.
 - `tests/main/ipc`: handlers IPC, validação e sanitização de erros.
+- `tests/main/audit`: auditoria de clientes, paginação, retenção e IPC.
+- `tests/main/diagnostics`: resumo sanitizado, IPC e histórico de ciclos.
+- `tests/main/update`: estado, download manual, bloqueio de instalação e IPC do updater.
 - `tests/integration/sync`: sincronização bidirecional entre duas instalações SQLite independentes com Supabase mockado.
 - `tests/main/sync/realtime`: canal Realtime, debounce, reconexão e proteção contra payload direto.
 - `tests/integration/realtime`: Realtime como gatilho de pull, lifecycle de autenticação e polling como fallback com Supabase mockado.
 - `tests/preload`: API exposta pelo `contextBridge`.
 - `tests/renderer`: listagem, filtros, cadastro, edição, detalhes, hooks, formatadores e client.
+- `tests/renderer/update-client.test.ts`: client do renderer para IPC de atualização.
+- `tests/scripts/verify-release-version.test.ts`: validação de tag e versão de release.
+- `tests/renderer/DiagnosticsPage.test.tsx`: tela de diagnóstico, exportação e sincronização manual.
 - `tests/smoke`: arquivos essenciais e scripts de validação/empacotamento.
 
 ## Banco nos Testes
@@ -79,3 +90,10 @@ Testes reais devem ser protegidos por `RUN_SUPABASE_REALTIME_TESTS=true` e usar 
 6. Abrir detalhes, editar, inativar e reativar.
 7. Reiniciar o app e confirmar persistência.
 8. Acessar uma URL de cliente inexistente e confirmar mensagem amigável.
+9. Abrir o histórico do cliente e confirmar que só nomes de campos alterados aparecem.
+10. Abrir `/settings/diagnostics`, exportar diagnóstico e confirmar ausência de credenciais e dados pessoais.
+11. Em ambiente Windows/homologação, gerar `package:win`, instalar versão anterior, baixar atualização, reiniciar e confirmar preservação de banco, sessão, outbox e migrations.
+
+## Homologação de Release Candidate
+
+Para `0.9.0-rc.1`, use `RELEASE_CANDIDATE_TEST_PLAN.md` como roteiro principal. A homologação deve ocorrer em Windows limpo, ambiente com versão anterior, cenário offline e duas instalações independentes. A máquina de desenvolvimento não substitui essa validação.

@@ -2,6 +2,19 @@ name: Build Windows
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  push:
+    branches:
+      - main
+      - master
+      - develop
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -29,14 +42,51 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Build Windows installer
-        run: npm run package:win
+      - name: Build
+        run: npm run build
 
-      - name: Verify package
+      - name: Package directory
+        run: npm run package:dir
+
+      - name: Verify package directory
         run: npm run verify:package
 
-      - name: Upload installer
+      - name: Build Windows installer
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        run: npm run package:win
+
+      - name: Verify Windows artifacts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = Get-ChildItem -Path release -Recurse -File
+          $forbidden = $files | Where-Object {
+            $_.Name -match '\.env$|\.sqlite$|\.sqlite-wal$|\.sqlite-shm$|\.db$|\.log$|\.pfx$|\.key$|\.pem$'
+          }
+          if ($forbidden) {
+            $forbidden | ForEach-Object { Write-Error "Forbidden artifact: $($_.FullName)" }
+            exit 1
+          }
+          $installer = $files | Where-Object { $_.Extension -eq ".exe" } | Select-Object -First 1
+          if (-not $installer) {
+            Write-Error "Windows installer was not generated."
+            exit 1
+          }
+          $hashes = $files | Where-Object {
+            $_.Extension -in ".exe", ".yml", ".blockmap"
+          } | Get-FileHash -Algorithm SHA256
+          $hashes | Format-Table -AutoSize | Out-File -FilePath release\artifact-checksums.txt
+          "Windows artifact verification passed." | Out-File -FilePath release\verification-report.txt
+
+      - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: clientdesk-windows
-          path: release/*.exe
+          path: |
+            release/*.exe
+            release/*.yml
+            release/*.blockmap
+            release/artifact-checksums.txt
+            release/verification-report.txt
+          if-no-files-found: error

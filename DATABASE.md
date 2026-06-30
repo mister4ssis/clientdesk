@@ -135,6 +135,11 @@ Clientes com `deleted_at` preenchido não aparecem na listagem normal. Isso repr
 
 A migration `004-add-local-app-metadata.sql` cria `app_metadata`. O app grava `owner_user_id`, `owner_email`, `app_version` e `metadata_updated_at` para validar backups e evitar mistura de contas.
 
+A migration `005-add-audit-and-sync-run-log.sql` cria `customer_audit_log` e `sync_run_log`.
+`customer_audit_log` guarda histórico sanitizado de alterações de clientes com nomes de campos alterados, origem, operação, usuário, instalação e timestamps. `sync_run_log` guarda ciclos de sincronização com motivo, status, contadores, duração e código de erro sanitizado.
+
+Essas tabelas não armazenam snapshots completos, valores pessoais, payloads, SQL bruto, paths internos, chaves ou tokens.
+
 ## Migrations
 
 O controle de migrations usa:
@@ -174,7 +179,7 @@ Durante restauração de backup, a conexão também é fechada temporariamente, 
 
 ## Backups
 
-Backups escolhidos pelo usuário podem usar `.sqlite` ou `.clientdesk-backup`. Antes de restaurar, o arquivo é validado com `PRAGMA integrity_check`, presença de `schema_migrations`, presença de `customers`, colunas essenciais e versão de migrations compatível.
+Backups escolhidos pelo usuário podem usar `.sqlite` ou `.clientdesk-backup`. Antes de restaurar, o arquivo é validado com `PRAGMA integrity_check`, presença de `schema_migrations`, presença de `customers`, colunas essenciais e versão de migrations compatível. A versão local compatível de schema é `5`.
 
 Antes de substituir o banco atual, o aplicativo cria uma cópia de segurança em:
 

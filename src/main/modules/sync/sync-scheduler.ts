@@ -16,8 +16,8 @@ export class SyncScheduler {
     }
 
     this.started = true;
-    this.requestRun();
-    this.timer = setInterval(() => this.requestRun(), this.intervalMinutes * 60_000);
+    this.requestRun('STARTUP');
+    this.timer = setInterval(() => this.requestRun('PERIODIC'), this.intervalMinutes * 60_000);
     this.timer.unref?.();
   }
 
@@ -30,7 +30,17 @@ export class SyncScheduler {
     this.started = false;
   }
 
-  requestRun(): void {
-    void this.backgroundSyncService.runNow();
+  requestRun(reason: 'STARTUP' | 'PERIODIC' | 'LOCAL_CHANGE' = 'PERIODIC'): void {
+    if (reason === 'STARTUP') {
+      void this.backgroundSyncService.run('STARTUP');
+      return;
+    }
+
+    if (reason === 'LOCAL_CHANGE') {
+      void this.backgroundSyncService.requestSync({ reason: 'LOCAL_CHANGE' });
+      return;
+    }
+
+    void this.backgroundSyncService.requestSync({ reason: 'SCHEDULER' });
   }
 }

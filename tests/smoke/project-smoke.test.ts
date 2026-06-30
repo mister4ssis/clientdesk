@@ -23,9 +23,12 @@ describe('project smoke checks', () => {
     const expectedScripts = [
       'dev',
       'build',
+      'ensure:electron',
       'lint',
       'typecheck',
       'test',
+      'test:integration',
+      'test:package',
       'test:watch',
       'package',
       'package:dir',

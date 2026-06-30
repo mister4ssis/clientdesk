@@ -26,6 +26,12 @@
 - [ ] persistência validada
 - [ ] erros sanitizados
 - [ ] logs revisados
+- [ ] `npm run release:check` aprovado para tag de release
+- [ ] tag `vX.Y.Z` corresponde a `package.json`
+- [ ] para RC, tag `v0.9.0-rc.1` corresponde a `package.json`
+- [ ] workflow `release-candidate.yml` validado como prerelease
+- [ ] workflow Windows gerou artifacts sem dados locais
+- [ ] updater validado com `MAIN_VITE_UPDATE_ENABLED=false` por padrão
 
 ## Testes Funcionais
 
@@ -112,6 +118,9 @@
 - [ ] polling recupera alteração quando Realtime está indisponível
 - [ ] logout remove canal Realtime
 - [ ] troca de usuário não reaproveita canal anterior
+- [ ] histórico do cliente registra cadastro, edição, status, pull e conflito
+- [ ] diagnóstico exibe estado de sync, Realtime, outbox, conflitos e últimos ciclos
+- [ ] exportação de diagnóstico não contém clientes, tokens, chaves, banco ou paths internos
 
 ## Segurança
 
@@ -130,7 +139,12 @@
 - [ ] policy de `realtime.messages` restringe tópico por `auth.uid()`
 - [ ] renderer não recebe tópico, payload, socket ou token Realtime
 - [ ] backup de outro usuário rejeitado
+- [ ] logs e diagnóstico não contêm CPF/CNPJ, e-mail completo, telefone, representante ou endereço
+- [ ] auditoria registra somente nomes de campos alterados
 - [ ] assinatura digital avaliada
+- [ ] metadados de atualização gerados
+- [ ] update não instala durante backup, restauração, sync, migration ou conflito
+- [ ] atualização preserva banco, sessão, backups, outbox e cursor
 
 ## Assinatura
 
@@ -138,6 +152,21 @@
 - [ ] aviso de editor desconhecido do Windows documentado
 - [ ] certificado de assinatura planejado antes de distribuição pública
 - [ ] nenhum certificado ou segredo commitado
+- [ ] secrets `WINDOWS_CSC_LINK` e `WINDOWS_CSC_KEY_PASSWORD` configurados somente na CI quando houver certificado real
+- [ ] assinatura validada com publisher esperado
+
+## Atualização Automática
+
+- [ ] `MAIN_VITE_UPDATE_ENABLED=false` no padrão distribuível até assinatura e provider serem validados
+- [ ] `electron-updater` não é importado no renderer
+- [ ] IPCs `update:*` retornam `IpcResult`
+- [ ] renderer não recebe URL, token, provider, caminho do instalador ou stack trace
+- [ ] canal stable validado
+- [ ] canal beta validado para `0.9.0-rc.1`
+- [ ] usuários stable não recebem `0.9.0-rc.1`
+- [ ] downgrade automático bloqueado
+- [ ] instalação exige confirmação do usuário
+- [ ] migrations locais aplicadas com banco preservado após update
 
 ## Comandos de Validação
 
@@ -147,6 +176,43 @@ npm run typecheck
 npm test
 npm run build
 npm run package:dir
+npm run verify:package
+npm run package:win
+npm run release:check
 ```
 
 Use `npm run package:win` para gerar o pacote Windows quando o ambiente estiver preparado.
+
+## Rodada Local RC 0.9.0-rc.1 - 2026-06-29
+
+- [x] `npm ci`
+- [x] `npm run lint`
+- [x] `npm run typecheck`
+- [x] `npm test`
+- [x] `npm run test:integration`
+- [x] `npm run build`
+- [x] `npm run package:dir`
+- [x] `npm run verify:package`
+- [x] `npm run test:package`
+- [x] `npm run release:check -- v0.9.0-rc.1`
+- [ ] `npm run package:win` em Windows ou CI Windows
+- [ ] instalação limpa em Windows 11
+- [ ] atualização real pelo canal beta
+- [ ] assinatura Windows real
+
+## Gate Final RC 0.9.0-rc.1 - 2026-06-29
+
+- [x] relatórios da RC lidos
+- [x] issues abertas classificadas
+- [x] decisão determinada sem assumir aprovação
+- [x] `1.0.0` não preparada por falta de evidência obrigatória
+- [x] `0.9.0-rc.2` não preparada porque não há BLOCKER/CRITICAL aberto
+- [x] testes automatizados locais executados
+- [x] pacote local verificado
+- [x] rollback documentado
+- [ ] testes manuais obrigatórios completos
+- [ ] artifacts Windows validados
+- [ ] checksums Windows gerados
+- [ ] updater beta validado com prerelease
+
+Decisão do gate: `PENDENTE`.

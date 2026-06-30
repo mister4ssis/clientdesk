@@ -28,7 +28,13 @@ export interface PublicError {
     | 'SYNC_CONFIGURATION_ERROR'
     | 'SYNC_CONFLICT'
     | 'SYNC_CONFLICT_NOT_FOUND'
-    | 'SYNC_PULL_DISABLED';
+    | 'SYNC_PULL_DISABLED'
+    | 'UPDATE_DISABLED'
+    | 'UPDATE_CHECK_FAILED'
+    | 'UPDATE_DOWNLOAD_FAILED'
+    | 'UPDATE_INSTALL_BLOCKED'
+    | 'UPDATE_NOT_AVAILABLE'
+    | 'UPDATE_NOT_DOWNLOADED';
   message: string;
   details?: unknown;
 }

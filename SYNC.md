@@ -36,6 +36,10 @@ O ciclo de sincronização registra logs sanitizados com:
 
 Os logs não incluem nome de cliente, CPF/CNPJ, e-mail, telefone, representante, snapshots, tokens ou chaves.
 
+Além do log de console sanitizado, cada ciclo grava `sync_run_log` no SQLite com motivo (`STARTUP`, `PERIODIC`, `MANUAL`, `LOCAL_CHANGE`, `REALTIME_EVENT`, `RECONNECT`), status, contadores, duração e código de erro. Esse registro é observacional e não pode impedir push/pull.
+
+A tela `/settings/diagnostics` exibe os últimos ciclos e permite exportar um JSON sanitizado. A retenção é controlada por `MAIN_VITE_SYNC_LOG_RETENTION_DAYS` e `MAIN_VITE_SYNC_LOG_MAX_ROWS`.
+
 ## Autenticação
 
 O ciclo remoto só executa em `AUTHENTICATED`. Em `OFFLINE_AUTHENTICATED` ou `SESSION_EXPIRED`, o app mantém outbox/cursor/conflitos locais, mas não chama Supabase.

@@ -17,6 +17,17 @@ import type {
   SyncRunResult,
   SyncStatus
 } from '../sync/sync.types';
+import type {
+  CustomerAuditFiltersDto,
+  CustomerAuditListResultDto
+} from '../audit/audit.types';
+import type {
+  DiagnosticsExportResultDto,
+  DiagnosticsSummaryDto,
+  SyncRunLogDto,
+  SyncRunLogFiltersDto
+} from '../diagnostics/diagnostics.types';
+import type { UpdateOperationResult, UpdateState } from '../update/update.types';
 import type { IpcResult } from './ipc-result';
 
 export interface CustomerSetActiveInput {
@@ -35,6 +46,11 @@ export interface CustomerUpdateInput {
 
 export interface SyncConflictInput {
   id: string;
+}
+
+export interface CustomerAuditHistoryInput {
+  customerId: string;
+  filters?: CustomerAuditFiltersDto;
 }
 
 export interface IpcContracts {
@@ -114,6 +130,38 @@ export interface IpcContracts {
     input: SyncConflictInput;
     output: IpcResult<SyncConflictDetails>;
   };
+  'audit:list-customer-history': {
+    input: CustomerAuditHistoryInput;
+    output: IpcResult<CustomerAuditListResultDto>;
+  };
+  'diagnostics:get-summary': {
+    input: void;
+    output: IpcResult<DiagnosticsSummaryDto>;
+  };
+  'diagnostics:list-sync-runs': {
+    input: SyncRunLogFiltersDto;
+    output: IpcResult<SyncRunLogDto[]>;
+  };
+  'diagnostics:export': {
+    input: void;
+    output: IpcResult<DiagnosticsExportResultDto>;
+  };
+  'update:get-state': {
+    input: void;
+    output: IpcResult<UpdateState>;
+  };
+  'update:check': {
+    input: void;
+    output: IpcResult<UpdateOperationResult>;
+  };
+  'update:download': {
+    input: void;
+    output: IpcResult<UpdateOperationResult>;
+  };
+  'update:install': {
+    input: void;
+    output: IpcResult<UpdateOperationResult>;
+  };
 }
 
 export interface ClientDeskApi {
@@ -145,5 +193,22 @@ export interface ClientDeskApi {
     getConflict(id: string): Promise<IpcResult<SyncConflictDetails>>;
     resolveKeepLocal(id: string): Promise<IpcResult<SyncConflictDetails>>;
     resolveUseRemote(id: string): Promise<IpcResult<SyncConflictDetails>>;
+  };
+  audit: {
+    listCustomerHistory(
+      customerId: string,
+      filters?: CustomerAuditFiltersDto
+    ): Promise<IpcResult<CustomerAuditListResultDto>>;
+  };
+  diagnostics: {
+    getSummary(): Promise<IpcResult<DiagnosticsSummaryDto>>;
+    listSyncRuns(filters?: SyncRunLogFiltersDto): Promise<IpcResult<SyncRunLogDto[]>>;
+    export(): Promise<IpcResult<DiagnosticsExportResultDto>>;
+  };
+  update: {
+    getState(): Promise<IpcResult<UpdateState>>;
+    check(): Promise<IpcResult<UpdateOperationResult>>;
+    download(): Promise<IpcResult<UpdateOperationResult>>;
+    install(): Promise<IpcResult<UpdateOperationResult>>;
   };
 }

@@ -41,6 +41,68 @@ describe('BackgroundSyncService', () => {
     expect(result.status.lastErrorCode).toBeNull();
   });
 
+  it('records sync run counts without blocking synchronization', async () => {
+    const dependencies = createDependencies();
+    const syncRunLogRepository = {
+      start: vi.fn(),
+      complete: vi.fn()
+    };
+    const service = createService({}, dependencies, {
+      syncRunLogRepository: syncRunLogRepository as unknown as NonNullable<
+        ConstructorParameters<typeof BackgroundSyncService>[6]
+      >['syncRunLogRepository'],
+      getRunContext: () => ({
+        userId: '11111111-1111-4111-8111-111111111111',
+        installationId: '22222222-2222-4222-8222-222222222222'
+      })
+    });
+
+    const result = await service.requestSync({ reason: 'LOCAL_CHANGE' });
+
+    expect(result.started).toBe(true);
+    expect(syncRunLogRepository.start).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason: 'LOCAL_CHANGE',
+        userId: '11111111-1111-4111-8111-111111111111'
+      })
+    );
+    expect(syncRunLogRepository.complete).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'SUCCESS',
+        pushProcessedCount: 1,
+        failureCount: 0,
+        errorCode: null
+      })
+    );
+  });
+
+  it('does not fail synchronization when observational run log fails', async () => {
+    const dependencies = createDependencies();
+    const service = createService({}, dependencies, {
+      syncRunLogRepository: {
+        start: vi.fn(() => {
+          throw new Error('log failed');
+        }),
+        complete: vi.fn(() => {
+          throw new Error('log failed');
+        })
+      } as unknown as NonNullable<
+        ConstructorParameters<typeof BackgroundSyncService>[6]
+      >['syncRunLogRepository'],
+      getRunContext: () => ({
+        userId: '11111111-1111-4111-8111-111111111111',
+        installationId: '22222222-2222-4222-8222-222222222222'
+      })
+    });
+
+    await expect(service.runNow()).resolves.toMatchObject({
+      started: true,
+      status: {
+        lastErrorCode: null
+      }
+    });
+  });
+
   it('keeps failed items scheduled for retry', async () => {
     const dependencies = createDependencies({
       syncResult: {
@@ -115,7 +177,8 @@ function createDependencies(options: DependencyOptions = {}) {
 
 function createService(
   configOverrides: Partial<ConstructorParameters<typeof BackgroundSyncService>[0]> = {},
-  dependencies = createDependencies()
+  dependencies = createDependencies(),
+  options: ConstructorParameters<typeof BackgroundSyncService>[6] = {}
 ): BackgroundSyncService {
   return new BackgroundSyncService(
     {
@@ -129,6 +192,9 @@ function createService(
       realtimeEnabled: true,
       realtimePullDebounceMs: 500,
       realtimeReconnectMaxSeconds: 60,
+      auditRetentionDays: 365,
+      syncLogRetentionDays: 30,
+      syncLogMaxRows: 1000,
       requestTimeoutMs: 10000,
       hasForbiddenSecret: false,
       ...configOverrides
@@ -136,6 +202,8 @@ function createService(
     dependencies.connectivityService as unknown as SupabaseConnectivityService,
     dependencies.syncOutboxRepository as unknown as SyncOutboxRepository,
     dependencies.customerSyncService as unknown as CustomerSyncService,
-    dependencies.syncStatusService
+    dependencies.syncStatusService,
+    undefined,
+    options
   );
 }

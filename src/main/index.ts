@@ -12,9 +12,16 @@ import { registerIpcHandlers } from './ipc/register-ipc-handlers';
 import { AuthService } from './modules/auth/auth.service';
 import { LocalAuthProfileRepository } from './modules/auth/local-auth-profile.repository';
 import { SecureSessionStorage } from './modules/auth/secure-session-storage';
+import { CustomerAuditRepository } from './modules/audit/customer-audit.repository';
+import { CustomerAuditService } from './modules/audit/customer-audit.service';
 import { BackupService } from './modules/backup/backup.service';
 import { CustomerRepository } from './modules/customers/customer.repository';
 import { CustomerService } from './modules/customers/customer.service';
+import { DiagnosticsExportService } from './modules/diagnostics/diagnostics-export.service';
+import { DiagnosticsService } from './modules/diagnostics/diagnostics.service';
+import { RetentionService } from './modules/diagnostics/retention.service';
+import { SyncRunLogRepository } from './modules/diagnostics/sync-run-log.repository';
+import { InstallationService } from './modules/installation/installation.service';
 import { BackgroundSyncService } from './modules/sync/background-sync.service';
 import { CustomerConflictService } from './modules/sync/customer-conflict.service';
 import { CustomerPullService } from './modules/sync/customer-pull.service';
@@ -26,21 +33,35 @@ import { SyncCursorRepository } from './modules/sync/sync-cursor.repository';
 import { SyncOutboxRepository } from './modules/sync/sync-outbox.repository';
 import { SyncScheduler } from './modules/sync/sync-scheduler';
 import { SyncStatusService } from './modules/sync/sync-status.service';
+import { loadUpdateConfig } from './modules/update/update-config';
+import { UpdateLifecycleService } from './modules/update/update-lifecycle.service';
+import { UpdateService } from './modules/update/update.service';
 import { createMainWindow } from './windows/main-window';
 import type { AuthUser } from '@shared/auth/auth.types';
 import type { CustomerListResultDto } from '@shared/customers/customer.dto';
 import type { SyncStatus } from '@shared/sync/sync.types';
+import {
+  CURRENT_LOCAL_SCHEMA_VERSION,
+  MINIMUM_SUPPORTED_APP_VERSION,
+  MINIMUM_SUPPORTED_SCHEMA_VERSION
+} from '@shared/version/schema-compatibility';
 
 let syncScheduler: SyncScheduler | null = null;
 let authService: AuthService | null = null;
 let realtimeChannelManager: RealtimeChannelManager | null = null;
 let realtimeSyncTriggerService: RealtimeSyncTriggerService | null = null;
 let currentRealtimeAccessToken: string | null = null;
+let updateService: UpdateService | null = null;
+let currentBackupService: BackupService | null = null;
+let currentBackgroundSyncService: BackgroundSyncService | null = null;
+let currentCustomerConflictService: CustomerConflictService | null = null;
+let migrationInProgress = false;
 
 async function bootstrap(): Promise<void> {
   await app.whenReady();
 
   const syncConfig = loadSupabaseSyncConfig();
+  const updateConfig = loadUpdateConfig();
   const sessionStorage = new SecureSessionStorage({
     userDataPath: app.getPath('userData')
   });
@@ -49,7 +70,23 @@ async function bootstrap(): Promise<void> {
     fileName: 'profile.enc'
   });
   const localProfileRepository = new LocalAuthProfileRepository(profileStorage);
+  const installationService = new InstallationService(app.getPath('userData'));
   const supabaseClient = createClientDeskSupabaseClient(syncConfig, sessionStorage);
+  const updateLifecycleService = new UpdateLifecycleService({
+    isBackupInProgress: () => currentBackupService?.isOperationInProgress() ?? false,
+    isSyncRunning: () => currentBackgroundSyncService?.isRunning() ?? false,
+    isConflictResolutionInProgress: () =>
+      currentCustomerConflictService?.isOperationInProgress() ?? false,
+    isMigrationInProgress: () => migrationInProgress,
+    stopBackgroundWork: () => {
+      realtimeSyncTriggerService?.stop();
+      void realtimeChannelManager?.shutdown();
+      syncScheduler?.stop();
+    },
+    closeDatabase: () => closeDatabase()
+  });
+  updateService = new UpdateService(updateConfig, updateLifecycleService);
+  updateService.initialize();
 
   authService = new AuthService({
     supabaseClient,
@@ -71,6 +108,7 @@ async function bootstrap(): Promise<void> {
   await authService.initialize();
 
   createMainWindow();
+  scheduleInitialUpdateCheck(updateConfig.checkDelaySeconds);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -81,7 +119,12 @@ async function bootstrap(): Promise<void> {
   function registerUserServices(user: AuthUser, mode: 'online' | 'offline'): void {
     syncScheduler?.stop();
     const database = openDatabaseForUser(user.id, app.getPath('userData'));
-    runMigrations(database);
+    migrationInProgress = true;
+    try {
+      runMigrations(database);
+    } finally {
+      migrationInProgress = false;
+    }
     writeLocalDatabaseMetadata(database, user);
     registerServices(database, user, mode === 'online');
   }
@@ -93,6 +136,9 @@ async function bootstrap(): Promise<void> {
     realtimeChannelManager = null;
     syncScheduler?.stop();
     syncScheduler = null;
+    currentBackupService = null;
+    currentBackgroundSyncService = null;
+    currentCustomerConflictService = null;
     closeDatabase();
     registerLockedServices();
   }
@@ -105,11 +151,26 @@ async function bootstrap(): Promise<void> {
     const syncOutboxRepository = new SyncOutboxRepository(currentDatabase);
     const syncCursorRepository = new SyncCursorRepository(currentDatabase);
     const syncConflictRepository = new SyncConflictRepository(currentDatabase);
+    const customerAuditRepository = new CustomerAuditRepository(currentDatabase);
+    const syncRunLogRepository = new SyncRunLogRepository(currentDatabase);
     syncOutboxRepository.bootstrapPendingCustomers();
+    new RetentionService(customerAuditRepository, syncRunLogRepository, {
+      auditRetentionDays: syncConfig.auditRetentionDays,
+      syncLogRetentionDays: syncConfig.syncLogRetentionDays,
+      syncLogMaxRows: syncConfig.syncLogMaxRows
+    }).run();
+
+    const auditContext = () => ({
+      userId: user.id,
+      installationId: installationService.getInstallationId()
+    });
 
     const customerRepository = new CustomerRepository(currentDatabase, {
-      syncOutboxRepository
+      syncOutboxRepository,
+      customerAuditRepository,
+      getAuditContext: auditContext
     });
+    const customerAuditService = new CustomerAuditService(customerAuditRepository, () => user.id);
     const syncStatusService = new SyncStatusService(syncConfig.enabled, syncOutboxRepository, {
       pullEnabled: syncConfig.pullEnabled,
       syncConflictRepository
@@ -144,11 +205,15 @@ async function bootstrap(): Promise<void> {
           return (
             authState?.status === 'AUTHENTICATED' &&
             authState.user?.id === user.id &&
-            getCurrentUserId() === user.id
+            getCurrentUserId() === user.id &&
+            isLocalSchemaCompatible(currentDatabase)
           );
-        }
+        },
+        syncRunLogRepository,
+        getRunContext: auditContext
       }
     );
+    currentBackgroundSyncService = backgroundSyncService;
     realtimeSyncTriggerService?.stop();
     realtimeSyncTriggerService = new RealtimeSyncTriggerService({
       debounceMs: syncConfig.realtimePullDebounceMs,
@@ -173,13 +238,14 @@ async function bootstrap(): Promise<void> {
       syncConflictRepository,
       customerSyncService
     );
+    currentCustomerConflictService = customerConflictService;
     syncScheduler = new SyncScheduler(
       backgroundSyncService,
       syncConfig.intervalMinutes,
       syncConfig.enabled
     );
     const customerService = new CustomerService(customerRepository, {
-      onCustomerChanged: () => syncScheduler?.requestRun()
+      onCustomerChanged: () => syncScheduler?.requestRun('LOCAL_CHANGE')
     });
     const backupService = new BackupService({
       getUserDataPath: () => app.getPath('userData'),
@@ -191,13 +257,30 @@ async function bootstrap(): Promise<void> {
         registerServices(restoredDatabase, user, startScheduler);
       }
     });
+    currentBackupService = backupService;
+    const diagnosticsService = new DiagnosticsService({
+      database: currentDatabase,
+      authService: authService as AuthService,
+      syncService: backgroundSyncService,
+      syncOutboxRepository,
+      syncConflictRepository,
+      syncCursorRepository,
+      syncRunLogRepository,
+      installationService,
+      getAppVersion: () => app.getVersion()
+    });
+    const diagnosticsExportService = new DiagnosticsExportService(diagnosticsService);
 
     registerIpcHandlers({
       authService: authService ?? undefined,
       customerService,
       backupService,
       syncService: backgroundSyncService,
-      customerConflictService
+      customerConflictService,
+      customerAuditService,
+      diagnosticsService,
+      diagnosticsExportService,
+      updateService: updateService ?? undefined
     });
 
     if (startScheduler) {
@@ -217,17 +300,36 @@ async function bootstrap(): Promise<void> {
       customerService: createLockedCustomerService(),
       backupService: createLockedBackupService(),
       syncService: createLockedSyncService(),
-      customerConflictService: createLockedCustomerConflictService()
+      customerConflictService: createLockedCustomerConflictService(),
+      customerAuditService: createLockedCustomerAuditService(),
+      diagnosticsService: createLockedDiagnosticsService(),
+      diagnosticsExportService: createLockedDiagnosticsExportService(),
+      updateService: updateService ?? undefined
     });
   }
 }
 
 app.on('before-quit', () => {
+  updateService?.stop();
   realtimeSyncTriggerService?.stop();
   void realtimeChannelManager?.shutdown();
   syncScheduler?.stop();
   closeDatabase();
 });
+
+function scheduleInitialUpdateCheck(delaySeconds: number): void {
+  if (!updateService || updateService.getState().status === 'DISABLED') {
+    return;
+  }
+
+  const timer = setTimeout(() => {
+    void updateService?.check().catch(() => {
+      // O estado público já recebe ERROR e o IPC/log sanitiza detalhes quando necessário.
+    });
+  }, delaySeconds * 1000);
+
+  timer.unref();
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -319,6 +421,33 @@ function createLockedCustomerConflictService() {
   };
 }
 
+function createLockedCustomerAuditService() {
+  return {
+    listByCustomer: () => {
+      throwNotAuthenticated();
+    }
+  };
+}
+
+function createLockedDiagnosticsService() {
+  return {
+    getSummary: () => {
+      throwNotAuthenticated();
+    },
+    listSyncRuns: () => {
+      throwNotAuthenticated();
+    }
+  };
+}
+
+function createLockedDiagnosticsExportService() {
+  return {
+    export: async () => {
+      throwNotAuthenticated();
+    }
+  };
+}
+
 function throwNotAuthenticated(): never {
   throw new ApplicationError(ErrorCode.AuthNotAuthenticated, 'Usuário não autenticado.');
 }
@@ -337,5 +466,28 @@ function writeLocalDatabaseMetadata(database: DatabaseConnection, user: AuthUser
   statement.run({ key: 'owner_user_id', value: user.id });
   statement.run({ key: 'owner_email', value: user.email ?? '' });
   statement.run({ key: 'app_version', value: app.getVersion() });
+  statement.run({ key: 'local_schema_version', value: String(readLocalSchemaVersion(database)) });
+  statement.run({ key: 'minimum_supported_app_version', value: MINIMUM_SUPPORTED_APP_VERSION });
+  statement.run({
+    key: 'minimum_supported_schema_version',
+    value: String(MINIMUM_SUPPORTED_SCHEMA_VERSION)
+  });
   statement.run({ key: 'metadata_updated_at', value: now });
+}
+
+function isLocalSchemaCompatible(database: DatabaseConnection): boolean {
+  const schemaVersion = readLocalSchemaVersion(database);
+
+  return (
+    schemaVersion >= MINIMUM_SUPPORTED_SCHEMA_VERSION &&
+    schemaVersion <= CURRENT_LOCAL_SCHEMA_VERSION
+  );
+}
+
+function readLocalSchemaVersion(database: DatabaseConnection): number {
+  const row = database
+    .prepare('SELECT MAX(version) AS version FROM schema_migrations')
+    .get() as { version: number | null };
+
+  return row.version ?? 0;
 }

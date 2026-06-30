@@ -27,5 +27,19 @@ export const IPC_CHANNELS = {
     getConflict: 'sync:get-conflict',
     resolveKeepLocal: 'sync:resolve-keep-local',
     resolveUseRemote: 'sync:resolve-use-remote'
+  },
+  audit: {
+    listCustomerHistory: 'audit:list-customer-history'
+  },
+  diagnostics: {
+    getSummary: 'diagnostics:get-summary',
+    listSyncRuns: 'diagnostics:list-sync-runs',
+    export: 'diagnostics:export'
+  },
+  update: {
+    getState: 'update:get-state',
+    check: 'update:check',
+    download: 'update:download',
+    install: 'update:install'
   }
 } as const;

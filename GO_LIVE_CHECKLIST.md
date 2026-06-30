@@ -1,0 +1,96 @@
+# Go-Live Checklist - ClientDesk 1.0.0
+
+## Release Candidate
+
+- [ ] `0.9.0-rc.1` instalada em Windows 11 limpo
+- [ ] `0.9.0-rc.1` validada em Windows 10, se suportado
+- [ ] Instalador validado
+- [ ] Assinatura validada
+- [ ] Atualização validada
+- [ ] Instalação limpa validada
+- [ ] Atualização de versão anterior validada
+- [ ] Migrações validadas
+- [ ] Persistência validada
+- [ ] Offline validado
+- [ ] Sincronização validada
+- [ ] Conflitos validados
+- [ ] RLS validado
+- [ ] Realtime validado
+- [ ] Polling fallback validado
+- [ ] Backup validado
+- [ ] Restauração validada
+- [ ] Diagnóstico validado
+- [ ] Exportação de diagnóstico sanitizada
+- [ ] Logs revisados
+- [ ] Documentação revisada
+- [ ] Problemas críticos zerados
+- [ ] Rollback documentado
+
+## Segurança
+
+- [ ] `.env` ausente do pacote
+- [ ] Chaves Supabase ausentes do renderer
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` ausente do pacote
+- [ ] Access/refresh tokens ausentes do renderer e logs
+- [ ] Bancos SQLite ausentes do pacote
+- [ ] Sessões ausentes do pacote
+- [ ] Backups ausentes do pacote
+- [ ] Certificados e PFX ausentes do repositório
+- [ ] `nodeIntegration=false`
+- [ ] `contextIsolation=true`
+- [ ] `sandbox=true`
+
+## Atualização
+
+- [ ] Canal stable não recebe prerelease
+- [ ] Canal beta recebe RC quando habilitado
+- [ ] Downgrade automático bloqueado
+- [ ] Instalação exige confirmação do usuário
+- [ ] Instalação bloqueada durante operação crítica
+- [ ] Banco preservado após update
+- [ ] Outbox preservada após update
+- [ ] Sessão compatível preservada após update
+- [ ] Migrations executadas uma vez
+
+## Decisão
+
+- [ ] GO aprovado
+- [ ] NO-GO registrado com motivos
+- [x] PENDENTE registrado com motivos
+- [ ] Tag `v1.0.0` criada somente após aprovação
+
+## Status da Homologação Técnica Local - 2026-06-29
+
+- [x] lint local aprovado
+- [x] typecheck local aprovado
+- [x] testes automatizados locais aprovados
+- [x] testes de integração locais com mocks aprovados
+- [x] build local aprovado
+- [x] pacote descompactado local aprovado
+- [x] verificação local de pacote aprovada
+- [x] release check para `v0.9.0-rc.1` aprovado
+- [x] gate final executado sem preparar `1.0.0`
+- [x] falha RC-004 reproduzida, corrigida e retestada
+- [ ] workflow `release-candidate` executado em `windows-latest`
+- [ ] instalador Windows validado em máquina limpa
+- [ ] assinatura Windows validada com certificado real
+- [ ] auto update beta validado com prerelease publicada
+- [ ] testes manuais funcionais executados com evidência
+
+## Itens Obrigatórios Pendentes Para GO
+
+- [ ] instalação limpa validada em Windows 11
+- [ ] atualização de versão anterior validada
+- [ ] migrations validadas em upgrade real
+- [ ] persistência de banco, sessão, outbox e conflitos validada em upgrade
+- [ ] autenticação real validada
+- [ ] isolamento real entre usuários validado
+- [ ] sincronização online real validada
+- [ ] sincronização offline real validada
+- [ ] conflitos reais validados nas duas resoluções
+- [ ] backup e restauração validados manualmente
+- [ ] instalador Windows gerado e validado
+- [ ] pipeline `release-candidate` validada
+- [ ] pacote Windows verificado sem credenciais
+- [ ] assinatura validada ou pendência aceita explicitamente
+- [ ] atualização beta real validada

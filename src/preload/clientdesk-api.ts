@@ -39,6 +39,22 @@ export function createClientDeskApi(ipcRenderer: IpcRendererInvoke): ClientDeskA
         ipcRenderer.invoke(IPC_CHANNELS.sync.resolveKeepLocal, { id }),
       resolveUseRemote: (id) =>
         ipcRenderer.invoke(IPC_CHANNELS.sync.resolveUseRemote, { id })
+    },
+    audit: {
+      listCustomerHistory: (customerId, filters = {}) =>
+        ipcRenderer.invoke(IPC_CHANNELS.audit.listCustomerHistory, { customerId, filters })
+    },
+    diagnostics: {
+      getSummary: () => ipcRenderer.invoke(IPC_CHANNELS.diagnostics.getSummary),
+      listSyncRuns: (filters = {}) =>
+        ipcRenderer.invoke(IPC_CHANNELS.diagnostics.listSyncRuns, filters),
+      export: () => ipcRenderer.invoke(IPC_CHANNELS.diagnostics.export)
+    },
+    update: {
+      getState: () => ipcRenderer.invoke(IPC_CHANNELS.update.getState),
+      check: () => ipcRenderer.invoke(IPC_CHANNELS.update.check),
+      download: () => ipcRenderer.invoke(IPC_CHANNELS.update.download),
+      install: () => ipcRenderer.invoke(IPC_CHANNELS.update.install)
     }
   } satisfies ClientDeskApi;
 }

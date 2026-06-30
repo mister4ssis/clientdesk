@@ -11,10 +11,20 @@ import {
   type BackupServiceContract
 } from '../modules/backup/backup.ipc';
 import {
+  registerCustomerAuditIpcHandlers,
+  type CustomerAuditServiceContract
+} from '../modules/audit/customer-audit.ipc';
+import {
+  registerDiagnosticsIpcHandlers,
+  type DiagnosticsExportServiceContract,
+  type DiagnosticsServiceContract
+} from '../modules/diagnostics/diagnostics.ipc';
+import {
   registerSyncIpcHandlers,
   type CustomerConflictServiceContract,
   type SyncServiceContract
 } from '../modules/sync/sync.ipc';
+import { registerUpdateIpcHandlers, type UpdateServiceContract } from '../modules/update/update.ipc';
 
 export type IpcMainLike = Pick<IpcMain, 'handle' | 'removeHandler'>;
 
@@ -24,6 +34,10 @@ export interface RegisterIpcHandlersDependencies {
   backupService?: BackupServiceContract;
   syncService?: SyncServiceContract;
   customerConflictService?: CustomerConflictServiceContract;
+  customerAuditService?: CustomerAuditServiceContract;
+  diagnosticsService?: DiagnosticsServiceContract;
+  diagnosticsExportService?: DiagnosticsExportServiceContract;
+  updateService?: UpdateServiceContract;
   ipcMain?: IpcMainLike;
   getAppVersion?: () => string;
 }
@@ -34,6 +48,10 @@ export function registerIpcHandlers({
   backupService,
   syncService,
   customerConflictService,
+  customerAuditService,
+  diagnosticsService,
+  diagnosticsExportService,
+  updateService,
   ipcMain = electronIpcMain,
   getAppVersion = () => app.getVersion()
 }: RegisterIpcHandlersDependencies): void {
@@ -69,6 +87,28 @@ export function registerIpcHandlers({
       ipcMain,
       syncService,
       customerConflictService
+    });
+  }
+
+  if (customerAuditService) {
+    registerCustomerAuditIpcHandlers({
+      ipcMain,
+      customerAuditService
+    });
+  }
+
+  if (diagnosticsService && diagnosticsExportService) {
+    registerDiagnosticsIpcHandlers({
+      ipcMain,
+      diagnosticsService,
+      diagnosticsExportService
+    });
+  }
+
+  if (updateService) {
+    registerUpdateIpcHandlers({
+      ipcMain,
+      updateService
     });
   }
 }

@@ -81,6 +81,10 @@ export class BackupService {
     return this.lastBackup;
   }
 
+  isOperationInProgress(): boolean {
+    return this.operationInProgress;
+  }
+
   async createBackup(): Promise<BackupResult> {
     return this.runExclusive(async () => {
       const selectedPath = await this.selectBackupDestination();

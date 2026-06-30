@@ -9,12 +9,18 @@ const requiredBuildFiles = [
   'src/main/database/migrations/001-create-customers.sql'
 ];
 const forbiddenReleasePatterns = [
+  /\.env$/i,
   /\.sqlite$/i,
   /\.sqlite-wal$/i,
   /\.sqlite-shm$/i,
   /\.db$/i,
-  /\.log$/i
+  /\.log$/i,
+  /\.pfx$/i,
+  /\.pem$/i,
+  /\.key$/i
 ];
+const semverPattern =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(beta|rc)\.(0|[1-9]\d*))?$/;
 
 const failures = [];
 
@@ -24,7 +30,9 @@ for (const filePath of requiredBuildFiles) {
 
 const packageJson = readJson(path.join(projectRoot, 'package.json'));
 assertEqual(packageJson.main, 'out/main/index.js', 'package.json main must point to out/main/index.js');
+assertMatches(packageJson.version, semverPattern, 'package.json version must be valid SemVer');
 assertDependency(packageJson, 'better-sqlite3', 'dependencies');
+assertDependency(packageJson, 'electron-updater', 'dependencies');
 assertDependency(packageJson, 'electron', 'devDependencies');
 assertDependency(packageJson, 'electron-builder', 'devDependencies');
 
@@ -48,6 +56,20 @@ if (existsSync(releaseDirectory)) {
     (filePath) => path.basename(filePath) === 'better_sqlite3.node',
     'Packaged release must include better_sqlite3.node'
   );
+
+  const updaterMetadataFiles = releaseFiles.filter((filePath) =>
+    ['latest.yml', 'latest-mac.yml'].includes(path.basename(filePath))
+  );
+
+  for (const metadataFile of updaterMetadataFiles) {
+    const metadata = readFileSync(metadataFile, 'utf8');
+
+    if (!metadata.includes(`version: ${packageJson.version}`)) {
+      failures.push(
+        `Updater metadata must reference package version ${packageJson.version}: ${path.relative(projectRoot, metadataFile)}`
+      );
+    }
+  }
 
   for (const filePath of releaseFiles) {
     const relativePath = path.relative(projectRoot, filePath);
@@ -82,6 +104,12 @@ function assertExists(filePath, message) {
 function assertEqual(actual, expected, message) {
   if (actual !== expected) {
     failures.push(`${message}. Expected ${expected}, got ${String(actual)}.`);
+  }
+}
+
+function assertMatches(actual, pattern, message) {
+  if (typeof actual !== 'string' || !pattern.test(actual)) {
+    failures.push(`${message}. Got ${String(actual)}.`);
   }
 }
 

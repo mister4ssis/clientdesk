@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { DatabaseConnection } from '@main/database/database';
+import { CustomerAuditRepository } from '@main/modules/audit/customer-audit.repository';
 import { CustomerRepository } from '@main/modules/customers/customer.repository';
 import type { Customer } from '@shared/customers/customer.types';
 import { createMigratedMemoryDatabase } from '../../helpers/test-database';
@@ -120,6 +121,52 @@ describe('CustomerRepository', () => {
       createdAt,
       updatedAt: '2026-06-21T11:00:00.000Z'
     });
+  });
+
+  it('records audit entries for local changes without personal values', () => {
+    const auditRepository = new CustomerAuditRepository(database as DatabaseConnection);
+    repository = new CustomerRepository(database as DatabaseConnection, {
+      customerAuditRepository: auditRepository,
+      getAuditContext: () => ({
+        userId: '11111111-1111-4111-8111-111111111111',
+        installationId: '22222222-2222-4222-8222-222222222222'
+      })
+    });
+
+    repository.create(makeCustomer({ id: 'customer-1', legalName: 'Maria Silva' }));
+    repository.update('customer-1', {
+      legalName: 'Maria Souza',
+      phone: '11999999999',
+      updatedAt: '2026-06-21T11:00:00.000Z'
+    });
+
+    const history = auditRepository.listByCustomer('customer-1', {
+      userId: '11111111-1111-4111-8111-111111111111',
+      limit: 10,
+      offset: 0
+    });
+
+    expect(history.items.map((entry) => entry.operation)).toEqual(['UPDATED', 'CREATED']);
+    expect(history.items[0]?.changedFields).toEqual(['legalName', 'phone']);
+    expect(JSON.stringify(history)).not.toContain('Maria Souza');
+    expect(JSON.stringify(history)).not.toContain('11999999999');
+  });
+
+  it('rolls back a local change when mandatory audit recording fails', () => {
+    repository = new CustomerRepository(database as DatabaseConnection, {
+      customerAuditRepository: {
+        record: () => {
+          throw new Error('audit failed');
+        }
+      } as unknown as CustomerAuditRepository,
+      getAuditContext: () => ({
+        userId: '11111111-1111-4111-8111-111111111111',
+        installationId: '22222222-2222-4222-8222-222222222222'
+      })
+    });
+
+    expect(() => repository.create(makeCustomer({ id: 'customer-1' }))).toThrow('audit failed');
+    expect(repository.findById('customer-1')).toBeNull();
   });
 
   it('activates and deactivates a customer', () => {
