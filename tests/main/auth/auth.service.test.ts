@@ -47,7 +47,7 @@ describe('AuthService', () => {
 
   it('returns a sanitized error for invalid credentials', async () => {
     const supabaseClient = createSupabaseClientMock({
-      signInError: { message: 'Invalid login credentials' }
+      signInError: { code: 'invalid_credentials', message: 'Invalid login credentials', status: 400 }
     });
     const service = createService({ supabaseClient });
 
@@ -57,8 +57,73 @@ describe('AuthService', () => {
         password: 'wrong'
       })
     ).rejects.toMatchObject({
-      code: 'AUTH_INVALID_CREDENTIALS'
+      code: 'invalid_credentials'
     });
+  });
+
+  it('preserves email_not_confirmed from Supabase Auth', async () => {
+    const supabaseClient = createSupabaseClientMock({
+      signInError: { code: 'email_not_confirmed', message: 'Email not confirmed', status: 400 }
+    });
+    const service = createService({ supabaseClient });
+
+    await expect(
+      service.signInWithPassword({
+        email: 'user@example.com',
+        password: 'secret'
+      })
+    ).rejects.toMatchObject({
+      code: 'email_not_confirmed'
+    });
+  });
+
+  it('maps thrown fetch failures to a public network auth code', async () => {
+    const supabaseClient = createSupabaseClientMock({
+      signInThrows: new Error('fetch failed')
+    });
+    const service = createService({ supabaseClient });
+
+    await expect(
+      service.signInWithPassword({
+        email: 'user@example.com',
+        password: 'secret'
+      })
+    ).rejects.toMatchObject({
+      code: 'fetch_failed'
+    });
+  });
+
+  it('logs auth failures without email, password or tokens', async () => {
+    const authLogger = { log: vi.fn() };
+    const supabaseClient = createSupabaseClientMock({
+      signInError: {
+        code: 'invalid_credentials',
+        message: 'Invalid login credentials for user@example.com password=secret access_token=token',
+        status: 400
+      }
+    });
+    const service = createService({ supabaseClient, authLogger });
+
+    await expect(
+      service.signInWithPassword({
+        email: 'user@example.com',
+        password: 'secret'
+      })
+    ).rejects.toMatchObject({
+      code: 'invalid_credentials'
+    });
+
+    const serializedLog = JSON.stringify(authLogger.log.mock.calls);
+    expect(serializedLog).not.toContain('user@example.com');
+    expect(serializedLog).not.toContain('secret');
+    expect(serializedLog).not.toContain('token');
+    expect(authLogger.log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'AUTH_SIGN_IN',
+        code: 'invalid_credentials',
+        status: 'failure'
+      })
+    );
   });
 
   it('rejects first access while offline', async () => {
@@ -118,9 +183,11 @@ const userId = '00000000-0000-4000-8000-000000000001';
 interface CreateServiceOptions {
   supabaseClient?: ClientDeskSupabaseClient;
   signInError?: { message: string };
+  signInThrows?: Error;
   isNetworkOnline?: () => boolean;
   onAuthenticated?: ReturnType<typeof vi.fn>;
   onSessionTokenChanged?: ReturnType<typeof vi.fn>;
+  authLogger?: { log: ReturnType<typeof vi.fn> };
 }
 
 function createService(options: CreateServiceOptions = {}): AuthService {
@@ -139,7 +206,8 @@ function createServiceWithProfile(options: CreateServiceOptions = {}) {
     localProfileRepository: profileRepository,
     isNetworkOnline: options.isNetworkOnline ?? (() => true),
     onAuthenticated: options.onAuthenticated,
-    onSessionTokenChanged: options.onSessionTokenChanged
+    onSessionTokenChanged: options.onSessionTokenChanged,
+    authLogger: options.authLogger
   });
 
   return {
@@ -149,13 +217,19 @@ function createServiceWithProfile(options: CreateServiceOptions = {}) {
 }
 
 function createSupabaseClientMock(
-  options: { signInError?: { message: string } } = {}
+  options: { signInError?: { code?: string; message: string; status?: number }; signInThrows?: Error } = {}
 ): ClientDeskSupabaseClient {
   const auth = {
-    signInWithPassword: vi.fn(async () => ({
-      data: options.signInError ? { user: null, session: null } : {},
-      error: options.signInError ?? null
-    })),
+    signInWithPassword: vi.fn(async () => {
+      if (options.signInThrows) {
+        throw options.signInThrows;
+      }
+
+      return {
+        data: options.signInError ? { user: null, session: null } : {},
+        error: options.signInError ?? null
+      };
+    }),
     getUser: vi.fn(async () => ({
       data: {
         user: {

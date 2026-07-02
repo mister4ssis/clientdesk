@@ -35,6 +35,46 @@ describe('LoginPage', () => {
     expect(screen.queryByText('technical')).not.toBeInTheDocument();
   });
 
+  it('shows configuration and connectivity auth errors', () => {
+    const { rerender } = render(
+      <LoginPage
+        authState={unauthenticatedState}
+        error={new ClientDeskAuthError('AUTH_CONFIGURATION_ERROR', 'technical')}
+        isLoading={false}
+        onLogin={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText('Esta instalação não possui a configuração necessária para acessar o servidor.')
+    ).toBeInTheDocument();
+
+    rerender(
+      <LoginPage
+        authState={unauthenticatedState}
+        error={new ClientDeskAuthError('fetch_failed', 'technical')}
+        isLoading={false}
+        onLogin={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByText('Não foi possível conectar ao servidor. Verifique sua internet.')
+    ).toBeInTheDocument();
+
+    rerender(
+      <LoginPage
+        authState={unauthenticatedState}
+        error={new ClientDeskAuthError('email_not_confirmed', 'technical')}
+        isLoading={false}
+        onLogin={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('Confirme seu e-mail antes de entrar.')).toBeInTheDocument();
+    expect(screen.queryByText('technical')).not.toBeInTheDocument();
+  });
+
   it('calls login with entered values', async () => {
     const onLogin = vi.fn(async () => undefined);
     render(<LoginPage authState={unauthenticatedState} error={null} isLoading={false} onLogin={onLogin} />);
